@@ -90,41 +90,27 @@ AluResult alu1bit(
 }
 
 Alu32BitResult alu32bit(
-    const bool a[32],
-    const bool b[32],
+    uint32_t a,
+    uint32_t b,
     const bool less,
           bool operation[5]
 ) {
     Alu32BitResult alu32BitResult;
     bool carryIn = operation[1];
-
     const uint32_t  aluOperation = bitsToInt(3, (bool[]){ operation[2], operation[3], operation[4] });
 
     // Shift Left Aritmetic
     if (aluOperation == 4) {
         const int shamt = bitsToLeftShiftAmount(b);
-        for (int i = 0; i < 32; i++) {
-            if (i + shamt < 32)
-                alu32BitResult.result[i] = a[i + shamt];
-            else
-                alu32BitResult.result[i] = 0;
-        }
-
+        alu32BitResult.result = a << shamt;
         alu32BitResult.overflow = false;
-
         goto CONTROL_ZERO;
     }
 
     // Shift Right Logical
     if (aluOperation == 5) {
         const int shamt = bitsToRightShiftAmount(b);
-        for (int i = 31; i >= 0; i--) {
-            if (i - shamt >= 0)
-                alu32BitResult.result[i] = a[i - shamt];
-            else
-                alu32BitResult.result[i] = 0;
-        }
-
+        alu32BitResult.result = a >> shamt;
         alu32BitResult.overflow = false;
         goto CONTROL_ZERO;
     }
@@ -132,64 +118,55 @@ Alu32BitResult alu32bit(
     // Shift Right Aritmetic
     if (aluOperation == 6) {
         const int shamt = bitsToRightShiftAmount(b);
-        const bool sign = a[0];
+        const bool sign = getBit(a, 31);
+        uint32_t shifted = a >> shamt;
 
-        for (int i = 31; i >= 0; i--) {
-            if (i - shamt >= 0)
-                alu32BitResult.result[i] = a[i - shamt];
-            else
-                alu32BitResult.result[i] = sign;
+        if (sign) {
+            const uint32_t mask = ~((1u << (32 - shamt)) - 1);
+            shifted |= mask;
         }
 
+        printf("b: %d\n", b);
+        printf("a: %d\n", a);
+        printf("sign: %d\n", sign);
+        printf("new a: %d\n", shifted);
+
+        alu32BitResult.result = shifted;
         alu32BitResult.overflow = false;
         goto CONTROL_ZERO;
     }
 
+    uint32_t resultBits = 0;
     bool carryInOverflowControl  = 0;
     bool carryOutOverflowControl = 0;
 
-    for (int i = 31; i >= 0; i--) {
-
+    for (int i = 0; i < 32; i++) {
+        const bool bitA = getBit(a, i);
+        const bool bitB = getBit(b, i);
         const bool lessInput = (i == 31) ? less : false;
-        const AluResult result1Bit = alu1bit(a[i], b[i], lessInput, carryIn, operation, aluOperation);
-        alu32BitResult.result[i] = result1Bit.result;
 
-        carryIn = result1Bit.carryOut;
+        const AluResult res = alu1bit(bitA, bitB, lessInput, carryIn, operation, aluOperation);
+        setBit(&resultBits, i, res.result);
 
-        if (i == 1) carryInOverflowControl  = carryIn;
-        if (i == 0) carryOutOverflowControl = result1Bit.carryOut;
+        carryIn = res.carryOut;
+
+        if (i == 1) carryInOverflowControl = carryIn;
+        if (i == 0) carryOutOverflowControl = res.carryOut;
     }
 
+    alu32BitResult.result = resultBits;
     alu32BitResult.overflow = carryInOverflowControl ^ carryOutOverflowControl;
 
-    CONTROL_ZERO:
-
-    alu32BitResult.zero     = true;
-    for (int i = 0; i < 32; i++) {
-        if (alu32BitResult.result[i]) {
-            alu32BitResult.zero = false;
-            break;
-
-        }
-    }
+CONTROL_ZERO:
+    alu32BitResult.zero = alu32BitResult.result == 0;
 
     return alu32BitResult;
 }
 
-int bitsToLeftShiftAmount(const bool b[32]) {
-    int shamt = 0;
-    for (int i = 27; i < 32; i++) {
-        shamt <<= 1;
-        shamt |= b[i];
-    }
-    return shamt;
+int bitsToLeftShiftAmount(const uint32_t b) {
+    return b & 0x1F;
 }
 
-int bitsToRightShiftAmount(const bool b[32]) {
-    int shamt = 0;
-    for (int i = 27; i < 32; i++) {
-        shamt <<= 1;
-        shamt |= b[i];
-    }
-    return shamt;
+int bitsToRightShiftAmount(const uint32_t b) {
+    return b & 0x1F;
 }

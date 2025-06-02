@@ -21,3 +21,14 @@ void intToBits(int32_t value, bool bits[32]) {
         value >>= 1;
     }
 }
+
+bool getBit(const uint32_t x, const int i) {
+    return (x >> i) & 1u;
+}
+
+void setBit(uint32_t* x, const int i, const bool val) {
+    if (val)
+        *x |= (1u << i);
+    else
+        *x &= ~(1u << i);
+}

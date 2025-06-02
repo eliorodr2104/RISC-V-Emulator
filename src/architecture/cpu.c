@@ -13,7 +13,6 @@
 #include "controlUnit.h"
 #include "instructionMemory.h"
 #include "registerMemory.h"
-#include "tools.h"
 #include "tui.h"
 
 Cpu* newCpu() {
@@ -44,11 +43,8 @@ void runCpu(Cpu* cpu) {
         // Use rs2, Type-R
         if (!unitControlRet.aluSrc) {
 
-            bool* firstRegisterValue = getValueRegister(decodedInstruction.rs1);
-            if (!firstRegisterValue) return;
-
-            bool* secondRegisterValue = getValueRegister(decodedInstruction.rs2);
-            if (!secondRegisterValue) return;
+            const int32_t firstRegisterValue  = getValueRegister(decodedInstruction.rs1);
+            const int32_t secondRegisterValue = getValueRegister(decodedInstruction.rs2);
 
             result = alu32bit(
                 firstRegisterValue,
@@ -59,12 +55,8 @@ void runCpu(Cpu* cpu) {
 
         } else {
 
-            bool* firstRegisterValue = getValueRegister(decodedInstruction.rs1);
-            if (!firstRegisterValue) return;
-
-            bool* immediateOperator  = malloc(32 * sizeof(bool));
-            intToBits(decodedInstruction.immediate, immediateOperator);
-            if (!immediateOperator) return;
+            const int32_t firstRegisterValue = getValueRegister(decodedInstruction.rs1);
+            const int32_t immediateOperator  = decodedInstruction.immediate;
 
             result = alu32bit(
                         firstRegisterValue,
@@ -76,7 +68,7 @@ void runCpu(Cpu* cpu) {
         }
 
         if (unitControlRet.regWrite) {
-            writeRegister(decodedInstruction.rd, bitsToInt(32, result.result));
+            writeRegister(decodedInstruction.rd, result.result);
         }
 
         printRegisterTable();

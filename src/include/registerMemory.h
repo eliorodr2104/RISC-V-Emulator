@@ -8,7 +8,7 @@
 
 extern int32_t registers[32];
 
-bool* getValueRegister(uint32_t registerNumber);
+int32_t getValueRegister(uint32_t registerNumber);
 bool writeRegister(uint32_t registerNumber, uint32_t value);
 
 #endif //REGISTERMEMORY_H

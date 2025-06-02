@@ -6,7 +6,7 @@
 #include "cpu.h"
 
 uint32_t instructions[MAX_INSTRUCTIONS] = {
-       0xFFF34293  // xori t0, t1, -1
+     0xFFF34293  // xori t0, t1, -1
     // 0x40135293  // srai t0, t1, 1
     // 0x00135293  // srli t0, t1, 1
     // 0x00131293  // slli t0, t1, 1
@@ -14,8 +14,8 @@ uint32_t instructions[MAX_INSTRUCTIONS] = {
     // 0x007352B3  // srl  t0, t1, t2
     // 0x007312B3  // sll  t0, t1, t2
     // 0x00430293  // addi t0, t1, 4
-    // 0x007302B3, // add  t0, t1  , t2
-    // 0x407302B3, // sub  t0, t1  , t2
+    // 0x007302B3, // add  t0, t1, t2
+    // 0x407302B3, // sub  t0, t1, t2
     // 0x000002B3, // sub  t0, zero, zero
 };
 
