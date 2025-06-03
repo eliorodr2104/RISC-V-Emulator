@@ -25,6 +25,6 @@ AluOp getAluControl(
     uint8_t funct7Bit30
 );
 
-void getAluOperationBits(AluOp aluOpEnum, bool operation[4]);
+void getAluOperationBits(AluOp aluOpEnum, uint8_t* operation);
 
 #endif //ALUCONTROL_H

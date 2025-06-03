@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 
+
 #include "alu.h"
 #include "aluControl.h"
 #include "controlUnit.h"
@@ -29,16 +30,12 @@ void runCpu(Cpu* cpu) {
     while (cpu->pc < MAX_INSTRUCTIONS) {
         Alu32BitResult result; // Result operation ALU
 
-        const uint32_t instruction                  = fetchInstruction(cpu);                        // Fetch instruction
+        const DecodedInstruction decodedInstruction = decodeInstruction(fetchInstruction(cpu));     // Decode the current instruction
+        const ControlSignals     unitControlRet     = getControlSignals(decodedInstruction.opcode); // Operation selected
+        const AluOp              aluOpEnum          = getAluControl(unitControlRet.operation, decodedInstruction.funct3, decodedInstruction.funct7Bit30);
 
-        const DecodedInstruction decodedInstruction = decodeInstruction(instruction);               // Decode the current instruction
-
-        const ControlSignals unitControlRet         = getControlSignals(decodedInstruction.opcode); // Operation selected
-
-        const AluOp aluOpEnum = getAluControl(unitControlRet.operation, decodedInstruction.funct3, decodedInstruction.funct7Bit30);
-
-        bool operation[5];
-        getAluOperationBits(aluOpEnum, operation);
+        uint8_t operation = 0;
+        getAluOperationBits(aluOpEnum, &operation);
 
         // Use rs2, Type-R
         if (!unitControlRet.aluSrc) {

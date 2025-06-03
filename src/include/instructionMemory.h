@@ -20,10 +20,7 @@ typedef struct {
 
 extern uint32_t instructions[];
 
-uint32_t fetchInstruction(Cpu* cpu);
-
-uint32_t extractBits(uint32_t instruction, int start, int end);
-int32_t signExtend(uint32_t value, int bits);
+uint32_t           fetchInstruction (Cpu* cpu);
 DecodedInstruction decodeInstruction(uint32_t instruction);
 
 #endif //INSTRUCTIONMEMORY_H

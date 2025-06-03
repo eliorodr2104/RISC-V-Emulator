@@ -4,10 +4,11 @@
 
 #include "instructionMemory.h"
 #include "cpu.h"
+#include "tools.h"
 
 uint32_t instructions[MAX_INSTRUCTIONS] = {
-     0xFFF34293  // xori t0, t1, -1
-    // 0x40135293  // srai t0, t1, 1
+    // 0xFFF34293  // xori t0, t1, -1
+       0x40135293  // srai t0, t1, 1
     // 0x00135293  // srli t0, t1, 1
     // 0x00131293  // slli t0, t1, 1
     // 0x407352B3  // sra  t0, t1, t2
@@ -28,21 +29,9 @@ uint32_t fetchInstruction(Cpu* cpu) {
     return instructions[cpu->pc];
 }
 
-uint32_t extractBits(const uint32_t instruction, const int start, const int end) {
-    const int width = end - start + 1;
-    const uint32_t mask = (1U << width) - 1;
-    return instruction >> start & mask;
-}
-
-// Estensione del segno per immediati
-int32_t signExtend(const uint32_t value, const int bits) {
-    const int shift = 32 - bits;
-    return (int32_t)(value << shift) >> shift;
-}
-
 // Decodifica istruzione RISC-V
 DecodedInstruction decodeInstruction(const uint32_t instruction) {
-    DecodedInstruction decoded = {0};
+    DecodedInstruction decoded = { 0 };
 
     decoded.opcode      = extractBits(instruction, 0, 6);    // [6-0]
     decoded.rd          = extractBits(instruction, 7, 11);   // [11-7]
@@ -65,8 +54,8 @@ DecodedInstruction decodeInstruction(const uint32_t instruction) {
             {
                 const uint32_t imm_11_5 = extractBits(instruction, 25, 31);
                 const uint32_t imm_4_0  = extractBits(instruction, 7, 11);
-                const uint32_t imm_s = (imm_11_5 << 5) | imm_4_0;
-                decoded.immediate = signExtend(imm_s, 12);
+                const uint32_t imm_s    = (imm_11_5 << 5) | imm_4_0;
+                decoded.immediate       = signExtend(imm_s, 12);
             }
             break;
 
@@ -77,8 +66,8 @@ DecodedInstruction decodeInstruction(const uint32_t instruction) {
                 const uint32_t imm_11   = extractBits(instruction, 7, 7);
                 const uint32_t imm_10_5 = extractBits(instruction, 25, 30);
                 const uint32_t imm_4_1  = extractBits(instruction, 8, 11);
-                const uint32_t imm_b = (imm_12 << 12) | (imm_11 << 11) | (imm_10_5 << 5) | (imm_4_1 << 1);
-                decoded.immediate = signExtend(imm_b, 13);
+                const uint32_t imm_b    = (imm_12 << 12) | (imm_11 << 11) | (imm_10_5 << 5) | (imm_4_1 << 1);
+                decoded.immediate       = signExtend(imm_b, 13);
             }
             break;
 

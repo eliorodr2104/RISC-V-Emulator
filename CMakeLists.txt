@@ -10,15 +10,15 @@ add_executable(RISC_V src/main.c
         src/include/cpu.h
         src/architecture/memory/instructionMemory.c
         src/include/tui.h
-        src/architecture/tui.c
+        src/terminalInterface/tui.c
         src/architecture/cpu.c
         src/include/controlUnit.h
         src/architecture/controlUnit/controlUnit.c
         src/include/registerMemory.h
         src/architecture/memory/registerMemory.c
         src/include/tools.h
-        src/architecture/tools.c
         src/architecture/alu/aluControl.c
-        src/include/aluControl.h)
+        src/include/aluControl.h
+        src/architecture/tools.c)
 
 target_include_directories(RISC_V PRIVATE src/include)

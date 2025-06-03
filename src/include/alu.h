@@ -17,18 +17,23 @@ typedef struct {
     bool overflow;
 } Alu32BitResult;
 
-int twoBitsToDecimal(bool a, bool b);
-
-AluResult alu1bit (bool a, bool b, bool less, bool carryIn, const bool operation[5], uint32_t aluOp);
-
-Alu32BitResult alu32bit(
-    uint32_t a,
-    uint32_t b,
+AluResult alu1bit (
+    bool a,
+    bool b,
     bool less,
-    bool operation[5]
+    bool carryIn,
+    uint8_t invertControl,
+    uint8_t aluOp
 );
 
-int bitsToLeftShiftAmount(uint32_t b);
-int bitsToRightShiftAmount(uint32_t b);
+Alu32BitResult alu32bit(
+    int32_t a,
+    int32_t b,
+    bool less,
+    uint8_t operation
+);
+
+extern inline int bitsToShiftAmount(uint32_t b);
+extern inline int twoBitsToDecimal(bool a, bool b);
 
 #endif //ALU_H
