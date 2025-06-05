@@ -5,11 +5,13 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
+#include "instructionMemory.h"
+
 static bool getBit(const uint32_t x, const int i) {
     return (x >> i) & 1u;
 }
 
-static void setBit(uint32_t* x, const int i, const bool val) {
+static void setBit(int32_t* x, const int i, const bool val) {
     *x = (val ? *x | (1u << i) : *x & ~(1u << i)) ;
 }
 
@@ -22,5 +24,9 @@ static int32_t signExtend(const uint32_t value, const int bits) {
     const int shift = 32 - bits;
     return (int32_t)(value << shift) >> shift;
 }
+
+
+void formatInstruction(DecodedInstruction decoded, char* buffer, size_t size);
+const char* getInstructionName(uint8_t opcode, uint8_t funct3, uint8_t funct7Bit30);
 
 #endif //TOOLS_H

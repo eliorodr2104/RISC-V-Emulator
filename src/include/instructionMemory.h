@@ -5,7 +5,9 @@
 #ifndef INSTRUCTIONMEMORY_H
 #define INSTRUCTIONMEMORY_H
 
-#define MAX_INSTRUCTIONS 1
+#define MAX_INSTRUCTIONS 27
+#define SIZE_INSTRUCTIONS MAX_INSTRUCTIONS * 4
+
 #include "cpu.h"
 
 typedef struct {

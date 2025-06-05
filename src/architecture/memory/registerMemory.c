@@ -12,7 +12,7 @@ int32_t registers[32] = {
     //gp        tp          t0
     0x00000000, 0x00000000, 0x00000000,
     //t1        t2          s0
-    0xFFFFFFFC, 0x00000004, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000,
     //s1        a0          a1
     0x00000000, 0x00000000, 0x00000000,
     //a2        a3          a4
@@ -31,18 +31,3 @@ int32_t registers[32] = {
     0x00000000, 0x00000000
 
 };
-
-int32_t getValueRegister(const uint32_t registerNumber) {
-    if (registerNumber >= 32) return 0;
-
-    return registers[registerNumber];
-}
-
-bool writeRegister(const uint32_t registerNumber, const int32_t value) {
-    if (registerNumber >= 32) return false;
-
-    registers[registerNumber] = value;
-
-    return true;
-
-}

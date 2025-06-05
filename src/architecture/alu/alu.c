@@ -109,19 +109,12 @@ Alu32BitResult alu32bit(
     // Shift Right Arithmetic
     if (aluOperation == 6) {
         const int shiftAmount = bitsToShiftAmount(b);
-        const bool sign = getBit(a, 31);
-        uint32_t shifted = a >> shiftAmount;
 
-        if (sign) {
-            const uint32_t mask = ~((1u << (32 - shiftAmount)) - 1);
-            shifted |= mask;
-        }
-
-        alu32BitResult.result = shifted;
+        alu32BitResult.result = a >> shiftAmount;
         goto CONTROL_ZERO;
     }
 
-    uint32_t resultBits = 0;
+    int32_t resultBits = 0;
     bool carryInOverflowControl  = 0;
     bool carryOutOverflowControl = 0;
 
@@ -146,12 +139,4 @@ CONTROL_ZERO:
     alu32BitResult.overflow = (aluOperation >= 4 && aluOperation <= 6 ? false : carryInOverflowControl ^ carryOutOverflowControl);
 
     return alu32BitResult;
-}
-
-extern inline int bitsToShiftAmount(const uint32_t b) {
-    return b & 0x1F;
-}
-
-extern inline int twoBitsToDecimal(const bool a, const bool b) {
-    return (a << 1) | b;
 }

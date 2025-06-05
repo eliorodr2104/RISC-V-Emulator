@@ -7,11 +7,16 @@
 #include <stdlib.h>
 
 typedef struct {
-    uint32_t pc;
+    int32_t pc;
 
 } Cpu;
 
 Cpu* newCpu();
+
+void runCpuFull(Cpu* cpu);
+void runCpuStepByStep(Cpu* cpu);
+int executeSingleStep(Cpu* cpu, bool interactive);
+
 void runCpu(Cpu* cpu);
 
 #endif //CPU_H

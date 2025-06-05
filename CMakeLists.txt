@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.30)
 project(RISC_V C)
 
 set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_FLAGS_RELEASE "-O3 -std=c2x")
 
 add_executable(RISC_V src/main.c
         src/include/alu.h

@@ -7,8 +7,59 @@
 #include "tools.h"
 
 uint32_t instructions[MAX_INSTRUCTIONS] = {
+
+    // === SETUP INIZIALE ===
+    0x00A00293,  // 0:  addi t0, zero, 10
+    0x00500313,  // 4:  addi t1, zero, 5
+    0x00300393,  // 8:  addi t2, zero, 3
+
+    // === TEST ARITMETICA TIPO-R ===
+    0x006282B3,  // 12: add  t0, t0, t1
+    0x407282B3,  // 16: sub  t0, t0, t2
+    0x007312B3,  // 20: sll  t0, t1, t2
+    0x407352B3,  // 24: sra  t0, t1, t2
+    0x007352B3,  // 28: srl  t0, t1, t2
+
+    // === TEST ARITMETICA TIPO-I ===
+    0x00A28293,  // 32: addi t0, t0, 10          ; t0 = 0 + 10 = 10
+    0x00329293,  // 36: slli t0, t0, 3           ; t0 = 10 << 3 = 80
+    0x0032D293,  // 40: srai t0, t0, 3           ; t0 = 80 >>> 3 = 10
+    0x0032D293,  // 44: srli t0, t0, 3           ; t0 = 10 >> 3 = 1
+
+    // === TEST LOGICA ===
+    0xFF000393,  // 48: addi t2, zero, -16       ; t2 = -16 (sign extended)
+    // 1111 1111 0001 0000 0000 0011 1001 0011
+
+    0x0072F2B3,  // 52: and  t0, t0, t2          ; t0 = 1 & 0xFF0 = 0
+    0x0072E2B3,  // 56: or   t0, t0, t2          ; t0 = 0 | 0xFF0 = 0xFF0
+    0x0072C2B3,  // 60: xor  t0, t0, t2          ; t0 = 0xFF0 ^ 0xFF0 = 0
+    0xFFF2C293,  // 64: xori t0, t0, -1          ; t0 = 0 ^ 0xFFF = 0xFFF
+
+    // === SETUP PER JALR ===
+    0x05000313,  // 68: addi t1, zero, 80        ; t1 = 80 (indirizzo di ritorno)
+    0x00C00393,  // 72: addi t2, zero, 12        ; t2 = 12 (offset)
+
+    // === TEST JALR ===
+    0x00C300E7,  // 76: jalr ra, t1, 12          ; salta a 80+12=92, salva 80 in ra
+
+    // === CODICE DOPO IL SALTO (PC=80) ===
+    0x01400293,  // 80: addi t0, zero, 20        ; t0 = 20
+    0x00500313,  // 84: addi t1, zero, 5         ; t1 = 5
+    0x006282B3,  // 88: add  t0, t0, t1          ; t0 = 20 + 5 = 25
+
+    // === PUNTO DI DESTINAZIONE JALR (PC=92) ===
+    0x00A00393,  // 92: addi t2, zero, 10        ; t2 = 10
+    0x007282B3,  // 96: add  t0, t0, t2          ; t0 = 25 + 10 = 35
+
+    // === RITORNO USANDO JALR ===
+    0x00008067,  // 100: jalr zero, ra, 0        ; salta al return address (80)
+
+    // === FINE TEST ===
+    0x00000033,  // 104: add zero, zero, zero    ; NOP per terminare
+
+    //0x004280E7, // jalr x1, x5, 4
     // 0xFFF34293  // xori t0, t1, -1
-       0x40135293  // srai t0, t1, 1
+    // 0x40135293  // srai t0, t1, 1
     // 0x00135293  // srli t0, t1, 1
     // 0x00131293  // slli t0, t1, 1
     // 0x407352B3  // sra  t0, t1, t2
@@ -24,9 +75,11 @@ uint32_t fetchInstruction(Cpu* cpu) {
 
     if (!cpu) return 0;
 
-    if (cpu->pc >= MAX_INSTRUCTIONS) return 0;
+    const uint32_t instructionIndex = cpu->pc / 4;
 
-    return instructions[cpu->pc];
+    if (instructionIndex >= MAX_INSTRUCTIONS) return 0;
+
+    return instructions[instructionIndex];
 }
 
 // Decodifica istruzione RISC-V
@@ -43,6 +96,7 @@ DecodedInstruction decodeInstruction(const uint32_t instruction) {
     // Decodifica immediato basato sull'opcode (tipo di istruzione)
     switch (decoded.opcode) {
             // Tipo I (es. ADDI, LW)
+        case 0x67:
         case 0x13:
             // LOAD
         case 0x03:
@@ -60,16 +114,16 @@ DecodedInstruction decodeInstruction(const uint32_t instruction) {
             break;
 
             // Tipo B
-        case 0x67:
-            {
-                const uint32_t imm_12   = extractBits(instruction, 31, 31);
-                const uint32_t imm_11   = extractBits(instruction, 7, 7);
-                const uint32_t imm_10_5 = extractBits(instruction, 25, 30);
-                const uint32_t imm_4_1  = extractBits(instruction, 8, 11);
-                const uint32_t imm_b    = (imm_12 << 12) | (imm_11 << 11) | (imm_10_5 << 5) | (imm_4_1 << 1);
-                decoded.immediate       = signExtend(imm_b, 13);
-            }
-            break;
+        //case 0x67:
+        //    {
+        //        const uint32_t imm_12   = extractBits(instruction, 31, 31);
+        //        const uint32_t imm_11   = extractBits(instruction, 7, 7);
+        //        const uint32_t imm_10_5 = extractBits(instruction, 25, 30);
+        //        const uint32_t imm_4_1  = extractBits(instruction, 8, 11);
+        //        const uint32_t imm_b    = (imm_12 << 12) | (imm_11 << 11) | (imm_10_5 << 5) | (imm_4_1 << 1);
+        //        decoded.immediate       = signExtend(imm_b, 13);
+        //    }
+        //    break;
 
             // Tipo U
         case 0x37:

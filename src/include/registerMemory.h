@@ -8,7 +8,13 @@
 
 extern int32_t registers[32];
 
-int32_t getValueRegister(uint32_t registerNumber);
-bool writeRegister(uint32_t registerNumber, uint32_t value);
+static int32_t getValueRegister(const uint32_t registerNumber) {
+    return (registerNumber >= 32 ? 0 : registers[registerNumber]);
+}
+
+static bool writeRegister(const uint32_t registerNumber, const int32_t value) {
+    if (registerNumber == 0) return false;
+    return registerNumber < 32 ? (registers[registerNumber] = value, true) : false;
+}
 
 #endif //REGISTERMEMORY_H

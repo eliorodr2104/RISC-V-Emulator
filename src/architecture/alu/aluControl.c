@@ -39,6 +39,11 @@ AluOp getAluControl(const uint8_t aluOp, const uint8_t funct3, const uint8_t fun
 
             }
 
+        // Type-I -> jalr
+        case 0x67:
+            if (funct3 == 0) return ALU_ADD;
+
+
         default:
             return ALU_UNKNOWN;
     }

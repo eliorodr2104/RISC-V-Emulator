@@ -1,20 +1,40 @@
-#include "include/cpu.h"
+#include <stdio.h>
 
-void initWord(
-    bool word[32],
-    const int32_t value
-) {
-
-    for (int i = 0; i < 32; i++) {
-        word[31 - i] = (value >> i) & 1;
-    }
-}
+#include "tui.h"
+#include "cpu.h"
 
 int main(void) {
+    headerProgram();
 
     Cpu* cpu = newCpu();
 
-    runCpu(cpu);
+    userChoices();
 
+    char choice[3];
+
+    if (fgets(choice, sizeof(choice), stdin) != NULL) {
+
+        switch(choice[0]) {
+            case '1':
+                printf("\n Mode: Full execution\n");
+                printf("═══════════════════════════════════════════════════════════════\n");
+                runCpuFull(cpu);
+                break;
+
+            case '2':
+                runCpuStepByStep(cpu);
+                break;
+
+            case '3':
+                printf("\nExit\n");
+                break;
+
+            default:
+                printf("\nError\n");
+                break;
+        }
+    }
+
+    free(cpu);
     return 0;
 }

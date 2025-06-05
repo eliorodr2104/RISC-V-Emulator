@@ -12,7 +12,7 @@ typedef struct {
 } AluResult;
 
 typedef struct {
-    uint32_t result;
+    int32_t result;
     bool zero;
     bool overflow;
 } Alu32BitResult;
@@ -33,7 +33,12 @@ Alu32BitResult alu32bit(
     uint8_t operation
 );
 
-extern inline int bitsToShiftAmount(uint32_t b);
-extern inline int twoBitsToDecimal(bool a, bool b);
+static int bitsToShiftAmount(const int32_t b) {
+    return b & 0x1F;
+}
+
+static int twoBitsToDecimal(const bool a, const bool b) {
+    return (a << 1) | b;
+}
 
 #endif //ALU_H
