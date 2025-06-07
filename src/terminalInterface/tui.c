@@ -8,6 +8,7 @@
 #include "instructionMemory.h"
 #include "registerMemory.h"
 #include "tools.h"
+#include  "ncurses.h"
 
 const char* register_names[32] = {
     "zero", "ra",  "sp",  "gp",  "tp",  "t0",  "t1",  "t2",
@@ -124,17 +125,22 @@ void printInstructionStatus(const DecodedInstruction decoded, const int32_t inpu
 }
 
 void printProgramWithCurrentInstruction(
+    WINDOW* winProg,
+    WINDOW* winRegs,
     const int32_t input1,
     const int32_t input2,
     const int32_t result,
     const int32_t pc
 ) {
 
-    printf("\n══════════════════════════════════════════\n");
-    printf("         PROGRAM EXECUTION STATUS\n"           );
-    printf("══════════════════════════════════════════\n\n");
+    // Header definition
+    werase(winProg);
+    box(winProg, 0, 0);
+    wattron(winProg, COLOR_PAIR(1) | A_BOLD);
+    mvwprintw(winProg, 0, 2, " PROGRAM EXECUTION STATUS ");
+    wattroff(winProg, COLOR_PAIR(1) | A_BOLD);
 
-    // Stampa tutto il programma
+    // Print all instructions
     for (int i = 0; i < MAX_INSTRUCTIONS; i++) {
         const int address                       = i * 4;
         const DecodedInstruction currentDecoded = decodeInstruction(instructions[i]);
@@ -142,86 +148,260 @@ void printProgramWithCurrentInstruction(
         char instrStr[100];
         formatInstruction(currentDecoded, instrStr, sizeof(instrStr));
 
-        // Indica l'istruzione corrente con una freccia
+        // Calc index, with overflow stop prints instructions
+        const int row = 1 + i;
+        if (row >= getmaxy(winProg) - 1) break;
+
+
         if (address == pc) {
-            printf(" -> \033[1;33m0x%08X: %-30s\033[0m", address, instrStr);
+
+            // Current instruction with arrow and color background
+            wattron(winProg, COLOR_PAIR(3) | A_BOLD);
+            mvwprintw(winProg, row, 2, "-> 0x%08X: %-30s", address, instrStr);
+            wattroff(winProg, COLOR_PAIR(3) | A_BOLD);
+
+            // Print comment
+            wattron(winProg, COLOR_PAIR(4));
+            int colComment = 2 + 4 + 10 + 2 + 30;
+
             switch (currentDecoded.opcode) {
-                case 0x33: // R-type (add, sub, etc.)
-                    if (currentDecoded.funct3 == 0x0 && currentDecoded.funct7Bit30 == 0x00) { // ADD
-                        printf("// 0x%08X + 0x%08X = 0x%08X", input1, input2, result);
 
-                    } else if (currentDecoded.funct3 == 0x0 && currentDecoded.funct7Bit30 == 0x20) { // SUB
-                        printf("// 0x%08X - 0x%08X = 0x%08X", input1, input2, result);
+                // Instruction R-type
+                case 0x33:
 
-                    } else if (currentDecoded.funct3 == 0x7) { // AND
-                        printf("// 0x%08X & 0x%08X = 0x%08X", input1, input2, result);
+                    switch (currentDecoded.funct3) {
 
-                    } else if (currentDecoded.funct3 == 0x6) { // OR
-                        printf("// 0x%08X | 0x%08X = 0x%08X", input1, input2, result);
+                        // Instruction ADD or SUB
+                        case 0x0:
 
-                    } else if (currentDecoded.funct3 == 0x4) { // XOR
-                        printf("// 0x%08X ^ 0x%08X = 0x%08X", input1, input2, result);
+                            // Instruction ADD
+                            if (!currentDecoded.funct7Bit30) {
+                                mvwprintw(
+                                    winProg,
+                                    row,
+                                    colComment,
+                                    "// add: 0x%08X + 0x%08X = 0x%08X",
+                                    input1,
+                                    input2,
+                                    result
+                                );
 
-                    } else if (currentDecoded.funct3 == 0x1) { // SLL
-                        printf("// 0x%08X << %d = 0x%08X", input1, input2 & 0x1F, result);
+                            // Instruction SUB
+                            } else {
+                                mvwprintw(
+                                    winProg,
+                                    row,
+                                    colComment,
+                                    "// sub: 0x%08X - 0x%08X = 0x%08X",
+                                    input1,
+                                    input2,
+                                    result
+                                );
 
-                    } else if (currentDecoded.funct3 == 0x5 && currentDecoded.funct7Bit30 == 0x00) { // SRL
-                        printf("// 0x%08X >> %d = 0x%08X", input1, input2 & 0x1F, result);
+                            }
 
-                    } else if (currentDecoded.funct3 == 0x5 && currentDecoded.funct7Bit30 == 0x20) { // SRA
-                        printf("// 0x%08X >>> %d = 0x%08X", input1, input2 & 0x1F, result);
+                        break;
 
+                        // Instruction SLL "Shift Left Logical"
+                        case 0x1:
+                            mvwprintw(winProg, row, colComment,
+                                      "// sll: 0x%08X << %d = 0x%08X",
+                                      input1, input2 & 0x1F, result);
+
+                        break;
+
+                        // Instruction SLT "Set Less Than"
+                        case 0x2:
+                            mvwprintw(winProg, row, colComment,
+                                      "// slt: 0x%08X < 0x%08X = 0x%08X",
+                                      input1, input2, result);
+
+                        break;
+
+                        // Instruction XOR
+                        case 0x4:
+                            mvwprintw(winProg, row, colComment,
+                                      "// xor: 0x%08X ^ 0x%08X = 0x%08X",
+                                      input1, input2, result);
+
+                        break;
+
+                        // Instruction SRL or SRA
+                        case 0x5:
+
+                            // Instruction SRA
+                            if (currentDecoded.funct7Bit30) {
+                                mvwprintw(winProg, row, colComment,
+                                          "// sra: 0x%08X >>> %d = 0x%08X",
+                                          input1, input2 & 0x1F, result);
+
+                            // Instruction SRL
+                            } else {
+                                mvwprintw(winProg, row, colComment,
+                                          "// srl: 0x%08X >> %d = 0x%08X",
+                                          input1, input2 & 0x1F, result);
+
+                            }
+
+                        break;
+
+                        // Instruction OR
+                        case 0x6:
+                            mvwprintw(winProg, row, colComment,
+                                      "// or:  0x%08X | 0x%08X = 0x%08X",
+                                      input1, input2, result);
+
+                        break;
+
+                        // Instruction AND
+                        case 0x7:
+                            mvwprintw(winProg, row, colComment,
+                                      "// and: 0x%08X & 0x%08X = 0x%08X",
+                                      input1, input2, result);
+
+                        break;
+
+                        default: mvwprintw(winProg, row, colComment, "// op non riconosciuta"); break;
                     }
+
                     break;
 
-                case 0x13: // I-type (addi, etc.)
-                    if (currentDecoded.funct3 == 0x0) { // ADDI
-                        printf("// 0x%08X + %d = 0x%08X", input1, (int16_t)currentDecoded.immediate, result);
-                    } else if (currentDecoded.funct3 == 0x7) { // ANDI
-                        printf("// 0x%08X & 0x%08X = 0x%08X", input1, currentDecoded.immediate, result);
-                    } else if (currentDecoded.funct3 == 0x6) { // ORI
-                        printf("// 0x%08X | 0x%08X = 0x%08X", input1, currentDecoded.immediate, result);
-                    } else if (currentDecoded.funct3 == 0x4) { // XORI
-                        printf("// 0x%08X ^ 0x%08X = 0x%08X", input1, currentDecoded.immediate, result);
+                case 0x67:
+                    mvwprintw(
+                        winProg,
+                        row,
+                        colComment,
+                        "// jalr: ra -> 0x%08X, (rs1=0x%08X + %d)",
+                        pc + 4,
+                        input1,
+                        (int16_t)currentDecoded.immediate
+                    );
+
+                break;
+
+                // Instructions I-Type
+                case 0x13:
+
+                    switch (currentDecoded.funct3) {
+
+                        // Instruction ADDI
+                        case 0x0:
+                            mvwprintw(winProg, row, colComment,
+                                      "// addi: 0x%08X + %d = 0x%08X",
+                                      input1,
+                                      (int16_t)currentDecoded.immediate,
+                                      result);
+
+                        break;
+
+                        // Instruction SLLI
+                        case 0x1:
+                            mvwprintw(winProg, row, colComment,
+                                      "// slli: 0x%08X << %d = 0x%08X",
+                                      input1,
+                                      currentDecoded.immediate,
+                                      result);
+
+                        break;
+
+                        // Instruction XORI
+                        case 0x4:
+                            mvwprintw(winProg, row, colComment,
+                                      "// xori: 0x%08X ^ 0x%08X = 0x%08X",
+                                      input1,
+                                      currentDecoded.immediate,
+                                      result);
+
+                        break;
+
+                        // Instruction SRLI or SRAI
+                        case 0x5:
+
+                            if (currentDecoded.funct7Bit30) {
+                                mvwprintw(winProg, row, colComment,
+                                          "// srai: 0x%08X >>> %d = 0x%08X",
+                                          input1,
+                                          currentDecoded.immediate,
+                                          result);
+
+                            } else {
+                                mvwprintw(winProg, row, colComment,
+                                          "// srli: 0x%08X >> %d = 0x%08X",
+                                          input1,
+                                          currentDecoded.immediate,
+                                          result);
+
+                            }
+
+                        break;
+
+                        // Instruction ORI
+                        case 0x6:
+                            mvwprintw(winProg, row, colComment,
+                                      "// ori:  0x%08X | 0x%08X = 0x%08X",
+                                      input1,
+                                      currentDecoded.immediate,
+                                      result);
+
+                        break;
+
+                        // Instruction ANDI
+                        case 0x7:
+                            mvwprintw(winProg, row, colComment,
+                                      "// andi: 0x%08X & 0x%08X = 0x%08X",
+                                      input1,
+                                      currentDecoded.immediate,
+                                      result);
+
+                        break;
+
+                        default: mvwprintw(winProg, row, colComment, "// op non riconosciuta"); break;
                     }
+
                     break;
 
-                case 0x03: // Load instructions
-                    printf("// MEM[0x%08X] = 0x%08X", input1 + (int16_t)currentDecoded.immediate, result);
-                    break;
+                default: mvwprintw(winProg, row, colComment, "// op non riconosciuta"); break;
 
-                case 0x23: // Store instructions
-                    printf("// MEM[0x%08X] = 0x%08X", input1 + (int16_t)currentDecoded.immediate, input2);
-                    break;
-
-                case 0x63: // Branch instructions
-                    if (result) {
-                        printf("// 0x%08X vs 0x%08X -> BRANCH TAKEN", input1, input2);
-                    } else {
-                        printf("// 0x%08X vs 0x%08X -> BRANCH NOT TAKEN", input1, input2);
-                    }
-                    break;
-
-                default:
-                    printf("// Result: 0x%08X", result);
-                    break;
             }
-            printf("\n");
+
+            wattroff(winProg, COLOR_PAIR(4));
+
         } else {
-            // Istruzioni non correnti senza freccia
-            printf("    0x%08X: %-30s\n", address, instrStr);
+            // All instructions
+            wattron(winProg, COLOR_PAIR(0));
+            mvwprintw(winProg, row, 2, "   0x%08X: %-30s", address, instrStr);
+            wattroff(winProg, COLOR_PAIR(0));
         }
     }
 
-    printf("\n");
+    // Refresh registers windows
+    werase(winRegs);
+    box(winRegs, 0, 0);
+    wattron(winRegs, COLOR_PAIR(1) | A_BOLD);
+    mvwprintw(winRegs, 0, 2, " REGISTER STATE ");
+    wattroff(winRegs, COLOR_PAIR(1) | A_BOLD);
 
-    // Mostra lo stato dei registri più importanti
-    printf("┌─────────────────── REGISTER STATE ───────────────────┐\n");
-    printf("│ ra = 0x%08X  sp = 0x%08X  gp = 0x%08X    │\n",
-           registers[1], registers[2], registers[3]);
-    printf("│ tp = 0x%08X  pc = 0x%08X                     │\n",
-                   registers[4], pc);
-    printf("└──────────────────────────────────────────────────────┘\n");
+
+    wattron(winRegs, COLOR_PAIR(5));
+
+    mvwprintw(winRegs, 1, 2,
+              "ra = 0x%08X  sp = 0x%08X  gp = 0x%08X",
+              registers[1], registers[2], registers[3]);
+
+    mvwprintw(winRegs, 2, 2,
+              "tp = 0x%08X  pc = 0x%08X",
+              registers[4], pc);
+
+    wattroff(winRegs, COLOR_PAIR(5));
+
+    // Refresh instructions windows
+    wnoutrefresh(winProg);
+
+    // Refresh registers windows
+    wnoutrefresh(winRegs);
+
+    // Update all windows
+    doupdate();
 
 }
 
@@ -285,7 +465,6 @@ void printDecodedInstruction(uint32_t instruction, DecodedInstruction decoded) {
     printf("===========================\n");
 }
 
-// Versione alternativa più compatta
 void printRegisterTableCompact() {
     printf("RV32I Register Values:\n");
     printf("----------------------\n");
@@ -297,13 +476,12 @@ void printRegisterTableCompact() {
     printf("\n");
 }
 
-// Funzione per mostrare solo i registri modificati
 void printNonZeroRegisters() {
     printf("\n  Registri modificati:\n");
     printf("─────────────────────────\n");
 
     int found = 0;
-    for (int i = 1; i < 32; i++) { // Salta x0
+    for (int i = 1; i < 32; i++) { // Jump x0
         if (registers[i] != 0) {
             printf(" x%-2d (%-4s): 0x%08X (%d)\n",
                    i, register_names[i], registers[i], registers[i]);

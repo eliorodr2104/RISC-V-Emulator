@@ -6,6 +6,7 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "alu.h"
@@ -24,25 +25,39 @@ Cpu* newCpu() {
     return cpu;
 }
 
-void runCpuFull(Cpu* cpu) {
+void runCpuFull(
+    WINDOW* winProg,
+    WINDOW* winRegs,
+    Cpu* cpu
+) {
+
     while (cpu->pc < SIZE_INSTRUCTIONS) {
-        executeSingleStep(cpu, 0);
+        executeSingleStep(winProg, winRegs, cpu, 0);
     }
 
     // Print the final register table
     printFinalRegisterTable();
 }
 
-void runCpuStepByStep(Cpu* cpu) {
+void runCpuStepByStep(
+    WINDOW* winProg,
+    WINDOW* winRegs,
+    Cpu* cpu
+) {
     while (cpu->pc < SIZE_INSTRUCTIONS) {
-        if (!executeSingleStep(cpu, 1)) break;
+        if (!executeSingleStep(winProg, winRegs, cpu, 1)) break;
     }
 
     // Print the final register table
     printFinalRegisterTable();
 }
 
-int executeSingleStep(Cpu* cpu, const bool interactive) {
+int executeSingleStep(
+    WINDOW* winProg,
+    WINDOW* winRegs,
+    Cpu* cpu,
+    const bool interactive
+) {
     int32_t nextPc    = cpu->pc + 4;
     uint8_t operation = 0;
 
@@ -64,7 +79,7 @@ int executeSingleStep(Cpu* cpu, const bool interactive) {
 
     //printInstructionStatus(decodedInstruction, firstRegisterValue, secondOperand, result.result, cpu->pc);
 
-    printProgramWithCurrentInstruction(firstRegisterValue, secondOperand, result.result, cpu->pc);
+    printProgramWithCurrentInstruction(winProg, winRegs, firstRegisterValue, secondOperand, result.result, cpu->pc);
     //const DecodedInstruction currentDecoded,
     //                                    const int32_t input1, const int32_t input2, const int32_t result, const int32_t pc) {
 
@@ -88,32 +103,8 @@ int executeSingleStep(Cpu* cpu, const bool interactive) {
     cpu->pc = nextPc;
 
     if (interactive) {
-        commandList();
-
-        char input[10]; // aumentiamo un po' la dimensione
-        while (1) {
-            printf("Enter command: ");
-            if (fgets(input, sizeof(input), stdin) == NULL) {
-                break;
-            }
-
-            input[strcspn(input, "\n")] = '\0';
-
-            const char cmd = tolower(input[0]);
-
-            if (cmd == 'q') return 0;
-
-            if (cmd == 'r') {
-                printf("\n");
-                printRegisterTable();
-                printf("\nPress Enter to continue...\n");
-
-                int c;
-                while ((c = getchar()) != '\n' && c != EOF);
-            }
-
-            break;
-        }
+        const int ch = getch();
+        if (ch == 'q') return 0;
 
     }
 

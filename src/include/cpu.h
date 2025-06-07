@@ -4,7 +4,7 @@
 
 #ifndef CPU_H
 #define CPU_H
-#include <stdlib.h>
+#include <ncurses.h>
 
 typedef struct {
     int32_t pc;
@@ -13,9 +13,24 @@ typedef struct {
 
 Cpu* newCpu();
 
-void runCpuFull(Cpu* cpu);
-void runCpuStepByStep(Cpu* cpu);
-int executeSingleStep(Cpu* cpu, bool interactive);
+void runCpuFull(
+    WINDOW* winProg,
+    WINDOW* winRegs,
+    Cpu* cpu
+);
+
+void runCpuStepByStep(
+    WINDOW* winProg,
+    WINDOW* winRegs,
+    Cpu* cpu
+);
+
+int executeSingleStep(
+    WINDOW* winProg,
+    WINDOW* winRegs,
+    Cpu* cpu,
+    bool interactive
+);
 
 void runCpu(Cpu* cpu);
 
