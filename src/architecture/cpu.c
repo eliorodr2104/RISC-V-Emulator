@@ -14,7 +14,7 @@
 #include "controlUnit.h"
 #include "instructionMemory.h"
 #include "registerMemory.h"
-#include "tui.h"
+#include "../include/tui/cpu/tuiCpu.h"
 
 Cpu* newCpu() {
     Cpu* cpu = malloc(sizeof(Cpu));

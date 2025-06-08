@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 #include "tools.h"
-#include "tui.h"
+#include "../../include/tui/cpu/tuiCpu.h"
 
 AluResult alu1bit(
     bool a,
