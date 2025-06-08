@@ -32,7 +32,7 @@ void runCpuFull(
 ) {
 
     while (cpu->pc < SIZE_INSTRUCTIONS) {
-        executeSingleStep(winProg, winRegs, cpu, 0);
+        executeSingleStep(winProg, winRegs, winRegs, cpu, 0);
     }
 
 }
@@ -40,10 +40,11 @@ void runCpuFull(
 void runCpuStepByStep(
     WINDOW* winProg,
     WINDOW* winRegs,
+    WINDOW* winStatus,
     Cpu* cpu
 ) {
     while (cpu->pc < SIZE_INSTRUCTIONS) {
-        if (!executeSingleStep(winProg, winRegs, cpu, 1)) break;
+        if (!executeSingleStep(winProg, winRegs, winStatus, cpu, 1)) break;
     }
 
 }
@@ -51,6 +52,7 @@ void runCpuStepByStep(
 int executeSingleStep(
     WINDOW* winProg,
     WINDOW* winRegs,
+    WINDOW* winStatus,
     Cpu* cpu,
     const bool interactive
 ) {
@@ -73,12 +75,9 @@ int executeSingleStep(
 
     const Alu32BitResult result = alu32bit(firstRegisterValue, secondOperand, 0, operation);
 
-    //printInstructionStatus(decodedInstruction, firstRegisterValue, secondOperand, result.result, cpu->pc);
-
-    printProgramWithCurrentInstruction(winProg, winRegs, firstRegisterValue, secondOperand, result.result, cpu->pc);
-    //const DecodedInstruction currentDecoded,
-    //                                    const int32_t input1, const int32_t input2, const int32_t result, const int32_t pc) {
-
+    if (printProgramWithCurrentInstruction(winProg, winRegs, winStatus, firstRegisterValue, secondOperand, result.result, cpu->pc)) {
+        return 0;
+    }
 
     // Esecuzione per JALR
     if (decodedInstruction.opcode == 0x67 && decodedInstruction.funct3 == 0x0) {
@@ -98,11 +97,11 @@ int executeSingleStep(
 
     cpu->pc = nextPc;
 
-    if (interactive) {
-        const int ch = getch();
-        if (ch == 'q') return 0;
+    //if (interactive) {
+    //    const int ch = getch();
+    //    if (ch == 'q' || ch == 'Q') return 0;
 
-    }
+    //}
 
     return 1;
 }

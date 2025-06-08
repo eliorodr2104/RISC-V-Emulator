@@ -12,6 +12,7 @@
 void userChoices(
     WINDOW* winProg,
     WINDOW* winRegs,
+    WINDOW* winStatus,
     Cpu* cpu
 );
 

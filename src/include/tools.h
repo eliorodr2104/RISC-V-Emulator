@@ -5,6 +5,7 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
+#include "aluControl.h"
 #include "instructionMemory.h"
 
 static bool getBit(const uint32_t x, const int i) {
@@ -28,5 +29,7 @@ static int32_t signExtend(const uint32_t value, const int bits) {
 
 void formatInstruction(DecodedInstruction decoded, char* buffer, size_t size);
 const char* getInstructionName(uint8_t opcode, uint8_t funct3, uint8_t funct7Bit30);
+
+AluOp getInstructionEnum(uint8_t opcode, uint8_t funct3, uint8_t funct7Bit30);
 
 #endif //TOOLS_H

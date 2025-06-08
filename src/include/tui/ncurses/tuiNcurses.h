@@ -10,7 +10,18 @@
 // ########################
 // # Ncurses functions    #
 // ########################
-void initNcurses(WINDOW* winRegs, WINDOW* winProg);
-void closeNcurses(WINDOW* winRegs, WINDOW* winProg);
+void initNcurses(
+    WINDOW** winRegs,
+    WINDOW** winProg,
+    WINDOW** winStatus
+);
+
+void closeNcurses(
+    WINDOW** winRegs,
+    WINDOW** winProg,
+    WINDOW** winStatus
+);
+
+void mvwprintwWrap(WINDOW *win, int starty, int startx, const char *str);
 
 #endif //TUINCURSES_H

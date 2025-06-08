@@ -9,12 +9,13 @@ int main(void) {
 
     WINDOW* winProg = nullptr;
     WINDOW* winRegs = nullptr;
+    WINDOW* winStatus = nullptr;
 
-    initNcurses(winRegs, winProg);
+    initNcurses(&winRegs, &winProg, &winStatus);
 
-    userChoices(winProg, winRegs, cpu);
+    userChoices(winProg, winRegs, winStatus, cpu);
 
-    closeNcurses(winRegs, winProg);
+    closeNcurses(&winRegs, &winProg, &winStatus);
 
     free(cpu);
     return 0;

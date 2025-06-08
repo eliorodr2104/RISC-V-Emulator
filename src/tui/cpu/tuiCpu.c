@@ -2,14 +2,16 @@
 // Created by Eliomar Alejandro Rodriguez Ferrer on 02/06/25.
 //
 
-#include <locale.h>
-#include <stdint.h>
+#include "tuiCpu.h"
+
 #include <stdlib.h>
 
+#include "aluControl.h"
 #include "instructionMemory.h"
 #include "registerMemory.h"
 #include "tools.h"
 #include  "ncurses.h"
+#include "tuiNcurses.h"
 
 const char* register_names[32] = {
     "zero", "ra",  "sp",  "gp",  "tp",  "t0",  "t1",  "t2",
@@ -29,7 +31,6 @@ void printRegisterTable(
     // Refresh registers windows
     werase(winRegs);
     box(winRegs, 0, 0);
-
 
     wattron(winRegs, COLOR_PAIR(1) | A_BOLD);
     mvwprintw(winRegs, 0, 2, " REGISTER STATE ");
@@ -62,19 +63,19 @@ void printRegisterTable(
         row++;
     }
 
-    // Refresh registers windows
-    wnoutrefresh(winRegs);
-
 }
 
-void printProgramWithCurrentInstruction(
+bool printProgramWithCurrentInstruction(
     WINDOW* winProg,
     WINDOW* winRegs,
+    WINDOW* winStatus,
     const int32_t input1,
     const int32_t input2,
     const int32_t result,
     const int32_t pc
 ) {
+    int step = 0;
+    DecodedInstruction usageInstruction = {};
 
     // Header definition
     werase(winProg);
@@ -97,6 +98,7 @@ void printProgramWithCurrentInstruction(
 
 
         if (address == pc) {
+            usageInstruction = currentDecoded;
 
             // Current instruction with arrow and color background
             wattron(winProg, COLOR_PAIR(3) | A_BOLD);
@@ -105,21 +107,19 @@ void printProgramWithCurrentInstruction(
 
             // Print comment
             wattron(winProg, COLOR_PAIR(4));
-            int colComment = 2 + 4 + 10 + 2 + 30;
+            const int colComment = 2 + 4 + 10 + 2 + 30;
 
+            const AluOp aluOp = getInstructionEnum(currentDecoded.opcode, currentDecoded.funct3, currentDecoded.funct7Bit30);
             switch (currentDecoded.opcode) {
 
                 // Instruction R-type
                 case 0x33:
 
-                    switch (currentDecoded.funct3) {
+                    switch (aluOp) {
 
-                        // Instruction ADD or SUB
-                        case 0x0:
-
-                            // Instruction ADD
-                            if (!currentDecoded.funct7Bit30) {
-                                mvwprintw(
+                        // Instruction ADD
+                        case ALU_ADD:
+                            mvwprintw(
                                     winProg,
                                     row,
                                     colComment,
@@ -129,9 +129,11 @@ void printProgramWithCurrentInstruction(
                                     result
                                 );
 
-                            // Instruction SUB
-                            } else {
-                                mvwprintw(
+                        break;
+
+                        // Instruction SUB
+                        case ALU_SUB:
+                            mvwprintw(
                                     winProg,
                                     row,
                                     colComment,
@@ -141,12 +143,10 @@ void printProgramWithCurrentInstruction(
                                     result
                                 );
 
-                            }
-
                         break;
 
                         // Instruction SLL "Shift Left Logical"
-                        case 0x1:
+                        case ALU_SLL:
                             mvwprintw(winProg, row, colComment,
                                       "// sll: 0x%08X << %d = 0x%08X",
                                       input1, input2 & 0x1F, result);
@@ -154,7 +154,7 @@ void printProgramWithCurrentInstruction(
                         break;
 
                         // Instruction SLT "Set Less Than"
-                        case 0x2:
+                        case ALU_SLT:
                             mvwprintw(winProg, row, colComment,
                                       "// slt: 0x%08X < 0x%08X = 0x%08X",
                                       input1, input2, result);
@@ -162,34 +162,31 @@ void printProgramWithCurrentInstruction(
                         break;
 
                         // Instruction XOR
-                        case 0x4:
+                        case ALU_XOR:
                             mvwprintw(winProg, row, colComment,
                                       "// xor: 0x%08X ^ 0x%08X = 0x%08X",
                                       input1, input2, result);
 
                         break;
 
-                        // Instruction SRL or SRA
-                        case 0x5:
-
-                            // Instruction SRA
-                            if (currentDecoded.funct7Bit30) {
-                                mvwprintw(winProg, row, colComment,
+                        // // Instruction SRA
+                        case ALU_SRA:
+                            mvwprintw(winProg, row, colComment,
                                           "// sra: 0x%08X >>> %d = 0x%08X",
                                           input1, input2 & 0x1F, result);
 
-                            // Instruction SRL
-                            } else {
-                                mvwprintw(winProg, row, colComment,
+                        break;
+
+                        // Instruction SRL
+                        case ALU_SRL:
+                            mvwprintw(winProg, row, colComment,
                                           "// srl: 0x%08X >> %d = 0x%08X",
                                           input1, input2 & 0x1F, result);
-
-                            }
 
                         break;
 
                         // Instruction OR
-                        case 0x6:
+                        case ALU_OR:
                             mvwprintw(winProg, row, colComment,
                                       "// or:  0x%08X | 0x%08X = 0x%08X",
                                       input1, input2, result);
@@ -197,7 +194,7 @@ void printProgramWithCurrentInstruction(
                         break;
 
                         // Instruction AND
-                        case 0x7:
+                        case ALU_AND:
                             mvwprintw(winProg, row, colComment,
                                       "// and: 0x%08X & 0x%08X = 0x%08X",
                                       input1, input2, result);
@@ -225,10 +222,10 @@ void printProgramWithCurrentInstruction(
                 // Instructions I-Type
                 case 0x13:
 
-                    switch (currentDecoded.funct3) {
+                    switch (aluOp) {
 
                         // Instruction ADDI
-                        case 0x0:
+                        case ALU_ADDI:
                             mvwprintw(winProg, row, colComment,
                                       "// addi: 0x%08X + %d = 0x%08X",
                                       input1,
@@ -238,7 +235,7 @@ void printProgramWithCurrentInstruction(
                         break;
 
                         // Instruction SLLI
-                        case 0x1:
+                        case ALU_SLLI:
                             mvwprintw(winProg, row, colComment,
                                       "// slli: 0x%08X << %d = 0x%08X",
                                       input1,
@@ -248,7 +245,7 @@ void printProgramWithCurrentInstruction(
                         break;
 
                         // Instruction XORI
-                        case 0x4:
+                        case ALU_XORI:
                             mvwprintw(winProg, row, colComment,
                                       "// xori: 0x%08X ^ 0x%08X = 0x%08X",
                                       input1,
@@ -257,29 +254,29 @@ void printProgramWithCurrentInstruction(
 
                         break;
 
-                        // Instruction SRLI or SRAI
-                        case 0x5:
+                        // Instruction SRAI
+                        case ALU_SRAI:
 
-                            if (currentDecoded.funct7Bit30) {
-                                mvwprintw(winProg, row, colComment,
+                            mvwprintw(winProg, row, colComment,
                                           "// srai: 0x%08X >>> %d = 0x%08X",
                                           input1,
                                           currentDecoded.immediate,
                                           result);
 
-                            } else {
-                                mvwprintw(winProg, row, colComment,
+                        break;
+
+                        // Instruction SRLI
+                        case ALU_SRLI:
+                            mvwprintw(winProg, row, colComment,
                                           "// srli: 0x%08X >> %d = 0x%08X",
                                           input1,
                                           currentDecoded.immediate,
                                           result);
 
-                            }
-
                         break;
 
                         // Instruction ORI
-                        case 0x6:
+                        case ALU_ORI:
                             mvwprintw(winProg, row, colComment,
                                       "// ori:  0x%08X | 0x%08X = 0x%08X",
                                       input1,
@@ -289,7 +286,7 @@ void printProgramWithCurrentInstruction(
                         break;
 
                         // Instruction ANDI
-                        case 0x7:
+                        case ALU_ANDI:
                             mvwprintw(winProg, row, colComment,
                                       "// andi: 0x%08X & 0x%08X = 0x%08X",
                                       input1,
@@ -317,12 +314,111 @@ void printProgramWithCurrentInstruction(
         }
     }
 
-    printRegisterTable(winRegs);
-
     // Refresh instructions windows
+    printRegisterTable(winRegs);
     wnoutrefresh(winProg);
+    wnoutrefresh(winRegs);
 
-    // Update all windows
-    doupdate();
+    nodelay(winStatus, FALSE);
 
+    bool quitRequested = false;
+    while (1) {
+        drawPipeline(winStatus, usageInstruction, pc, step);
+
+        wnoutrefresh(winStatus);
+        doupdate();
+
+        const int ch = wgetch(winStatus);
+        if (ch == 'q' || ch == 'Q') {
+            quitRequested = true;
+            break;
+
+        }
+
+        if (ch == 10 || ch == 13) break;
+
+
+        step++;
+
+        if (step > 5) break;
+    }
+
+    return quitRequested;
+}
+
+void drawPipeline(
+    WINDOW* winStatus,
+    DecodedInstruction currentDecoded,
+    const int32_t pc,
+    const int step
+
+) {
+
+    werase(winStatus);
+    box(winStatus, 0, 0);
+    wattron(winStatus, COLOR_PAIR(1) | A_BOLD);
+    mvwprintw(winStatus, 0, 2, " RISC-V STATE ");
+    wattroff(winStatus, COLOR_PAIR(1) | A_BOLD);
+
+    if (step == 0) {
+        wattron(winStatus, COLOR_PAIR(3));
+        mvwprintw(winStatus, 4, 8, "0x%08X", pc);
+        wattroff(winStatus, COLOR_PAIR(3));
+
+    } else {
+        mvwprintw(winStatus, 4, 8, "0x%08X", pc);
+
+    }
+
+    mvwprintw(winStatus, 5,  4, "PC");
+    mvwprintw(winStatus, 5, 7,  "------------>");
+
+    mvwaddch(winStatus, 2, 20, ACS_ULCORNER);
+
+    for(int i = 0; i < 14; ++i)
+        mvwaddch(winStatus, 2, 21 + i, ACS_HLINE);
+    mvwaddch(winStatus, 2, 35, ACS_URCORNER);
+
+    mvwprintw(winStatus, 3, 22, "Instruction");
+    mvwprintw(winStatus, 4, 22, "Mem");
+
+    mvwaddch(winStatus, 8, 20, ACS_LLCORNER);
+    for(int i = 0; i < 14; ++i)
+        mvwaddch(winStatus, 8, 21 + i, ACS_HLINE);
+    mvwaddch(winStatus, 8, 35, ACS_LRCORNER);
+
+    for(int y = 3; y <= 7; ++y) {
+        mvwaddch(winStatus, y, 20, ACS_VLINE);
+        mvwaddch(winStatus, y, 35, ACS_VLINE);
+    }
+
+    if (step == 1) {
+        wattron(winStatus, COLOR_PAIR(3));
+        mvwprintw(winStatus, 2, 38, "0x%08X", currentDecoded.rs1);
+        wattroff(winStatus, COLOR_PAIR(3));
+
+    }
+
+    mvwprintw(winStatus, 3, 37,  "------------>");
+
+    if (step == 1) {
+        wattron(winStatus, COLOR_PAIR(3));
+        mvwprintw(winStatus, 6, 38, "0x%08X", currentDecoded.rs2);
+        wattroff(winStatus, COLOR_PAIR(3));
+
+    }
+
+    mvwprintw(winStatus, 7, 37,  "------------>");
+
+    mvwprintw(winStatus, 9, 2, "Explain:");
+
+    switch (step) {
+        case 0: mvwprintwWrap(winStatus, 10, 5, "PC sends address to instruction memory"); break;
+        case 1: mvwprintwWrap(winStatus, 10, 5, "Memory instruction provides the addresses of the registers"); break;
+        case 2: mvwprintw(winStatus, 11, 2, "3. REGISTRI leggono i valori sorgente"); break;
+        case 3: mvwprintw(winStatus, 11, 2, "4. ALU esegue l'operazione ADD sui valori"); break;
+        case 4: mvwprintw(winStatus, 11, 2, "5. Il risultato viene scritto nei REGISTRI (write back)"); break;
+        case 5: mvwprintw(winStatus, 11, 2, "6. Il PC viene aggiornato a PC+4"); break;
+        default: break;
+    }
 }

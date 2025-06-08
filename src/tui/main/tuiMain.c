@@ -10,6 +10,7 @@
 void userChoices(
     WINDOW* winProg,
     WINDOW* winRegs,
+    WINDOW* winStatus,
     Cpu* cpu
 ) {
 
@@ -48,7 +49,7 @@ void userChoices(
         }
         wrefresh(menuWin);
 
-        int c = wgetch(menuWin);
+        const int c = wgetch(menuWin);
         switch (c) {
             case KEY_UP:
                 highlight = (highlight == 0) ? n_choices - 1 : highlight - 1;
@@ -77,14 +78,14 @@ void userChoices(
                 mvwprintw(winRegs, 0, 2, " REGISTER STATE ");
                 wattroff(winRegs, COLOR_PAIR(1) | A_BOLD);
 
-                printProgramWithCurrentInstruction(winProg, winRegs, 0, 0, 0, cpu->pc);
+                //printProgramWithCurrentInstruction(winProg, winRegs, winStatus, 0, 0, 0, cpu->pc);
 
                 if (highlight == 0) {
                     runCpuFull(winProg, winRegs, cpu);
 
 
                 } else if (highlight == 1) {
-                    runCpuStepByStep(winProg, winRegs, cpu);
+                    runCpuStepByStep(winProg, winRegs, winStatus, cpu);
 
                 } else {
                     endwin();

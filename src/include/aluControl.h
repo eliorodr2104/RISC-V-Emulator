@@ -16,6 +16,16 @@ typedef enum {
     ALU_SLL,
     ALU_SRL,
     ALU_SRA,
+
+    ALU_ADDI,
+    ALU_ANDI,
+    ALU_ORI,
+    ALU_XORI,
+    ALU_SLTI,
+    ALU_SLLI,
+    ALU_SRLI,
+    ALU_SRAI,
+
     ALU_UNKNOWN
 } AluOp;
 

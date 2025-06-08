@@ -22,12 +22,14 @@ void runCpuFull(
 void runCpuStepByStep(
     WINDOW* winProg,
     WINDOW* winRegs,
+    WINDOW* winStatus,
     Cpu* cpu
 );
 
 int executeSingleStep(
     WINDOW* winProg,
     WINDOW* winRegs,
+    WINDOW* winStatus,
     Cpu* cpu,
     bool interactive
 );
