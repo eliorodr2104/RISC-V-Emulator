@@ -44,42 +44,49 @@ void userChoices() {
 // # CPU print functions  #
 // ########################
 
-void printRegisterTable() {
-    printf("┌───────────┬──────────┬────────────┬────────────┐\n");
-    printf("│ Registers │   Nome   │    Hex     │    Dec     │\n");
-    printf("├───────────┼──────────┼────────────┼────────────┤\n");
+void printRegisterTable(
+    WINDOW* winRegs
+) {
+
+    // Refresh registers windows
+    werase(winRegs);
+    box(winRegs, 0, 0);
+
+
+    wattron(winRegs, COLOR_PAIR(1) | A_BOLD);
+    mvwprintw(winRegs, 0, 2, " REGISTER STATE ");
+    wattroff(winRegs, COLOR_PAIR(1) | A_BOLD);
+
+    int row = 2;
+
+    constexpr int column = 3;
+
+    wattron  (winRegs, COLOR_WHITE | A_NORMAL);
+    mvwprintw(winRegs, row, column, "╭ Registers │ Value ╮");
+    wattroff (winRegs, COLOR_WHITE | A_NORMAL);
+
+    row += 2;
 
     for (int i = 0; i < 32; i++) {
-        const char* bg = (i % 2 == 0) ? "\033[100m" : "\033[0m"; // sfondo alternato
-        const char* green = (registers[i] != 0) ? "\033[32m" : "";
-        const char* reset = "\033[0m";
 
-        printf("│%s x%-7d  │ %-8s │ %s0x%08X%s%s │ %s%10d%s%s %s│\n",
-               bg, i, register_names[i],
-               green, registers[i], reset, bg,
-               green, registers[i], reset, bg, reset
-        );
+        if (row >= getmaxy(winRegs) - 1) break; // break if the window is full
+
+        // Change color to green if the register is not zero
+        if (registers[i] != 0) {
+            wattron(winRegs, COLOR_PAIR(2) | A_BOLD);
+        }
+
+        mvwprintw(winRegs, row, column, "%-6s     %08X",
+                  register_names[i], registers[i]);
+        wattroff(winRegs, COLOR_PAIR(2) | A_BOLD);
+
+
+        row++;
     }
 
-    printf("└───────────┴──────────┴────────────┴────────────┘\n");
-}
+    // Refresh registers windows
+    wnoutrefresh(winRegs);
 
-void printFinalRegisterTable() {
-    printf("\n");
-    printf("╔════════════════════════════════════════════════╗\n");
-    printf("║              Final State Registers             ║\n");
-    printf("╚════════════════════════════════════════════════╝\n");
-
-    printRegisterTable();
-
-    // Statistiche finali
-    int nonZeroCount = 0;
-    for (int i = 1; i < 32; i++) { // Escludi x0
-        if (registers[i] != 0) nonZeroCount++;
-    }
-
-    printf("\nStats: %d/%d registers modified (%.1f%%)\n",
-           nonZeroCount, 31, (nonZeroCount * 100.0) / 31);
 }
 
 void commandList() {
@@ -374,31 +381,10 @@ void printProgramWithCurrentInstruction(
         }
     }
 
-    // Refresh registers windows
-    werase(winRegs);
-    box(winRegs, 0, 0);
-    wattron(winRegs, COLOR_PAIR(1) | A_BOLD);
-    mvwprintw(winRegs, 0, 2, " REGISTER STATE ");
-    wattroff(winRegs, COLOR_PAIR(1) | A_BOLD);
-
-
-    wattron(winRegs, COLOR_PAIR(5));
-
-    mvwprintw(winRegs, 1, 2,
-              "ra = 0x%08X  sp = 0x%08X  gp = 0x%08X",
-              registers[1], registers[2], registers[3]);
-
-    mvwprintw(winRegs, 2, 2,
-              "tp = 0x%08X  pc = 0x%08X",
-              registers[4], pc);
-
-    wattroff(winRegs, COLOR_PAIR(5));
+    printRegisterTable(winRegs);
 
     // Refresh instructions windows
     wnoutrefresh(winProg);
-
-    // Refresh registers windows
-    wnoutrefresh(winRegs);
 
     // Update all windows
     doupdate();

@@ -1,3 +1,4 @@
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -12,7 +13,9 @@ void userChoicesNcurses(
 );
 
 int main(void) {
-    //headerProgram();
+    Cpu* cpu = newCpu();
+
+    setlocale(LC_ALL, "");
 
     initscr(); // Init screen TUI
     cbreak();
@@ -22,25 +25,30 @@ int main(void) {
 
     if (has_colors()) {
         start_color();
-        init_pair(1, COLOR_WHITE,  COLOR_BLUE);   // pair 1: header / title
+        init_pair(1, COLOR_BLACK,  COLOR_WHITE);  // pair 1: header / title
         init_pair(2, COLOR_BLACK,  COLOR_WHITE);  // pair 2: status bar
         init_pair(3, COLOR_YELLOW, COLOR_BLACK);  // pair 3: current instruction
         init_pair(4, COLOR_GREEN,  COLOR_BLACK);  // pair 4: text / result
         init_pair(5, COLOR_CYAN,   COLOR_BLACK);  // pair 5: all registers
+        init_pair(6, COLOR_WHITE,  COLOR_BLACK);   // Righe alternate (opzionale)
     }
 
-    // 2. Calc dim and create windows
+    // Calc dim and create windows
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
 
-    // (~rows-4) for list instructions and 4 rows for registers
-    const int prog_height = rows - 5;
-    const int prog_width  = cols;
-    constexpr int regs_height = 5;
-    const int regs_width  = cols;
+    const int regsHeight = rows;
+    const int regsWidth  = cols / 3;
 
-    WINDOW* winProg = newwin(prog_height, prog_width, 0,  0);
-    WINDOW* winRegs = newwin(regs_height, regs_width, prog_height, 0);
+    // Divide screen in two columns
+    const int progHeight = rows;
+    const int progWidth  = cols - regsWidth;
+
+    // Left Window
+    WINDOW* winProg = newwin(progHeight, progWidth, 0, 0);
+
+    // Right Window
+    WINDOW* winRegs = newwin(regsHeight, regsWidth, 0, progWidth);
 
     //Draw borders and title default
     wbkgd(winProg, COLOR_PAIR(0));  // background black, text white default
@@ -60,8 +68,6 @@ int main(void) {
     mvwprintw(winRegs, 0, 2, " REGISTER STATE ");
     wattroff(winRegs, COLOR_PAIR(1) | A_BOLD);
     wrefresh(winRegs);
-
-    Cpu* cpu = newCpu();
 
     userChoicesNcurses(winProg, winRegs, cpu);
 

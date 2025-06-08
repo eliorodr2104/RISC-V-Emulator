@@ -18,8 +18,10 @@ void userChoices();
 // ########################
 // # CPU print functions  #
 // ########################
-void printRegisterTable();
-void printFinalRegisterTable();
+void printRegisterTable(
+    WINDOW* winRegs
+);
+
 void commandList();
 
 void printStepProgramCounter(int32_t pc);

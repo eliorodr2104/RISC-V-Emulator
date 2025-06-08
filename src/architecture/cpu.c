@@ -35,8 +35,6 @@ void runCpuFull(
         executeSingleStep(winProg, winRegs, cpu, 0);
     }
 
-    // Print the final register table
-    printFinalRegisterTable();
 }
 
 void runCpuStepByStep(
@@ -48,8 +46,6 @@ void runCpuStepByStep(
         if (!executeSingleStep(winProg, winRegs, cpu, 1)) break;
     }
 
-    // Print the final register table
-    printFinalRegisterTable();
 }
 
 int executeSingleStep(
