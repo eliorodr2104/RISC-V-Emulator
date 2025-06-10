@@ -7,7 +7,6 @@
 #include <stdlib.h>
 
 #include "cpu.h"
-#include "../../include/tui/cpu/tuiCpu.h"
 
 void userChoices(
     WINDOW* winProg,
@@ -18,7 +17,7 @@ void userChoices(
 ) {
 
     Windows* currentWindow = malloc(sizeof *currentWindow);
-    if (!currentWindow) perror("malloc error");
+    if (!currentWindow) { perror("malloc error"); return; }
 
     *currentWindow = PROG_WINDOW;
 
@@ -69,15 +68,13 @@ void userChoices(
 
             case 10:
 
-                //printProgramWithCurrentInstruction(winProg, winRegs, winStatus, 0, 0, 0, cpu->pc);
-
                 if (highlight == 0) {
-                    runCpuFull(winProg, winRegs, cpu);
+                    runCpuFull(winProg, winRegs, winStatus, winCmd, currentWindow, cpu);
 
 
                 } else if (highlight == 1) {
                     commandWindow   (winCmd, *currentWindow);
-                    runCpuStepByStep(winProg, winRegs, winStatus, cpu);
+                    runCpuStepByStep(winProg, winRegs, winStatus, winCmd, currentWindow, cpu);
 
 
                 } else {
@@ -85,6 +82,7 @@ void userChoices(
                     exit(0);
 
                 }
+
                 return;
 
             default:
@@ -103,7 +101,26 @@ void commandWindow(
     werase(winCmd);
     wbkgd(winCmd, COLOR_PAIR(0)); // background black, text white default
 
-    mvwprintw(winCmd, 0, 1, " Enter command: ");
+
+    switch (window) {
+
+        case PROG_WINDOW:
+            mvwprintw(winCmd, 0, 1, " prog ");
+            break;
+
+
+        case REGS_WINDOW:
+            mvwprintw(winCmd, 0, 1, " regs ");
+            break;
+
+
+        case STATUS_WINDOW:
+            mvwprintw(winCmd, 0, 1, " status ");
+            break;
+
+        default: break;
+    }
+
     wrefresh(winCmd);
 
 }

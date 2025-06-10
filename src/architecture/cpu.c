@@ -4,10 +4,7 @@
 
 #include "cpu.h"
 
-#include <ctype.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "alu.h"
 #include "aluControl.h"
@@ -15,6 +12,7 @@
 #include "instructionMemory.h"
 #include "registerMemory.h"
 #include "../include/tui/cpu/tuiCpu.h"
+#include "windows.h"
 
 Cpu* newCpu() {
     Cpu* cpu = malloc(sizeof(Cpu));
@@ -28,31 +26,38 @@ Cpu* newCpu() {
 void runCpuFull(
     WINDOW* winProg,
     WINDOW* winRegs,
+    WINDOW*  winStatus,
+    WINDOW*  winCmd,
+    Windows* window,
     Cpu* cpu
 ) {
 
     while (cpu->pc < SIZE_INSTRUCTIONS) {
-        executeSingleStep(winProg, winRegs, winRegs, cpu, 0);
+        executeSingleStep(winProg, winRegs, winStatus, winCmd, window, cpu, 0);
     }
 
 }
 
 void runCpuStepByStep(
-    WINDOW* winProg,
-    WINDOW* winRegs,
-    WINDOW* winStatus,
+    WINDOW*  winProg,
+    WINDOW*  winRegs,
+    WINDOW*  winStatus,
+    WINDOW*  winCmd,
+    Windows* window,
     Cpu* cpu
 ) {
     while (cpu->pc < SIZE_INSTRUCTIONS) {
-        if (!executeSingleStep(winProg, winRegs, winStatus, cpu, 1)) break;
+        if (!executeSingleStep(winProg, winRegs, winStatus, winCmd, window, cpu, 1)) break;
     }
 
 }
 
 int executeSingleStep(
-    WINDOW* winProg,
-    WINDOW* winRegs,
-    WINDOW* winStatus,
+    WINDOW*  winProg,
+    WINDOW*  winRegs,
+    WINDOW*  winStatus,
+    WINDOW*  winCmd,
+    Windows* window,
     Cpu* cpu,
     const bool interactive
 ) {
@@ -75,7 +80,7 @@ int executeSingleStep(
 
     const Alu32BitResult result = alu32bit(firstRegisterValue, secondOperand, 0, operation);
 
-    if (printProgramWithCurrentInstruction(winProg, winRegs, winStatus, firstRegisterValue, secondOperand, result.result, cpu->pc)) {
+    if (printProgramWithCurrentInstruction(winProg, winRegs, winStatus, winCmd, window, firstRegisterValue, secondOperand, result.result, cpu->pc)) {
         return 0;
     }
 

@@ -4,16 +4,11 @@
 
 #ifndef TUIMAIN_H
 #define TUIMAIN_H
+
+#include <ncurses.h>
+
 #include "cpu.h"
-
-typedef enum {
-
-    PROG_WINDOW,
-    REGS_WINDOW,
-    STATUS_WINDOW,
-    CMD_WINDOW,
-
-} Windows;
+#include "windows.h"
 
 // ########################
 // # Main print functions #

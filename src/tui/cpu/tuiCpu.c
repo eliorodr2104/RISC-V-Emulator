@@ -11,6 +11,7 @@
 #include "registerMemory.h"
 #include "tools.h"
 #include  "ncurses.h"
+#include "tuiMain.h"
 #include "tuiNcurses.h"
 
 const char* register_names[32] = {
@@ -159,6 +160,8 @@ bool printProgramWithCurrentInstruction(
     WINDOW* winProg,
     WINDOW* winRegs,
     WINDOW* winStatus,
+    WINDOW* winCmd,
+    Windows* selectCurrent,
     const int32_t input1,
     const int32_t input2,
     const int32_t result,
@@ -418,25 +421,61 @@ bool printProgramWithCurrentInstruction(
     nodelay(winStatus, FALSE);
 
     bool quitRequested = false;
+    bool continueExecution = false;
     while (1) {
         drawPipeline(winStatus, usageInstruction, pc, step);
+        commandWindow(winCmd, *selectCurrent);
 
         wnoutrefresh(winStatus);
         doupdate();
 
         const int ch = wgetch(winStatus);
+
         if (ch == 'q' || ch == 'Q') {
             quitRequested = true;
             break;
 
         }
 
-        if (ch == 10 || ch == 13) break;
+
+        if (ch == 'e' || ch == 'E') {
+            *selectCurrent = PROG_WINDOW;
+
+        }
+
+        if (ch == 't' || ch == 'T') {
+            *selectCurrent = REGS_WINDOW;
+
+        }
+
+        if (ch == 'r' || ch == 'R') {
+            *selectCurrent = STATUS_WINDOW;
+
+        }
 
 
-        step++;
+        switch (*selectCurrent) {
 
-        if (step > 5) break;
+            case PROG_WINDOW:
+
+                // Enter
+                if (ch == 10 || ch == 13) continueExecution = true;
+
+            break;
+
+
+            case STATUS_WINDOW:
+
+                // Backspace
+                if (ch == ' ') { step++; }
+
+            break;
+
+
+            default: break;
+        }
+
+        if (step > 5 || continueExecution) break;
     }
 
     return quitRequested;

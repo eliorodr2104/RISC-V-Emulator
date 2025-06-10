@@ -20,6 +20,8 @@ bool printProgramWithCurrentInstruction(
     WINDOW* winProg,
     WINDOW* winRegs,
     WINDOW* winStatus,
+    WINDOW* winCmd,
+    Windows* selectCurrent,
     int32_t input1,
     int32_t input2,
     int32_t result,
