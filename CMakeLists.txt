@@ -45,6 +45,10 @@ src/architecture/controlUnit/controlUnit.c
 src/architecture/memory/registerMemory.c
 src/architecture/alu/aluControl.c
 src/architecture/tools.c
+        src/cli-handler/args_handler.c
+        src/include/args_handler.h
+        src/cli-handler/asm_file_parser.c
+        src/cli-handler/asm_file_parser.h
 )
 
 # Define header files
@@ -61,10 +65,16 @@ src/include/aluControl.h
         src/tui/main/tuiMain.c
         src/tui/ncurses/tuiNcurses.c
         src/include/tui/ncurses/tuiNcurses.h
+        src/cli-handler/args_handler.c
+        src/include/args_handler.h
+        src/cli-handler/asm_file_parser.c
+        src/cli-handler/asm_file_parser.h
 )
 
 # Create executable
-add_executable(RISC_V ${SOURCE_FILES} ${HEADER_FILES})
+add_executable(RISC_V ${SOURCE_FILES} ${HEADER_FILES}
+        src/cli-handler/args_handler.c
+        src/include/args_handler.h)
 
 # Include directories
 target_include_directories(RISC_V PRIVATE

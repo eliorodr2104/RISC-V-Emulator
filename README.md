@@ -23,6 +23,7 @@ This emulator is designed to:
 - [ ]  Support for Type-S "save" instructions
 - [ ]  Full support of the ISA RV32I
 - [ ]  Support for memory management
+- [ ]  Cli interface for parsing a .s or binary file 
 
 ## Getting Started
 
@@ -34,6 +35,8 @@ This emulator is designed to:
   - **Linux**: `libncurses-dev`
   - **macOS**: Available through Homebrew
   - **Windows**: PDCurses or Windows port of ncurses
+- RISC-V GCC Toolchain:
+  - **macOS**: `riscv-software-src/riscv`
 
 ### Installation
 
@@ -52,11 +55,15 @@ cd RISC_V_Simulator
 ```bash
 sudo apt-get update
 sudo apt-get install libncurses-dev
+# @TODO add command for riscv gcc toolchain
 ```
 
 **macOS**:
 ```bash
 brew install ncurses
+
+brew tap riscv-software-src/riscv
+brew install riscv-tools
 ```
 
 **Windows**:
