@@ -175,13 +175,27 @@ bool printProgramWithCurrentInstruction(
     wbkgd(winProg, COLOR_PAIR(0)); // background black, text white default
     box(winProg, 0, 0);
 
-    wattron(winProg,  COLOR_PAIR(2) | A_BOLD);
-    mvwprintw(winProg, 0, 2, " E");
-    wattroff(winProg, COLOR_PAIR(2) | A_BOLD);
+    if (*selectCurrent == PROG_WINDOW) {
 
-    wattron(winProg, COLOR_PAIR(1) | A_BOLD);
-    mvwprintw(winProg, 0, 4, "xecution status ");
-    wattroff(winProg, COLOR_PAIR(1) | A_BOLD);
+        wattron(winProg,  COLOR_PAIR(2) | A_BOLD);
+        mvwprintw(winProg, 0, 2, " E");
+        wattroff(winProg, COLOR_PAIR(2) | A_BOLD);
+
+        wattron(winProg, COLOR_PAIR(1) | A_BOLD);
+        mvwprintw(winProg, 0, 4, "xecution status ");
+        wattroff(winProg, COLOR_PAIR(1) | A_BOLD);
+
+    } else {
+
+        wattron(winProg,  COLOR_PAIR(2) | A_DIM);
+        mvwprintw(winProg, 0, 2, " E");
+        wattroff(winProg, COLOR_PAIR(2) | A_DIM);
+
+        wattron(winProg, COLOR_PAIR(1) | A_DIM);
+        mvwprintw(winProg, 0, 4, "xecution status ");
+        wattroff(winProg, COLOR_PAIR(1) | A_DIM);
+
+    }
 
     // Print all instructions
     for (int i = 0; i < MAX_INSTRUCTIONS; i++) {
@@ -459,7 +473,7 @@ bool printProgramWithCurrentInstruction(
             case PROG_WINDOW:
 
                 // Enter
-                if (ch == 10 || ch == 13) continueExecution = true;
+                if (ch == 'j') continueExecution = true;
 
             break;
 

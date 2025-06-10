@@ -92,30 +92,68 @@ void userChoices(
 }
 
 void commandWindow(
-    WINDOW* winCmd,
-    Windows window
+          WINDOW* winCmd,
+    const Windows window
 
 ) {
 
     // Header definition
     werase(winCmd);
     wbkgd(winCmd, COLOR_PAIR(0)); // background black, text white default
+    box(winCmd, 0, 0);
+
+    wattron(winCmd,  COLOR_PAIR(1) | A_BOLD);
+    mvwprintw(winCmd, 0, 2, " Help ");
+    wattroff(winCmd, COLOR_PAIR(1) | A_BOLD);
 
 
     switch (window) {
 
         case PROG_WINDOW:
-            mvwprintw(winCmd, 0, 1, " prog ");
+
+            mvwprintw(winCmd, 1, 2, "<");
+            wattron(winCmd,  COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 3, "q");
+            wattroff(winCmd, COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 4, ":");
+            mvwprintw(winCmd, 1, 5, " Quit>");
+
+            mvwprintw(winCmd, 1, 13, "<");
+            wattron(winCmd,  COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 14, "j");
+            wattroff(winCmd, COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 15, ": ");
+            mvwprintw(winCmd, 1, 17, "Jump>");
+
             break;
 
 
         case REGS_WINDOW:
-            mvwprintw(winCmd, 0, 1, " regs ");
+            mvwprintw(winCmd, 1, 2, "<");
+            wattron(winCmd,  COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 3, "q");
+            wattroff(winCmd, COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 4, ":");
+            mvwprintw(winCmd, 1, 5, " Quit>");
+
             break;
 
 
         case STATUS_WINDOW:
-            mvwprintw(winCmd, 0, 1, " status ");
+            mvwprintw(winCmd, 1, 2, "<");
+            wattron(winCmd,  COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 3, "q");
+            wattroff(winCmd, COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 4, ":");
+            mvwprintw(winCmd, 1, 5, " Quit>");
+
+            mvwprintw(winCmd, 1, 13, "<");
+            wattron(winCmd,  COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 14, "n");
+            wattroff(winCmd, COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 15, ": ");
+            mvwprintw(winCmd, 1, 17, "Next>");
+
             break;
 
         default: break;

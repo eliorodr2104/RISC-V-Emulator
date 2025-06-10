@@ -26,6 +26,8 @@ void initNcurses(
     keypad(stdscr, TRUE);
     curs_set(0);
 
+    init_color(236, 300, 300, 300);
+
     if (has_colors()) {
         start_color();
 
@@ -37,6 +39,8 @@ void initNcurses(
         init_pair(4,            COLOR_YELLOW, COLOR_BLACK);  // pair 4: current instruction
         init_pair(5,            COLOR_GREEN,  COLOR_BLACK);  // pair 5: text / result
         init_pair(6,            COLOR_CYAN,   COLOR_BLACK);  // pair 6: all registers
+
+        init_pair(7,            COLOR_YELLOW, COLOR_BLACK);  // pair 7: Mark letter command
     }
 
     // Calc dim and create windows
@@ -51,15 +55,15 @@ void initNcurses(
     const int progWidth  = cols - regsWidth;
 
     // Left Window
-    *winProg = newwin(progHeight - 1, progWidth, 0, 0);
+    *winProg = newwin(progHeight - 3, progWidth, 0, 0);
 
     // Right Window
     *winRegs = newwin(regsHeight, regsWidth, 0, progWidth);
 
     // Bottom Right Window
-    *winStatus = newwin(regsHeight, regsWidth, regsHeight, progWidth);
+    *winStatus = newwin(regsHeight - 2, regsWidth, regsHeight, progWidth);
 
-    *winCmd = newwin(1, cols, rows - 1, 0);
+    *winCmd = newwin(3, cols, rows - 3, 0);
 }
 
 void closeNcurses(
