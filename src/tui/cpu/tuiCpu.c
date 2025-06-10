@@ -30,10 +30,15 @@ void printRegisterTable(
 
     // Refresh registers windows
     werase(winRegs);
+    wbkgd(winRegs, COLOR_PAIR(0));
     box(winRegs, 0, 0);
 
+    wattron(winRegs,  COLOR_PAIR(2) | A_BOLD);
+    mvwprintw(winRegs, 0, 2, " T");
+    wattroff(winRegs, COLOR_PAIR(2) | A_BOLD);
+
     wattron(winRegs, COLOR_PAIR(1) | A_BOLD);
-    mvwprintw(winRegs, 0, 2, " REGISTER STATE ");
+    mvwprintw(winRegs, 0, 4, "able Registers ");
     wattroff(winRegs, COLOR_PAIR(1) | A_BOLD);
 
     int row = 2;
@@ -65,6 +70,91 @@ void printRegisterTable(
 
 }
 
+
+void drawPipeline(
+          WINDOW* winStatus,
+    const DecodedInstruction currentDecoded,
+    const int32_t pc,
+    const int step
+
+) {
+
+    werase(winStatus);
+    wbkgd(winStatus, COLOR_PAIR(0));
+    box(winStatus, 0, 0);
+
+    wattron(winStatus,  COLOR_PAIR(2) | A_BOLD);
+    mvwprintw(winStatus, 0, 2, " R");
+    wattroff(winStatus, COLOR_PAIR(2) | A_BOLD);
+
+    wattron(winStatus, COLOR_PAIR(1) | A_BOLD);
+    mvwprintw(winStatus, 0, 4, "ISC-V State ");
+    wattroff(winStatus, COLOR_PAIR(1) | A_BOLD);
+
+    if (step == 0) {
+        wattron(winStatus, COLOR_PAIR(4));
+        mvwprintw(winStatus, 4, 8, "0x%08X", pc);
+        wattroff(winStatus, COLOR_PAIR(4));
+
+    } else {
+        mvwprintw(winStatus, 4, 8, "0x%08X", pc);
+
+    }
+
+    mvwprintw(winStatus, 5,  4, "PC");
+    mvwprintw(winStatus, 5, 7,  "------------>");
+
+    mvwaddch(winStatus, 2, 20, ACS_ULCORNER);
+
+    for(int i = 0; i < 14; ++i)
+        mvwaddch(winStatus, 2, 21 + i, ACS_HLINE);
+    mvwaddch(winStatus, 2, 35, ACS_URCORNER);
+
+    mvwprintw(winStatus, 3, 22, "Instruction");
+    mvwprintw(winStatus, 4, 22, "Mem");
+
+    mvwaddch(winStatus, 8, 20, ACS_LLCORNER);
+    for(int i = 0; i < 14; ++i)
+        mvwaddch(winStatus, 8, 21 + i, ACS_HLINE);
+    mvwaddch(winStatus, 8, 35, ACS_LRCORNER);
+
+    for(int y = 3; y <= 7; ++y) {
+        mvwaddch(winStatus, y, 20, ACS_VLINE);
+        mvwaddch(winStatus, y, 35, ACS_VLINE);
+    }
+
+    if (step == 1) {
+        wattron(winStatus, COLOR_PAIR(4));
+        mvwprintw(winStatus, 2, 38, "0x%08X", currentDecoded.rs1);
+        wattroff(winStatus, COLOR_PAIR(4));
+
+    }
+
+    mvwprintw(winStatus, 3, 37,  "------------>");
+    mvwprintw(winStatus, 4, 41,  "rs1");
+
+    if (step == 1) {
+        wattron(winStatus, COLOR_PAIR(4));
+        mvwprintw(winStatus, 6, 38, "0x%08X", currentDecoded.rs2);
+        wattroff(winStatus, COLOR_PAIR(4));
+
+    }
+
+    mvwprintw(winStatus, 7, 37,  "------------>");
+
+    mvwprintw(winStatus, 9, 2, "Explain:");
+
+    switch (step) {
+        case 0: mvwprintwWrap(winStatus, 10, 5, "PC sends address to instruction memory"); break;
+        case 1: mvwprintwWrap(winStatus, 10, 5, "Memory instruction provides the addresses of the registers"); break;
+        case 2: mvwprintw(winStatus, 11, 2, "3. REGISTRI leggono i valori sorgente"); break;
+        case 3: mvwprintw(winStatus, 11, 2, "4. ALU esegue l'operazione ADD sui valori"); break;
+        case 4: mvwprintw(winStatus, 11, 2, "5. Il risultato viene scritto nei REGISTRI (write back)"); break;
+        case 5: mvwprintw(winStatus, 11, 2, "6. Il PC viene aggiornato a PC+4"); break;
+        default: break;
+    }
+}
+
 bool printProgramWithCurrentInstruction(
     WINDOW* winProg,
     WINDOW* winRegs,
@@ -79,9 +169,15 @@ bool printProgramWithCurrentInstruction(
 
     // Header definition
     werase(winProg);
+    wbkgd(winProg, COLOR_PAIR(0)); // background black, text white default
     box(winProg, 0, 0);
+
+    wattron(winProg,  COLOR_PAIR(2) | A_BOLD);
+    mvwprintw(winProg, 0, 2, " E");
+    wattroff(winProg, COLOR_PAIR(2) | A_BOLD);
+
     wattron(winProg, COLOR_PAIR(1) | A_BOLD);
-    mvwprintw(winProg, 0, 2, " PROGRAM EXECUTION STATUS ");
+    mvwprintw(winProg, 0, 4, "xecution status ");
     wattroff(winProg, COLOR_PAIR(1) | A_BOLD);
 
     // Print all instructions
@@ -93,7 +189,7 @@ bool printProgramWithCurrentInstruction(
         formatInstruction(currentDecoded, instrStr, sizeof(instrStr));
 
         // Calc index, with overflow stop prints instructions
-        const int row = 1 + i;
+        const int row = 2 + i;
         if (row >= getmaxy(winProg) - 1) break;
 
 
@@ -101,12 +197,12 @@ bool printProgramWithCurrentInstruction(
             usageInstruction = currentDecoded;
 
             // Current instruction with arrow and color background
-            wattron(winProg, COLOR_PAIR(3) | A_BOLD);
+            wattron(winProg, COLOR_PAIR(4) | A_BOLD);
             mvwprintw(winProg, row, 2, "-> 0x%08X: %-30s", address, instrStr);
-            wattroff(winProg, COLOR_PAIR(3) | A_BOLD);
+            wattroff(winProg, COLOR_PAIR(4) | A_BOLD);
 
             // Print comment
-            wattron(winProg, COLOR_PAIR(4));
+            wattron(winProg, COLOR_PAIR(5));
             const int colComment = 2 + 4 + 10 + 2 + 30;
 
             const AluOp aluOp = getInstructionEnum(currentDecoded.opcode, currentDecoded.funct3, currentDecoded.funct7Bit30);
@@ -304,7 +400,7 @@ bool printProgramWithCurrentInstruction(
 
             }
 
-            wattroff(winProg, COLOR_PAIR(4));
+            wattroff(winProg, COLOR_PAIR(5));
 
         } else {
             // All instructions
@@ -344,81 +440,4 @@ bool printProgramWithCurrentInstruction(
     }
 
     return quitRequested;
-}
-
-void drawPipeline(
-    WINDOW* winStatus,
-    DecodedInstruction currentDecoded,
-    const int32_t pc,
-    const int step
-
-) {
-
-    werase(winStatus);
-    box(winStatus, 0, 0);
-    wattron(winStatus, COLOR_PAIR(1) | A_BOLD);
-    mvwprintw(winStatus, 0, 2, " RISC-V STATE ");
-    wattroff(winStatus, COLOR_PAIR(1) | A_BOLD);
-
-    if (step == 0) {
-        wattron(winStatus, COLOR_PAIR(3));
-        mvwprintw(winStatus, 4, 8, "0x%08X", pc);
-        wattroff(winStatus, COLOR_PAIR(3));
-
-    } else {
-        mvwprintw(winStatus, 4, 8, "0x%08X", pc);
-
-    }
-
-    mvwprintw(winStatus, 5,  4, "PC");
-    mvwprintw(winStatus, 5, 7,  "------------>");
-
-    mvwaddch(winStatus, 2, 20, ACS_ULCORNER);
-
-    for(int i = 0; i < 14; ++i)
-        mvwaddch(winStatus, 2, 21 + i, ACS_HLINE);
-    mvwaddch(winStatus, 2, 35, ACS_URCORNER);
-
-    mvwprintw(winStatus, 3, 22, "Instruction");
-    mvwprintw(winStatus, 4, 22, "Mem");
-
-    mvwaddch(winStatus, 8, 20, ACS_LLCORNER);
-    for(int i = 0; i < 14; ++i)
-        mvwaddch(winStatus, 8, 21 + i, ACS_HLINE);
-    mvwaddch(winStatus, 8, 35, ACS_LRCORNER);
-
-    for(int y = 3; y <= 7; ++y) {
-        mvwaddch(winStatus, y, 20, ACS_VLINE);
-        mvwaddch(winStatus, y, 35, ACS_VLINE);
-    }
-
-    if (step == 1) {
-        wattron(winStatus, COLOR_PAIR(3));
-        mvwprintw(winStatus, 2, 38, "0x%08X", currentDecoded.rs1);
-        wattroff(winStatus, COLOR_PAIR(3));
-
-    }
-
-    mvwprintw(winStatus, 3, 37,  "------------>");
-
-    if (step == 1) {
-        wattron(winStatus, COLOR_PAIR(3));
-        mvwprintw(winStatus, 6, 38, "0x%08X", currentDecoded.rs2);
-        wattroff(winStatus, COLOR_PAIR(3));
-
-    }
-
-    mvwprintw(winStatus, 7, 37,  "------------>");
-
-    mvwprintw(winStatus, 9, 2, "Explain:");
-
-    switch (step) {
-        case 0: mvwprintwWrap(winStatus, 10, 5, "PC sends address to instruction memory"); break;
-        case 1: mvwprintwWrap(winStatus, 10, 5, "Memory instruction provides the addresses of the registers"); break;
-        case 2: mvwprintw(winStatus, 11, 2, "3. REGISTRI leggono i valori sorgente"); break;
-        case 3: mvwprintw(winStatus, 11, 2, "4. ALU esegue l'operazione ADD sui valori"); break;
-        case 4: mvwprintw(winStatus, 11, 2, "5. Il risultato viene scritto nei REGISTRI (write back)"); break;
-        case 5: mvwprintw(winStatus, 11, 2, "6. Il PC viene aggiornato a PC+4"); break;
-        default: break;
-    }
 }

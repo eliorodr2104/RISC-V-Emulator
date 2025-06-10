@@ -26,13 +26,14 @@ int main(const int argc, char** argv) {
 
     Cpu* cpu = newCpu();
 
-    WINDOW* winProg = nullptr;
-    WINDOW* winRegs = nullptr;
+    WINDOW* winProg   = nullptr;
+    WINDOW* winRegs   = nullptr;
     WINDOW* winStatus = nullptr;
+    WINDOW* winCmd    = nullptr;
 
-    initNcurses(&winRegs, &winProg, &winStatus);
+    initNcurses(&winRegs, &winProg, &winStatus, &winCmd);
 
-    userChoices(winProg, winRegs, winStatus, cpu);
+    userChoices(winProg, winRegs, winStatus, winCmd, cpu);
 
     closeNcurses(&winRegs, &winProg, &winStatus);
 

@@ -13,7 +13,8 @@
 void initNcurses(
     WINDOW** winRegs,
     WINDOW** winProg,
-    WINDOW** winStatus
+    WINDOW** winStatus,
+    WINDOW** winCmd
 );
 
 void closeNcurses(

@@ -14,7 +14,8 @@
 void initNcurses(
     WINDOW** winRegs,
     WINDOW** winProg,
-    WINDOW** winStatus
+    WINDOW** winStatus,
+    WINDOW** winCmd
 ) {
     setlocale(LC_ALL, "");
 
@@ -27,12 +28,15 @@ void initNcurses(
 
     if (has_colors()) {
         start_color();
-        init_pair(1, COLOR_BLACK,  COLOR_WHITE);  // pair 1: header / title
-        init_pair(2, COLOR_BLACK,  COLOR_WHITE);  // pair 2: status bar
-        init_pair(3, COLOR_YELLOW, COLOR_BLACK);  // pair 3: current instruction
-        init_pair(4, COLOR_GREEN,  COLOR_BLACK);  // pair 4: text / result
-        init_pair(5, COLOR_CYAN,   COLOR_BLACK);  // pair 5: all registers
-        init_pair(6, COLOR_WHITE,  COLOR_BLACK);   // Righe alternate (opzionale)
+
+        // (numberColors, colorText,    colorBg)
+        init_pair(1,            COLOR_WHITE,  COLOR_BLACK);  // pair 1: title window
+        init_pair(2,            COLOR_RED,    COLOR_BLACK);  // pair 2: init letter for command
+        init_pair(3,            COLOR_BLACK,  COLOR_WHITE);  // pair 3: status bar
+
+        init_pair(4,            COLOR_YELLOW, COLOR_BLACK);  // pair 4: current instruction
+        init_pair(5,            COLOR_GREEN,  COLOR_BLACK);  // pair 5: text / result
+        init_pair(6,            COLOR_CYAN,   COLOR_BLACK);  // pair 6: all registers
     }
 
     // Calc dim and create windows
@@ -47,41 +51,15 @@ void initNcurses(
     const int progWidth  = cols - regsWidth;
 
     // Left Window
-    *winProg = newwin(progHeight, progWidth, 0, 0);
+    *winProg = newwin(progHeight - 1, progWidth, 0, 0);
 
     // Right Window
     *winRegs = newwin(regsHeight, regsWidth, 0, progWidth);
 
     // Bottom Right Window
-    *winStatus = newwin(regsHeight + 1, regsWidth, regsHeight, progWidth);
+    *winStatus = newwin(regsHeight, regsWidth, regsHeight, progWidth);
 
-    werase(*winProg);
-    box(*winProg, 0, 0);
-    wattron(*winProg, COLOR_PAIR(1) | A_BOLD);
-    mvwprintw(*winProg, 0, 2, " PROGRAM EXECUTION STATUS ");
-    wattroff(*winProg, COLOR_PAIR(1) | A_BOLD);
-
-    //Draw borders and title default
-    wbkgd(*winProg, COLOR_PAIR(0)); // background black, text white default
-    box(*winProg, 0, 0);
-    wattron(*winProg, COLOR_PAIR(1) | A_BOLD);
-    mvwprintw(*winProg, 0, 2, " PROGRAM EXECUTION STATUS ");
-    wattroff(*winProg, COLOR_PAIR(1) | A_BOLD);
-    wrefresh(*winProg);
-
-    wbkgd(*winRegs, COLOR_PAIR(0));
-    box(*winRegs, 0, 0);
-    wattron(*winRegs, COLOR_PAIR(1) | A_BOLD);
-    mvwprintw(*winRegs, 0, 2, " REGISTER STATE ");
-    wattroff(*winRegs, COLOR_PAIR(1) | A_BOLD);
-    wrefresh(*winRegs);
-
-    wbkgd(*winStatus, COLOR_PAIR(0));
-    box(*winStatus, 0, 0);
-    wattron(*winStatus, COLOR_PAIR(1) | A_BOLD);
-    mvwprintw(*winStatus, 0, 2, " RISC-V STATE ");
-    wattroff(*winStatus, COLOR_PAIR(1) | A_BOLD);
-    wrefresh(*winStatus);
+    *winCmd = newwin(1, cols, rows - 1, 0);
 }
 
 void closeNcurses(

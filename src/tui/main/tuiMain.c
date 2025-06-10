@@ -2,6 +2,8 @@
 // Created by Eliomar Alejandro Rodriguez Ferrer on 08/06/25.
 //
 
+#include "tuiMain.h"
+
 #include <stdlib.h>
 
 #include "cpu.h"
@@ -11,8 +13,14 @@ void userChoices(
     WINDOW* winProg,
     WINDOW* winRegs,
     WINDOW* winStatus,
+    WINDOW* winCmd,
     Cpu* cpu
 ) {
+
+    Windows* currentWindow = malloc(sizeof *currentWindow);
+    if (!currentWindow) perror("malloc error");
+
+    *currentWindow = PROG_WINDOW;
 
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
@@ -60,23 +68,6 @@ void userChoices(
                 break;
 
             case 10:
-                delwin(menuWin);
-
-                clear();
-                refresh();
-
-                werase(winProg);
-                werase(winRegs);
-                box(winProg, 0, 0);
-                box(winRegs, 0, 0);
-
-                wattron(winProg, COLOR_PAIR(1) | A_BOLD);
-                mvwprintw(winProg, 0, 2, " PROGRAM EXECUTION STATUS ");
-                wattroff(winProg, COLOR_PAIR(1) | A_BOLD);
-
-                wattron(winRegs, COLOR_PAIR(1) | A_BOLD);
-                mvwprintw(winRegs, 0, 2, " REGISTER STATE ");
-                wattroff(winRegs, COLOR_PAIR(1) | A_BOLD);
 
                 //printProgramWithCurrentInstruction(winProg, winRegs, winStatus, 0, 0, 0, cpu->pc);
 
@@ -85,7 +76,9 @@ void userChoices(
 
 
                 } else if (highlight == 1) {
+                    commandWindow   (winCmd, *currentWindow);
                     runCpuStepByStep(winProg, winRegs, winStatus, cpu);
+
 
                 } else {
                     endwin();
@@ -98,4 +91,19 @@ void userChoices(
                 return;
         }
     }
+}
+
+void commandWindow(
+    WINDOW* winCmd,
+    Windows window
+
+) {
+
+    // Header definition
+    werase(winCmd);
+    wbkgd(winCmd, COLOR_PAIR(0)); // background black, text white default
+
+    mvwprintw(winCmd, 0, 1, " Enter command: ");
+    wrefresh(winCmd);
+
 }
