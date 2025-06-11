@@ -4,6 +4,7 @@
 
 #ifndef TUI_H
 #define TUI_H
+#include "assemblyData.h"
 #include "ncurses.h"
 #include "instructionMemory.h"
 
@@ -19,17 +20,19 @@ void printRegisterTable(
 );
 
 bool printProgramWithCurrentInstruction(
-    WINDOW* winProg,
-    WINDOW* winRegs,
-    WINDOW* winStatus,
-    WINDOW* winCmd,
-    Windows* selectCurrent,
-    int*     charCurrent,
-    int32_t input1,
-    int32_t input2,
-    int32_t result,
-    int32_t pc,
-    options_t options
+    WINDOW*   winProg,
+    WINDOW*   winRegs,
+    WINDOW*   winStatus,
+    WINDOW*   winCmd,
+    Windows*  selectCurrent,
+    int*      charCurrent,
+    int32_t   input1,
+    int32_t   input2,
+    int32_t   result,
+    int32_t   pc,
+    options_t options,
+    AssemblyData* data,
+    int*      offsetProg
 );
 
 static void drawBlock(

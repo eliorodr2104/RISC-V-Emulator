@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "aluControl.h"
+#include "assemblyData.h"
 #include "instructionMemory.h"
 #include "registerMemory.h"
 #include "tools.h"
@@ -196,15 +197,15 @@ bool printProgramWithCurrentInstruction(
     const int32_t  input2,
     const int32_t  result,
     const int32_t  pc,
-    const options_t options
+    const options_t options,
+    AssemblyData* data,
+          int*     offsetProg
 ) {
+
     int step       = 0;
     int offset     = 0; // Offset for registers
-    DecodedInstruction usageInstruction = {};
 
-    // Array to save string asm RV32I
-    char **asmLines = nullptr;
-    int lineCount = 0;
+    DecodedInstruction usageInstruction = {};
 
     // Header definition
     werase(winProg);
@@ -233,49 +234,6 @@ bool printProgramWithCurrentInstruction(
 
     }
 
-    // Read the file header
-    FILE *file = fopen(options.binary_file, "r");
-    if (file == nullptr) {
-        mvwprintw(winProg, 2, 2, "Error: impossible open the file %s", options.binary_file);
-        goto cleanup;
-
-    }
-
-    // Count file line
-    char buffer[1024];
-    while (fgets(buffer, sizeof(buffer), file)) {
-        lineCount++;
-
-    }
-
-    rewind(file);
-
-    // Alloc memory for the rows
-    asmLines = malloc(lineCount * sizeof(char*));
-    if (!asmLines) {
-        mvwprintw(winProg, 2, 2, "Error: impossible alloc memory");
-        fclose(file);
-        goto cleanup;
-
-    }
-
-    // Read all lines
-    int currentLine = 0;
-
-    while (fgets(buffer, sizeof(buffer), file) && currentLine < lineCount) {
-        const size_t len = strlen(buffer);
-        if (len > 0 && buffer[len-1] == '\n') {
-            buffer[len-1] = '\0';
-
-        }
-
-        asmLines[currentLine] = malloc(strlen(buffer) + 1);
-        strcpy(asmLines[currentLine], buffer);
-        currentLine++;
-    }
-
-    fclose(file);
-
     // Calc instruction PC
     // The single instruction is a 4 byte long
     const int currentInstructionIndex = pc / 4;
@@ -283,8 +241,8 @@ bool printProgramWithCurrentInstruction(
     int codeLineCounter = 0;
     int highlightedLine = -1;
 
-    for (int i = 0; i < lineCount; i++) {
-        const char *trimmed = asmLines[i];
+    for (int i = 0; i < data->lineCount; i++) {
+        const char *trimmed = data->asmLines[i];
 
         // Skip space char
         while (*trimmed == ' ' || *trimmed == '\t') trimmed++;
@@ -324,14 +282,14 @@ bool printProgramWithCurrentInstruction(
 
     }
 
-    for (int i = startLine; i < lineCount && i - startLine < maxRows; i++) {
+    for (int i = startLine; i < data->lineCount && i - startLine - *offsetProg < maxRows; i++) {
         const int row = 2 + (i - startLine);
 
         if (i == highlightedLine) {
 
             // Current line PC
             wattron(winProg, COLOR_PAIR(4) | A_BOLD);
-            mvwprintw(winProg, row, 2, "-> %s", asmLines[i]);
+            mvwprintw(winProg, row, 2, "-> %s", data->asmLines[i]);
             wattroff(winProg, COLOR_PAIR(4) | A_BOLD);
 
             // Add comments for debug
@@ -385,21 +343,10 @@ bool printProgramWithCurrentInstruction(
         } else {
 
             wattron(winProg, COLOR_PAIR(0));
-            mvwprintw(winProg, row, 2, "   %s", asmLines[i]);
+            mvwprintw(winProg, row, 2, "   %s", data->asmLines[i]);
             wattroff(winProg, COLOR_PAIR(0));
 
         }
-    }
-
-cleanup:
-    // Free memory
-    if (asmLines) {
-        for (int i = 0; i < lineCount; i++) {
-            free(asmLines[i]);
-        }
-
-        free(asmLines);
-
     }
 
     printRegisterTable(winRegs, *charCurrent, offset);
@@ -445,6 +392,15 @@ cleanup:
 
         switch (*selectCurrent) {
             case PROG_WINDOW:
+
+                if (ch == KEY_UP && offset > 0) {
+                    (*offsetProg)--;
+                }
+
+                //const int availableProgRows = getmaxy(winRegs);
+                if (ch == KEY_DOWN) {
+                    (*offsetProg)++;
+                }
 
                 if (usageInstruction.opcode != 0x73) { // Not work if ecall
                     if (ch == 'j' || ch == 'J') continueExecution = true;

@@ -8,6 +8,7 @@
 
 #include "alu.h"
 #include "aluControl.h"
+#include "assemblyData.h"
 #include "controlUnit.h"
 #include "instructionMemory.h"
 #include "registerMemory.h"
@@ -33,9 +34,11 @@ void runCpuFull(
     const options_t options
 ) {
     int currentChar = 'h';
+    AssemblyData* data = newAssemblyData(options);
 
     while (cpu->pc < SIZE_INSTRUCTIONS) {
-        executeSingleStep(winProg, winRegs, winStatus, winCmd, window, &currentChar, cpu, options, 0);
+        executeSingleStep(winProg, winRegs, winStatus, winCmd, window, &currentChar, cpu, options, data, 0);
+
     }
 
 }
@@ -50,26 +53,30 @@ void runCpuStepByStep(
     const options_t options
 ) {
     int currentChar = 'h';
+    AssemblyData* data = newAssemblyData(options);
 
     while (cpu->pc < SIZE_INSTRUCTIONS) {
-        if (!executeSingleStep(winProg, winRegs, winStatus, winCmd, window, &currentChar, cpu, options, 1)) break;
+        if (!executeSingleStep(winProg, winRegs, winStatus, winCmd, window, &currentChar, cpu, options, data, 1)) break;
     }
 
 }
 
 int executeSingleStep(
-    WINDOW*  winProg,
-    WINDOW*  winRegs,
-    WINDOW*  winStatus,
-    WINDOW*  winCmd,
-    Windows* window,
-    int    * currentChar,
-    Cpu* cpu,
-    const options_t options,
-    const bool interactive
+          WINDOW      * winProg,
+          WINDOW      * winRegs,
+          WINDOW      * winStatus,
+          WINDOW      * winCmd,
+          Windows     * window,
+          int         * currentChar,
+          Cpu         * cpu,
+    const options_t     options,
+          AssemblyData* data,
+    const bool          interactive
 ) {
+
     int32_t nextPc      = cpu->pc + 4;
     uint8_t operation   = 0;
+    int     offsetProg  = 0;
 
     const DecodedInstruction decodedInstruction = decodeInstruction(fetchInstruction(cpu, options));
 
@@ -88,8 +95,24 @@ int executeSingleStep(
 
     const Alu32BitResult result = alu32bit(firstRegisterValue, secondOperand, 0, operation);
 
-    if (printProgramWithCurrentInstruction(winProg, winRegs, winStatus, winCmd, window, currentChar, firstRegisterValue, secondOperand, result.result, cpu->pc, options)) {
+    if (printProgramWithCurrentInstruction(
+        winProg,
+        winRegs,
+        winStatus,
+        winCmd,
+        window,
+        currentChar,
+        firstRegisterValue,
+        secondOperand,
+        result.result,
+        cpu->pc,
+        options,
+        data,
+        &offsetProg)
+
+    ) {
         return 0;
+
     }
 
     // Esecuzione per JALR

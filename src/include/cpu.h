@@ -7,6 +7,7 @@
 #include <ncurses.h>
 
 #include "args_handler.h"
+#include "assemblyData.h"
 #include "windows.h"
 
 typedef struct {
@@ -45,6 +46,7 @@ int executeSingleStep(
     int    * currentChar,
     Cpu* cpu,
     options_t options,
+    AssemblyData* data,
     bool interactive
 );
 
