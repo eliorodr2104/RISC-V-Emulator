@@ -58,10 +58,10 @@ void initNcurses(
     *winProg = newwin(progHeight - 3, progWidth, 0, 0);
 
     // Right Window
-    *winRegs = newwin(regsHeight, regsWidth, 0, progWidth);
+    *winRegs = newwin(regsHeight + 8, regsWidth, 0, progWidth);
 
     // Bottom Right Window
-    *winStatus = newwin(regsHeight - 2, regsWidth, regsHeight, progWidth);
+    *winStatus = newwin(regsHeight - 10, regsWidth, regsHeight + 8, progWidth);
 
     *winCmd = newwin(3, cols, rows - 3, 0);
 }

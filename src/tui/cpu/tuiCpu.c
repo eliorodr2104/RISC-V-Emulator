@@ -26,48 +26,76 @@ const char* register_names[32] = {
 // ########################
 
 void printRegisterTable(
-    WINDOW* winRegs
+    WINDOW*   winRegs,
+    const int currentSetting,
+    const int offset
+
 ) {
+
+    int row = 2;
+    constexpr int column = 3;
+
+    const int maxRows = getmaxy(winRegs) - row - 3;
 
     // Refresh registers windows
     werase(winRegs);
     wbkgd(winRegs, COLOR_PAIR(0));
     box(winRegs, 0, 0);
 
-    wattron(winRegs,  COLOR_PAIR(2) | A_BOLD);
+    wattron  (winRegs,  COLOR_PAIR(2) | A_BOLD);
     mvwprintw(winRegs, 0, 2, " T");
-    wattroff(winRegs, COLOR_PAIR(2) | A_BOLD);
+    wattroff (winRegs, COLOR_PAIR(2) | A_BOLD);
 
-    wattron(winRegs, COLOR_PAIR(1) | A_BOLD);
+    wattron  (winRegs, COLOR_PAIR(1) | A_BOLD);
     mvwprintw(winRegs, 0, 4, "able Registers ");
-    wattroff(winRegs, COLOR_PAIR(1) | A_BOLD);
+    wattroff (winRegs, COLOR_PAIR(1) | A_BOLD);
 
-    int row = 2;
-
-    constexpr int column = 3;
+    mvwprintw(winRegs, row, column, "╭");
+    mvwaddch (winRegs, row, column + 1, ACS_HLINE);
 
     wattron  (winRegs, COLOR_WHITE | A_NORMAL);
-    mvwprintw(winRegs, row, column, "╭ Registers │ Value ╮");
+    mvwprintw(winRegs, row, column + 2, " Registers        Value ");
     wattroff (winRegs, COLOR_WHITE | A_NORMAL);
 
-    row += 2;
+    mvwprintw(winRegs, row, column + 27, "╮");
+    mvwaddch (winRegs, row, column + 26, ACS_HLINE);
 
-    for (int i = 0; i < 32; i++) {
+    row ++;
 
-        if (row >= getmaxy(winRegs) - 1) break; // break if the window is full
+    for (int i = offset; i < 32 && i - offset < maxRows; i++) {
+        mvwaddch(winRegs, row, column, ACS_VLINE);
 
         // Change color to green if the register is not zero
         if (registers[i] != 0) {
             wattron(winRegs, COLOR_PAIR(2) | A_BOLD);
         }
 
-        mvwprintw(winRegs, row, column, "%-6s     %08X",
+        if (currentSetting == 'd') {
+            mvwprintw(winRegs, row, column + 3, "%-6s        %d",
                   register_names[i], registers[i]);
-        wattroff(winRegs, COLOR_PAIR(2) | A_BOLD);
 
+        }
+
+        if (currentSetting == 'h') {
+            mvwprintw(winRegs, row, column + 3, "%-6s      0x%08X",
+                  register_names[i], registers[i]);
+        }
+
+        wattroff(winRegs, COLOR_PAIR(2) | A_BOLD);
+        mvwaddch(winRegs, row, column + 27, ACS_VLINE);
 
         row++;
     }
+
+    mvwprintw(winRegs, row, column, "╰");
+
+    for (uint8_t i = 0; i < 26; i++) {
+
+        mvwaddch (winRegs, row, column + 1 + i, ACS_HLINE);
+
+    }
+
+    mvwprintw(winRegs, row, column + 27, "╯");
 
 }
 
@@ -157,17 +185,19 @@ void drawPipeline(
 }
 
 bool printProgramWithCurrentInstruction(
-    WINDOW* winProg,
-    WINDOW* winRegs,
-    WINDOW* winStatus,
-    WINDOW* winCmd,
-    Windows* selectCurrent,
-    const int32_t input1,
-    const int32_t input2,
-    const int32_t result,
-    const int32_t pc
+          WINDOW*  winProg,
+          WINDOW*  winRegs,
+          WINDOW*  winStatus,
+          WINDOW*  winCmd,
+          Windows* selectCurrent,
+          int*     charCurrent,
+    const int32_t  input1,
+    const int32_t  input2,
+    const int32_t  result,
+    const int32_t  pc
 ) {
-    int step = 0;
+    int step   = 0;
+    int offset = 0;
     DecodedInstruction usageInstruction = {};
 
     // Header definition
@@ -220,7 +250,7 @@ bool printProgramWithCurrentInstruction(
 
             // Print comment
             wattron(winProg, COLOR_PAIR(5));
-            const int colComment = 2 + 4 + 10 + 2 + 30;
+            constexpr int colComment = 2 + 4 + 10 + 2 + 30;
 
             const AluOp aluOp = getInstructionEnum(currentDecoded.opcode, currentDecoded.funct3, currentDecoded.funct7Bit30);
             switch (currentDecoded.opcode) {
@@ -428,29 +458,35 @@ bool printProgramWithCurrentInstruction(
     }
 
     // Refresh instructions windows
-    printRegisterTable(winRegs);
+    printRegisterTable(winRegs, *charCurrent, offset);
     wnoutrefresh(winProg);
     wnoutrefresh(winRegs);
 
     nodelay(winStatus, FALSE);
 
-    bool quitRequested = false;
+    bool quitRequested     = false;
     bool continueExecution = false;
+
+    keypad(winStatus, TRUE);
+
     while (1) {
+        printRegisterTable(winRegs, *charCurrent, offset);
+        wnoutrefresh(winRegs);
+
         drawPipeline(winStatus, usageInstruction, pc, step);
         commandWindow(winCmd, *selectCurrent);
 
         wnoutrefresh(winStatus);
+        wnoutrefresh(winCmd);
         doupdate();
 
-        const int ch = wgetch(winStatus);
+        const int ch      = wgetch(winStatus);
 
         if (ch == 'q' || ch == 'Q') {
             quitRequested = true;
             break;
 
         }
-
 
         if (ch == 'e' || ch == 'E') {
             *selectCurrent = PROG_WINDOW;
@@ -473,7 +509,7 @@ bool printProgramWithCurrentInstruction(
             case PROG_WINDOW:
 
                 // Enter
-                if (ch == 'j') continueExecution = true;
+                if (ch == 'j' || ch == 'J') continueExecution = true;
 
             break;
 
@@ -481,7 +517,36 @@ bool printProgramWithCurrentInstruction(
             case STATUS_WINDOW:
 
                 // Backspace
-                if (ch == ' ') { step++; }
+                if (ch == 'n' || ch == 'N') { step++; }
+
+            break;
+
+            case REGS_WINDOW:
+
+                if (ch == KEY_UP && offset > 0) {
+                    offset--;
+                }
+
+                int availableRows = getmaxy(winRegs) - 4;
+                if (ch == KEY_DOWN && offset + availableRows < 32) {
+                    offset++;
+                }
+
+                if (ch == 'd' || ch == 'D') {
+                    *charCurrent = 'd';
+
+                    printRegisterTable(winRegs, *charCurrent, offset);
+                    wnoutrefresh(winRegs);
+
+                }
+
+                if (ch == 'h' || ch == 'H') {
+                    *charCurrent = 'h';
+
+                    printRegisterTable(winRegs, *charCurrent, offset);
+                    wnoutrefresh(winRegs);
+
+                }
 
             break;
 

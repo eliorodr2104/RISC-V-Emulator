@@ -13,7 +13,9 @@ extern const char* register_names[32];
 // # CPU print functions  #
 // ########################
 void printRegisterTable(
-    WINDOW* winRegs
+    WINDOW* winRegs,
+    int     currentSetting,
+    int     offset
 );
 
 bool printProgramWithCurrentInstruction(
@@ -22,6 +24,7 @@ bool printProgramWithCurrentInstruction(
     WINDOW* winStatus,
     WINDOW* winCmd,
     Windows* selectCurrent,
+    int*     charCurrent,
     int32_t input1,
     int32_t input2,
     int32_t result,

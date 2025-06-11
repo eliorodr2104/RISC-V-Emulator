@@ -136,6 +136,20 @@ void commandWindow(
             mvwprintw(winCmd, 1, 4, ":");
             mvwprintw(winCmd, 1, 5, " Quit>");
 
+            mvwprintw(winCmd, 1, 13, "<");
+            wattron(winCmd,  COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 14, "d");
+            wattroff(winCmd, COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 15, ": ");
+            mvwprintw(winCmd, 1, 17, "Dec>");
+
+            mvwprintw(winCmd, 1, 23, "<");
+            wattron(winCmd,  COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 24, "h");
+            wattroff(winCmd, COLOR_PAIR(7) | A_BOLD);
+            mvwprintw(winCmd, 1, 25, ": ");
+            mvwprintw(winCmd, 1, 28, "Hex>");
+
             break;
 
 

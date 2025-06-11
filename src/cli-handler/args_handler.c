@@ -124,6 +124,8 @@ void add_breakpoint(options_t *opts, const char *addr) {
  * @param opts options obj to free
  */
 void free_options(const options_t *opts) {
+    if (!opts) return;
+
     if (opts->binary_file) free(opts->binary_file);
 
     if (opts->args) {
@@ -142,8 +144,10 @@ void free_options(const options_t *opts) {
 
     // Free of the instructions
     if (opts->instructions) {
-        for (int i = 0; i < opts->instruction_count; i++)
-            free(opts->instructions);
+        for (int i = 0; i < opts->instruction_count; i++) {
+            free(&opts->instructions[i]);
+        }
+        free(opts->instructions);
     }
 }
 

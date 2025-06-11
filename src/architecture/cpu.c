@@ -31,9 +31,10 @@ void runCpuFull(
     Windows* window,
     Cpu* cpu
 ) {
+    int currentChar = 'h';
 
     while (cpu->pc < SIZE_INSTRUCTIONS) {
-        executeSingleStep(winProg, winRegs, winStatus, winCmd, window, cpu, 0);
+        executeSingleStep(winProg, winRegs, winStatus, winCmd, window, &currentChar, cpu, 0);
     }
 
 }
@@ -46,8 +47,10 @@ void runCpuStepByStep(
     Windows* window,
     Cpu* cpu
 ) {
+    int currentChar = 'h';
+
     while (cpu->pc < SIZE_INSTRUCTIONS) {
-        if (!executeSingleStep(winProg, winRegs, winStatus, winCmd, window, cpu, 1)) break;
+        if (!executeSingleStep(winProg, winRegs, winStatus, winCmd, window, &currentChar, cpu, 1)) break;
     }
 
 }
@@ -58,11 +61,12 @@ int executeSingleStep(
     WINDOW*  winStatus,
     WINDOW*  winCmd,
     Windows* window,
+    int    * currentChar,
     Cpu* cpu,
     const bool interactive
 ) {
-    int32_t nextPc    = cpu->pc + 4;
-    uint8_t operation = 0;
+    int32_t nextPc      = cpu->pc + 4;
+    uint8_t operation   = 0;
 
     const DecodedInstruction decodedInstruction = decodeInstruction(fetchInstruction(cpu));
     const ControlSignals unitControlRet         = getControlSignals(decodedInstruction.opcode);
@@ -80,7 +84,7 @@ int executeSingleStep(
 
     const Alu32BitResult result = alu32bit(firstRegisterValue, secondOperand, 0, operation);
 
-    if (printProgramWithCurrentInstruction(winProg, winRegs, winStatus, winCmd, window, firstRegisterValue, secondOperand, result.result, cpu->pc)) {
+    if (printProgramWithCurrentInstruction(winProg, winRegs, winStatus, winCmd, window, currentChar, firstRegisterValue, secondOperand, result.result, cpu->pc)) {
         return 0;
     }
 

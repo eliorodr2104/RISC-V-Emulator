@@ -39,6 +39,7 @@ int executeSingleStep(
     WINDOW*  winStatus,
     WINDOW*  winCmd,
     Windows* window,
+    int    * currentChar,
     Cpu* cpu,
     bool interactive
 );
