@@ -7,6 +7,7 @@
 
 #include <ncurses.h>
 
+#include "args_handler.h"
 #include "cpu.h"
 #include "windows.h"
 
@@ -18,7 +19,8 @@ void userChoices(
     WINDOW* winRegs,
     WINDOW* winStatus,
     WINDOW* winCmd,
-    Cpu* cpu
+    Cpu* cpu,
+    options_t options
 );
 
 void commandWindow(

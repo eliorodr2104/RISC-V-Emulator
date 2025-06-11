@@ -13,7 +13,8 @@ void userChoices(
     WINDOW* winRegs,
     WINDOW* winStatus,
     WINDOW* winCmd,
-    Cpu* cpu
+    Cpu* cpu,
+    options_t options
 ) {
 
     Windows* currentWindow = malloc(sizeof *currentWindow);
@@ -69,12 +70,12 @@ void userChoices(
             case 10:
 
                 if (highlight == 0) {
-                    runCpuFull(winProg, winRegs, winStatus, winCmd, currentWindow, cpu);
+                    runCpuFull(winProg, winRegs, winStatus, winCmd, currentWindow, cpu, options);
 
 
                 } else if (highlight == 1) {
                     commandWindow   (winCmd, *currentWindow);
-                    runCpuStepByStep(winProg, winRegs, winStatus, winCmd, currentWindow, cpu);
+                    runCpuStepByStep(winProg, winRegs, winStatus, winCmd, currentWindow, cpu, options);
 
 
                 } else {

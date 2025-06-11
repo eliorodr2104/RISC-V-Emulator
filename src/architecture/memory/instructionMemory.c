@@ -71,7 +71,11 @@ uint32_t instructions[MAX_INSTRUCTIONS] = {
     // 0x000002B3, // sub  t0, zero, zero
 };
 
-uint32_t fetchInstruction(Cpu* cpu) {
+uint32_t fetchInstruction(
+    Cpu* cpu,
+    const options_t options
+
+) {
 
     if (!cpu) return 0;
 
@@ -79,7 +83,7 @@ uint32_t fetchInstruction(Cpu* cpu) {
 
     if (instructionIndex >= MAX_INSTRUCTIONS) return 0;
 
-    return instructions[instructionIndex];
+    return options.instructions[instructionIndex].instruction;
 }
 
 // Decodifica istruzione RISC-V

@@ -194,7 +194,8 @@ bool printProgramWithCurrentInstruction(
     const int32_t  input1,
     const int32_t  input2,
     const int32_t  result,
-    const int32_t  pc
+    const int32_t  pc,
+    const options_t options
 ) {
     int step   = 0;
     int offset = 0;
@@ -228,9 +229,9 @@ bool printProgramWithCurrentInstruction(
     }
 
     // Print all instructions
-    for (int i = 0; i < MAX_INSTRUCTIONS; i++) {
+    for (int i = 0; i < options.instruction_count; i++) {
         const int address                       = i * 4;
-        const DecodedInstruction currentDecoded = decodeInstruction(instructions[i]);
+        const DecodedInstruction currentDecoded = decodeInstruction(options.instructions[i].instruction);
 
         char instrStr[100];
         formatInstruction(currentDecoded, instrStr, sizeof(instrStr));

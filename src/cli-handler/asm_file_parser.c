@@ -42,7 +42,7 @@ static int read_binary_file(const char *filepath, options_t *opts) {
 
     // get file size
     fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
+    const long file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
     // return -1 if the file is empty
@@ -77,7 +77,7 @@ static int read_binary_file(const char *filepath, options_t *opts) {
 
         opts->instructions[i].instruction = instr;
         // printf("\nloaded instructions: ");
-        print_binary(instr);
+        // print_binary(instr);
     }
 
     // printf("\n closing file...");
