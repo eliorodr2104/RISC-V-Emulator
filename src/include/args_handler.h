@@ -7,6 +7,9 @@
 
 #include<stdint.h>
 
+typedef enum {
+    DEFAULT, FULL, STEP_BY_STEP
+} execution_mode;
 
 typedef struct {
     uint32_t address;       // address of the instruction
@@ -15,12 +18,13 @@ typedef struct {
 
 // struct with the options for the binary
 typedef struct {
-    char *binary_file;      // path to asm riscv 32bit binary file
-    char **args;            // args for the asm (after the -a flag)
-    int args_count;         // number of args for the asm
-    bool full_execution;    // bool flag for full execution         (incompatible with -s)
-    bool step_mode;         // bool flag for step by step execution (incompatible with -f)
-    char **breakpoints;     // breakpoints for the asm program
+    char *binary_file;                // path to asm riscv 32bit binary file
+    // @TODO: implement args
+    char **args;                      // args for the asm (after the -a flag)
+    int args_count;                   // number of args for the asm
+    execution_mode execution_mode;    // execution mode
+    // @TODO: implement breakpoints
+    char **breakpoints;               // breakpoints for the asm program
     int breakpoint_count;
 
     // data of the bin given
@@ -29,8 +33,8 @@ typedef struct {
 } options_t;
 
 // public functions
-int  handle_args(int argc, char *argv[], options_t *opts);
+int  handle_args  (int argc, char *argv[], options_t *opts);
 void print_options(const options_t *opts);
-void free_options(const options_t *opts);
+void free_options (const options_t *opts);
 
 #endif //ARGS_HANDLER_H

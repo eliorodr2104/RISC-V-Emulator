@@ -57,8 +57,8 @@ void print_help(const char *program_name) {
     printf("  -f, --full-execution      Execute the binary without stopping\n");
     printf("  -s, --step                Execute step-by-step\n");
     printf("  -h, --help                Show this help message\n");
-    printf("  -a, --args <ARGS>         Arguments to pass to the binary (space-separated)\n");
-    printf("  -b, --breakpoint <ADDR>   Set breakpoint at address (can be used multiple times)\n");
+    printf("  -a, --args <ARGS>         Arguments to pass to the binary (space-separated)       NOTE: NOT IMPLEMENTED YET \n");
+    printf("  -b, --breakpoint <ADDR>   Set breakpoint at address (can be used multiple times)  NOTE: NOT IMPLEMENTED YET \n");
     printf("\nExample:\n");
     printf("  %s program.bin -a \"arg1 arg2\" -b 0x1004\n", program_name);
 }
@@ -180,6 +180,7 @@ int handle_args(int argc, char *argv[], options_t *opts) {
         argc--;
     }
 
+    opts->execution_mode = DEFAULT;
     while (
         (opt = getopt_long(
             argc,
@@ -191,16 +192,16 @@ int handle_args(int argc, char *argv[], options_t *opts) {
     ) {
         switch (opt) {
             case 'f':
-                if (!opts->step_mode) {
-                    opts->full_execution = true;
+                if (opts->execution_mode == DEFAULT) {
+                    opts->execution_mode = FULL;
                     // printf("Full execution mode enabled\n");
                 } else
                     fprintf(stderr, "Can't use both step by step and full execution mode, try again with only one of the two\n");
                 break;
 
             case 's':
-                if (!opts->full_execution) {
-                    opts->step_mode = true;
+                if (opts->execution_mode == DEFAULT) {
+                    opts->execution_mode = STEP_BY_STEP;
                     // printf("Step by step mode enabled\n");
                 } else
                     fprintf(stderr, "Can't use both step by step and full execution mode, try again with only one of the two\n");
@@ -210,15 +211,15 @@ int handle_args(int argc, char *argv[], options_t *opts) {
                 return 1;
 
             case 'a':
-                opts->args = split_args(optarg, &opts->args_count);
-                // printf("Arguments for binary (%d args):\n", opts->args_count);
-                for (int i = 0; i < opts->args_count; i++) {
-                    printf("  argv[%d] = '%s'\n", i, opts->args[i]);
-                }
+                fprintf(stderr, "Arguments for the asm execution are not implemented yet\n");
+                // opts->args = split_args(optarg, &opts->args_count);
+                // // printf("Arguments for binary (%d args):\n", opts->args_count);
+                // for (int i = 0; i < opts->args_count; i++)
+                //     printf("  argv[%d] = '%s'\n", i, opts->args[i]);
                 break;
-
             case 'b':
-                add_breakpoint(opts, optarg);
+                fprintf(stderr, "Breakpoints for the asm execution are not implemented yet\n");
+                // add_breakpoint(opts, optarg);
                 // printf("Breakpoint added at: %s\n", optarg);
                 break;
 
