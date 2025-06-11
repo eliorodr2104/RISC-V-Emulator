@@ -29,10 +29,11 @@ bool printProgramWithCurrentInstruction(
     int32_t   input1,
     int32_t   input2,
     int32_t   result,
-    int32_t   pc,
+    Cpu*   cpu,
     options_t options,
-    AssemblyData* data,
+    const AssemblyData* data,
     int*      offsetProg
+
 );
 
 static void drawBlock(

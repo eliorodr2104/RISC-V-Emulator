@@ -11,6 +11,8 @@ typedef struct {
 
     char **asmLines;
     int    lineCount;
+    int* lineToInstructionMap;
+    int* instructionToLineMap;
 
 } AssemblyData;
 

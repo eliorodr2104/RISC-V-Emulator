@@ -1,4 +1,4 @@
-/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" -S /Users/c4v4h/CLionProjects/RISC-V-Emulator -B /Users/c4v4h/CLionProjects/RISC-V-Emulator/cmake-build-debug
--- Configuring done (0.0s)
+/Users/eliorodr2104/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/Users/eliorodr2104/Applications/CLion.app/Contents/bin/ninja/mac/aarch64/ninja -G Ninja -S /Users/eliorodr2104/CLionProjects/RISC-V -B /Users/eliorodr2104/CLionProjects/RISC-V/cmake-build-debug
+-- Configuring done (0.1s)
 -- Generating done (0.0s)
--- Build files have been written to: /Users/c4v4h/CLionProjects/RISC-V-Emulator/cmake-build-debug
+-- Build files have been written to: /Users/eliorodr2104/CLionProjects/RISC-V/cmake-build-debug

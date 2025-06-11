@@ -12,6 +12,7 @@
 
 typedef struct {
     int32_t pc;
+    int32_t resetFlag;
 
 } Cpu;
 
@@ -46,8 +47,14 @@ int executeSingleStep(
     int    * currentChar,
     Cpu* cpu,
     options_t options,
-    AssemblyData* data,
+    const AssemblyData* data,
     bool interactive
 );
+
+void reExecuteUntilTarget(Cpu* cpu, options_t options);
+
+void executeInstructionSilently(Cpu* cpu, options_t options);
+
+void resetCpuState(Cpu* cpu);
 
 #endif //CPU_H

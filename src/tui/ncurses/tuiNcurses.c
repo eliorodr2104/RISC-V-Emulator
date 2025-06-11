@@ -43,6 +43,12 @@ void initNcurses(
         init_pair(7,            COLOR_YELLOW, COLOR_BLACK);  // pair 7: Mark letter command
     }
 
+    if (has_mouse()) {
+        mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
+        mouseinterval(0);
+
+    }
+
     // Calc dim and create windows
     int rows, cols;
     getmaxyx(stdscr, rows, cols);

@@ -2,10 +2,11 @@
 // Created by Eliomar Alejandro Rodriguez Ferrer on 02/06/25.
 //
 
+#define SPACE_COMMENT 50
+
 #include "tuiCpu.h"
 
 #include <stdlib.h>
-#include <string.h>
 
 #include "aluControl.h"
 #include "assemblyData.h"
@@ -196,9 +197,9 @@ bool printProgramWithCurrentInstruction(
     const int32_t  input1,
     const int32_t  input2,
     const int32_t  result,
-    const int32_t  pc,
+          Cpu*     cpu,
     const options_t options,
-    AssemblyData* data,
+    const AssemblyData* data,
           int*     offsetProg
 ) {
 
@@ -206,6 +207,12 @@ bool printProgramWithCurrentInstruction(
     int offset     = 0; // Offset for registers
 
     DecodedInstruction usageInstruction = {};
+
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
+    keypad(winStatus, TRUE);
+
+    int rowToLineMapping[data->lineCount];
+    int visibleRows = 0;
 
     // Header definition
     werase(winProg);
@@ -235,55 +242,39 @@ bool printProgramWithCurrentInstruction(
     }
 
     // Calc instruction PC
-    // The single instruction is a 4 byte long
-    const int currentInstructionIndex = pc / 4;
-
-    int codeLineCounter = 0;
+    const int currentInstructionIndex = cpu->pc / 4;
     int highlightedLine = -1;
 
-    for (int i = 0; i < data->lineCount; i++) {
-        const char *trimmed = data->asmLines[i];
-
-        // Skip space char
-        while (*trimmed == ' ' || *trimmed == '\t') trimmed++;
-
-        // Skip line empty, comments and directives
-        if (*trimmed == '\0' || *trimmed == '#' || *trimmed == '.' || *trimmed == '_') {
-            continue;
-        }
-
-        // Skip tag (line end ':')
-        const char *colon = strchr(trimmed, ':');
-        if (colon && *(colon + 1) == '\0') {
-            continue;
-        }
-
-        // This is an instruction
-        if (codeLineCounter == currentInstructionIndex) {
-            highlightedLine = i;
-
-            if (currentInstructionIndex < options.instruction_count) {
-                usageInstruction = decodeInstruction(options.instructions[currentInstructionIndex].instruction);
-            }
-
-            break;
-        }
-
-        codeLineCounter++;
-
+    if (currentInstructionIndex < options.instruction_count) {
+        highlightedLine = data->instructionToLineMap[currentInstructionIndex];
+        usageInstruction = decodeInstruction(options.instructions[currentInstructionIndex].instruction);
     }
 
     const int maxRows = getmaxy(winProg) - 3;
-    int startLine    = 0;
+    int startLine     = *offsetProg;
 
-    if (highlightedLine >= maxRows) {
-        startLine = highlightedLine - maxRows / 2;
-        if (startLine < 0) startLine = 0;
-
+    if (highlightedLine >= 0) {
+        if (highlightedLine < startLine) {
+            *offsetProg = highlightedLine;
+            startLine = *offsetProg;
+        } else if (highlightedLine >= startLine + maxRows) {
+            *offsetProg = highlightedLine - maxRows + 1;
+            if (*offsetProg < 0) *offsetProg = 0;
+            startLine = *offsetProg;
+        }
     }
 
-    for (int i = startLine; i < data->lineCount && i - startLine - *offsetProg < maxRows; i++) {
+    int maxStartLine = data->lineCount - maxRows;
+    if (maxStartLine < 0) maxStartLine = 0;
+    if (startLine > maxStartLine) {
+        startLine = maxStartLine;
+        *offsetProg = startLine;
+    }
+
+    for (int i = startLine; i < data->lineCount && (i - startLine) < maxRows; i++) {
         const int row = 2 + (i - startLine);
+        rowToLineMapping[visibleRows] = i;
+        visibleRows++;
 
         if (i == highlightedLine) {
 
@@ -294,7 +285,6 @@ bool printProgramWithCurrentInstruction(
 
             // Add comments for debug
             wattron(winProg, COLOR_PAIR(5));
-            constexpr int colComment = 50; // Pos comment
 
             if (currentInstructionIndex < options.instruction_count) {
                 const AluOp aluOp = getInstructionEnum(usageInstruction.opcode, usageInstruction.funct3, usageInstruction.funct7Bit30);
@@ -303,18 +293,18 @@ bool printProgramWithCurrentInstruction(
                     case 0x33: // R-type
                         switch (aluOp) {
                             case ALU_ADD:
-                                mvwprintw(winProg, row, colComment,
+                                mvwprintw(winProg, row, SPACE_COMMENT,
                                           "// add: 0x%08X + 0x%08X = 0x%08X",
                                           input1, input2, result);
                                 break;
                             case ALU_SUB:
-                                mvwprintw(winProg, row, colComment,
+                                mvwprintw(winProg, row, SPACE_COMMENT,
                                           "// sub: 0x%08X - 0x%08X = 0x%08X",
                                           input1, input2, result);
                                 break;
 
                             default:
-                                mvwprintw(winProg, row, colComment, "// PC: 0x%08X", pc);
+                                mvwprintw(winProg, row, SPACE_COMMENT, "// PC: 0x%08X", cpu->pc);
                                 break;
                         }
                         break;
@@ -322,19 +312,19 @@ bool printProgramWithCurrentInstruction(
                     case 0x13: // I-type
                         switch (aluOp) {
                             case ALU_ADDI:
-                                mvwprintw(winProg, row, colComment,
+                                mvwprintw(winProg, row, SPACE_COMMENT,
                                           "// addi: 0x%08X + %d = 0x%08X",
                                           input1, (int16_t)usageInstruction.immediate, result);
                                 break;
 
                             default:
-                                mvwprintw(winProg, row, colComment, "// PC: 0x%08X", pc);
+                                mvwprintw(winProg, row, SPACE_COMMENT, "// PC: 0x%08X", cpu->pc);
                                 break;
                         }
                         break;
 
                     default:
-                        mvwprintw(winProg, row, colComment, "// PC: 0x%08X", pc);
+                        mvwprintw(winProg, row, SPACE_COMMENT, "// PC: 0x%08X", cpu->pc);
                         break;
                 }
             }
@@ -358,13 +348,11 @@ bool printProgramWithCurrentInstruction(
     bool quitRequested     = false;
     bool continueExecution = false;
 
-    keypad(winStatus, TRUE);
-
     while (1) {
         printRegisterTable(winRegs, *charCurrent, offset);
         wnoutrefresh(winRegs);
 
-        drawPipeline(winStatus, usageInstruction, pc, step);
+        drawPipeline(winStatus, usageInstruction, cpu->pc, step);
         commandWindow(winCmd, *selectCurrent);
 
         wnoutrefresh(winStatus);
@@ -372,6 +360,41 @@ bool printProgramWithCurrentInstruction(
         doupdate();
 
         const int ch = wgetch(winStatus);
+
+        if (ch == KEY_MOUSE) {
+            MEVENT event;
+            if (getmouse(&event) == OK) {
+
+                // Control click is in intern win
+                int prog_y, prog_x, prog_max_y, prog_max_x;
+                getbegyx(winProg, prog_y, prog_x);
+                getmaxyx(winProg, prog_max_y, prog_max_x);
+
+                // If click in range win then set instruction
+                if (event.x >= prog_x && event.x < prog_x + prog_max_x &&
+                    event.y >= prog_y && event.y < prog_y + prog_max_y &&
+                    (event.bstate & BUTTON1_CLICKED)) {
+
+                    // Click win
+                    if (event.bstate & BUTTON1_CLICKED) {
+
+                        // Click the left bottom
+                        const int clicked_row = event.y - prog_y - 2; // -2 for header and border
+
+                        if (clicked_row >= 0 && clicked_row < visibleRows) {
+
+                            const int target_instruction = data->lineToInstructionMap[rowToLineMapping[clicked_row]];
+
+                            if (target_instruction >= 0) {
+                                cpu->resetFlag = target_instruction;
+
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         if (ch == 'q' || ch == 'Q') {
             quitRequested = true;
@@ -393,17 +416,25 @@ bool printProgramWithCurrentInstruction(
         switch (*selectCurrent) {
             case PROG_WINDOW:
 
-                if (ch == KEY_UP && offset > 0) {
+                if (ch == KEY_UP && *offsetProg > 0) {
                     (*offsetProg)--;
+                    goto redraw_program;
                 }
 
-                //const int availableProgRows = getmaxy(winRegs);
                 if (ch == KEY_DOWN) {
-                    (*offsetProg)++;
+                    int maxOffset = data->lineCount - maxRows;
+                    if (maxOffset < 0) maxOffset = 0;
+                    if (*offsetProg < maxOffset) {
+                        (*offsetProg)++;
+                        goto redraw_program;
+                    }
                 }
 
                 if (usageInstruction.opcode != 0x73) { // Not work if ecall
-                    if (ch == 'j' || ch == 'J') continueExecution = true;
+                    if (ch == 'j' || ch == 'J') {
+                        continueExecution = true;
+
+                    }
                 }
 
                 break;
@@ -439,6 +470,48 @@ bool printProgramWithCurrentInstruction(
         }
 
         if (step > 5 || continueExecution) break;
+
+        continue;
+
+    redraw_program:
+
+        werase(winProg);
+        wbkgd(winProg, COLOR_PAIR(0));
+        box(winProg, 0, 0);
+
+        if (*selectCurrent == PROG_WINDOW) {
+            wattron(winProg,  COLOR_PAIR(2) | A_BOLD);
+            mvwprintw(winProg, 0, 2, " E");
+            wattroff(winProg, COLOR_PAIR(2) | A_BOLD);
+
+            wattron(winProg, COLOR_PAIR(1) | A_BOLD);
+            mvwprintw(winProg, 0, 4, "xecution status ");
+            wattroff(winProg, COLOR_PAIR(1) | A_BOLD);
+        }
+
+
+        startLine = *offsetProg;
+        int maxStartLine_redraw = data->lineCount - maxRows;
+        if (maxStartLine_redraw < 0) maxStartLine_redraw = 0;
+        if (startLine > maxStartLine_redraw) startLine = maxStartLine_redraw;
+
+        for (int i = startLine; i < data->lineCount && (i - startLine) < maxRows; i++) {
+            const int row = 2 + (i - startLine);
+
+            if (i == highlightedLine) {
+                wattron(winProg, COLOR_PAIR(4) | A_BOLD);
+                mvwprintw(winProg, row, 2, "-> %s", data->asmLines[i]);
+                wattroff(winProg, COLOR_PAIR(4) | A_BOLD);
+
+            } else {
+                wattron(winProg, COLOR_PAIR(0));
+                mvwprintw(winProg, row, 2, "   %s", data->asmLines[i]);
+                wattroff(winProg, COLOR_PAIR(0));
+
+            }
+        }
+
+        wnoutrefresh(winProg);
     }
 
     return quitRequested;

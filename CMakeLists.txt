@@ -70,6 +70,8 @@ src/include/aluControl.h
         src/cli-handler/asm_file_parser.c
         src/cli-handler/asm_file_parser.h
         src/include/tui/main/windows.h
+        src/include/assemblyData.h
+        src/architecture/assemblyData.c
 )
 
 # Create executable

@@ -59,6 +59,50 @@ AssemblyData* newAssemblyData(const options_t options) {
 
     fclose(file);
 
+    data->lineToInstructionMap = malloc(sizeof(int) * data->lineCount);
+
+    if (!data->lineToInstructionMap) return nullptr;
+
+    data->instructionToLineMap = malloc(sizeof(int) * options.instruction_count);
+
+    int totalInstructions = 0;
+
+    for (int i = 0; i < data->lineCount; i++) {
+        data->lineToInstructionMap[i] = -1; // -1
+    }
+
+    for (int i = 0; i < options.instruction_count; i++) {
+        data->instructionToLineMap[i] = -1;
+    }
+
+    for (int i = 0; i < data->lineCount; i++) {
+        const char *trimmed = data->asmLines[i];
+
+        // Skip spaces
+        while (*trimmed == ' ' || *trimmed == '\t') {
+            trimmed++;
+        }
+
+        // Skip row empty, comment e directive
+        if (*trimmed == '\0' || *trimmed == '#' || *trimmed == '.' || *trimmed == '_') {
+            continue;
+        }
+
+        // Skip tag
+        const char *colon = strchr(trimmed, ':');
+        if (colon && *(colon + 1) == '\0') {
+            continue;
+        }
+
+        data->lineToInstructionMap[i] = totalInstructions;
+
+        if (totalInstructions < options.instruction_count) {
+            data->instructionToLineMap[totalInstructions] = i;
+        }
+
+        totalInstructions++;
+    }
+
     return data;
 
 }
