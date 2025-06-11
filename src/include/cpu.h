@@ -6,6 +6,7 @@
 #define CPU_H
 #include <ncurses.h>
 
+#include "args_handler.h"
 #include "windows.h"
 
 typedef struct {
@@ -21,7 +22,8 @@ void runCpuFull(
     WINDOW*  winStatus,
     WINDOW*  winCmd,
     Windows* window,
-    Cpu* cpu
+    Cpu* cpu,
+    options_t options
 );
 
 void runCpuStepByStep(
@@ -30,7 +32,8 @@ void runCpuStepByStep(
     WINDOW*  winStatus,
     WINDOW*  winCmd,
     Windows* window,
-    Cpu* cpu
+    Cpu* cpu,
+    options_t options
 );
 
 int executeSingleStep(
@@ -41,6 +44,7 @@ int executeSingleStep(
     Windows* window,
     int    * currentChar,
     Cpu* cpu,
+    options_t options,
     bool interactive
 );
 

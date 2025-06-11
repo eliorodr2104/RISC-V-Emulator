@@ -22,7 +22,10 @@ typedef struct {
 
 extern uint32_t instructions[];
 
-uint32_t           fetchInstruction (Cpu* cpu);
+uint32_t           fetchInstruction (
+    Cpu* cpu,
+    options_t options
+);
 DecodedInstruction decodeInstruction(uint32_t instruction);
 
 #endif //INSTRUCTIONMEMORY_H

@@ -28,7 +28,8 @@ bool printProgramWithCurrentInstruction(
     int32_t input1,
     int32_t input2,
     int32_t result,
-    int32_t pc
+    int32_t pc,
+    options_t options
 );
 
 static void drawBlock(

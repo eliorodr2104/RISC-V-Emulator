@@ -29,12 +29,13 @@ void runCpuFull(
     WINDOW*  winStatus,
     WINDOW*  winCmd,
     Windows* window,
-    Cpu* cpu
+    Cpu* cpu,
+    const options_t options
 ) {
     int currentChar = 'h';
 
     while (cpu->pc < SIZE_INSTRUCTIONS) {
-        executeSingleStep(winProg, winRegs, winStatus, winCmd, window, &currentChar, cpu, 0);
+        executeSingleStep(winProg, winRegs, winStatus, winCmd, window, &currentChar, cpu, options, 0);
     }
 
 }
@@ -45,12 +46,13 @@ void runCpuStepByStep(
     WINDOW*  winStatus,
     WINDOW*  winCmd,
     Windows* window,
-    Cpu* cpu
+    Cpu* cpu,
+    const options_t options
 ) {
     int currentChar = 'h';
 
     while (cpu->pc < SIZE_INSTRUCTIONS) {
-        if (!executeSingleStep(winProg, winRegs, winStatus, winCmd, window, &currentChar, cpu, 1)) break;
+        if (!executeSingleStep(winProg, winRegs, winStatus, winCmd, window, &currentChar, cpu, options, 1)) break;
     }
 
 }
@@ -63,12 +65,13 @@ int executeSingleStep(
     Windows* window,
     int    * currentChar,
     Cpu* cpu,
+    options_t options,
     const bool interactive
 ) {
     int32_t nextPc      = cpu->pc + 4;
     uint8_t operation   = 0;
 
-    const DecodedInstruction decodedInstruction = decodeInstruction(fetchInstruction(cpu));
+    const DecodedInstruction decodedInstruction = decodeInstruction(fetchInstruction(cpu, options));
     const ControlSignals unitControlRet         = getControlSignals(decodedInstruction.opcode);
     const AluOp aluOpEnum                       = getAluControl(
                                                         unitControlRet.operation,
@@ -84,7 +87,7 @@ int executeSingleStep(
 
     const Alu32BitResult result = alu32bit(firstRegisterValue, secondOperand, 0, operation);
 
-    if (printProgramWithCurrentInstruction(winProg, winRegs, winStatus, winCmd, window, currentChar, firstRegisterValue, secondOperand, result.result, cpu->pc)) {
+    if (printProgramWithCurrentInstruction(winProg, winRegs, winStatus, winCmd, window, currentChar, firstRegisterValue, secondOperand, result.result, cpu->pc, options)) {
         return 0;
     }
 
