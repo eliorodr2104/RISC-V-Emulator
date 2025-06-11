@@ -65,13 +65,14 @@ int executeSingleStep(
     Windows* window,
     int    * currentChar,
     Cpu* cpu,
-    options_t options,
+    const options_t options,
     const bool interactive
 ) {
     int32_t nextPc      = cpu->pc + 4;
     uint8_t operation   = 0;
 
     const DecodedInstruction decodedInstruction = decodeInstruction(fetchInstruction(cpu, options));
+
     const ControlSignals unitControlRet         = getControlSignals(decodedInstruction.opcode);
     const AluOp aluOpEnum                       = getAluControl(
                                                         unitControlRet.operation,
@@ -103,15 +104,16 @@ int executeSingleStep(
         nextPc = (base + offset) & ~1;
 
     } else if (decodedInstruction.opcode == 0x6F) { // Execution jal
+
         if (unitControlRet.regWrite) {
 
-
             writeRegister(decodedInstruction.rd, cpu->pc + 4);
+
         }
 
         const int32_t offset = decodedInstruction.immediate;
 
-        nextPc = (cpu->pc + offset) & ~1;;
+        nextPc = (cpu->pc + offset) & ~1;
 
     } else if (unitControlRet.regWrite) {
         writeRegister(decodedInstruction.rd, result.result);
@@ -119,12 +121,6 @@ int executeSingleStep(
     }
 
     cpu->pc = nextPc;
-
-    //if (interactive) {
-    //    const int ch = getch();
-    //    if (ch == 'q' || ch == 'Q') return 0;
-
-    //}
 
     return 1;
 }

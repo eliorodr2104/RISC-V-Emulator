@@ -44,17 +44,26 @@ ControlSignals getControlSignals(
             signals.memWrite  = false;
             signals.aluSrc    = true;      // usa immediato
             signals.regWrite  = true;      // scrive risultato in rd
-
-        break;
+            break;
 
         // Store: SW, SH, SB, etc. (opcode = 0x23)
         case 0x23: // STORE
             signals.branch    = false;
             signals.memRead   = false;
             signals.memToReg  = false;     // non importa, non scrive nel registro
-            signals.operation = 0b0100011;
+            signals.operation = 0x23;
             signals.memWrite  = true;      // scrive in memoria
             signals.aluSrc    = true;      // usa immediato per offset
+            signals.regWrite  = false;     // non scrive nei registri
+            break;
+
+        case 0x73:
+            signals.branch    = false;
+            signals.memRead   = false;
+            signals.memToReg  = false;     // non importa, non scrive nel registro
+            signals.operation = 0x73;
+            signals.memWrite  = false;      // scrive in memoria
+            signals.aluSrc    = false;      // usa immediato per offset
             signals.regWrite  = false;     // non scrive nei registri
             break;
 

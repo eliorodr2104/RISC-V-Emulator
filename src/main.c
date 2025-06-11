@@ -13,8 +13,6 @@ int main(const int argc, char** argv) {
     if (result != 0)
         return result;
 
-    //print_options(&opts);
-
     Cpu* cpu = newCpu();
 
     WINDOW* winProg   = nullptr;

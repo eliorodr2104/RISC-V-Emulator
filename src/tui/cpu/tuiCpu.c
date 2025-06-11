@@ -5,6 +5,7 @@
 #include "tuiCpu.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "aluControl.h"
 #include "instructionMemory.h"
@@ -197,13 +198,17 @@ bool printProgramWithCurrentInstruction(
     const int32_t  pc,
     const options_t options
 ) {
-    int step   = 0;
-    int offset = 0;
+    int step       = 0;
+    int offset     = 0; // Offset for registers
     DecodedInstruction usageInstruction = {};
+
+    // Array to save string asm RV32I
+    char **asmLines = nullptr;
+    int lineCount = 0;
 
     // Header definition
     werase(winProg);
-    wbkgd(winProg, COLOR_PAIR(0)); // background black, text white default
+    wbkgd(winProg, COLOR_PAIR(0));
     box(winProg, 0, 0);
 
     if (*selectCurrent == PROG_WINDOW) {
@@ -228,237 +233,175 @@ bool printProgramWithCurrentInstruction(
 
     }
 
-    // Print all instructions
-    for (int i = 0; i < options.instruction_count; i++) {
-        const int address                       = i * 4;
-        const DecodedInstruction currentDecoded = decodeInstruction(options.instructions[i].instruction);
+    // Read the file header
+    FILE *file = fopen(options.binary_file, "r");
+    if (file == nullptr) {
+        mvwprintw(winProg, 2, 2, "Error: impossible open the file %s", options.binary_file);
+        goto cleanup;
 
-        char instrStr[100];
-        formatInstruction(currentDecoded, instrStr, sizeof(instrStr));
+    }
 
-        // Calc index, with overflow stop prints instructions
-        const int row = 2 + i;
-        if (row >= getmaxy(winProg) - 1) break;
+    // Count file line
+    char buffer[1024];
+    while (fgets(buffer, sizeof(buffer), file)) {
+        lineCount++;
 
+    }
 
-        if (address == pc) {
-            usageInstruction = currentDecoded;
+    rewind(file);
 
-            // Current instruction with arrow and color background
-            wattron(winProg, COLOR_PAIR(4) | A_BOLD);
-            mvwprintw(winProg, row, 2, "-> 0x%08X: %-30s", address, instrStr);
-            wattroff(winProg, COLOR_PAIR(4) | A_BOLD);
+    // Alloc memory for the rows
+    asmLines = malloc(lineCount * sizeof(char*));
+    if (!asmLines) {
+        mvwprintw(winProg, 2, 2, "Error: impossible alloc memory");
+        fclose(file);
+        goto cleanup;
 
-            // Print comment
-            wattron(winProg, COLOR_PAIR(5));
-            constexpr int colComment = 2 + 4 + 10 + 2 + 30;
+    }
 
-            const AluOp aluOp = getInstructionEnum(currentDecoded.opcode, currentDecoded.funct3, currentDecoded.funct7Bit30);
-            switch (currentDecoded.opcode) {
+    // Read all lines
+    int currentLine = 0;
 
-                // Instruction R-type
-                case 0x33:
+    while (fgets(buffer, sizeof(buffer), file) && currentLine < lineCount) {
+        const size_t len = strlen(buffer);
+        if (len > 0 && buffer[len-1] == '\n') {
+            buffer[len-1] = '\0';
 
-                    switch (aluOp) {
+        }
 
-                        // Instruction ADD
-                        case ALU_ADD:
-                            mvwprintw(
-                                    winProg,
-                                    row,
-                                    colComment,
-                                    "// add: 0x%08X + 0x%08X = 0x%08X",
-                                    input1,
-                                    input2,
-                                    result
-                                );
+        asmLines[currentLine] = malloc(strlen(buffer) + 1);
+        strcpy(asmLines[currentLine], buffer);
+        currentLine++;
+    }
 
-                        break;
+    fclose(file);
 
-                        // Instruction SUB
-                        case ALU_SUB:
-                            mvwprintw(
-                                    winProg,
-                                    row,
-                                    colComment,
-                                    "// sub: 0x%08X - 0x%08X = 0x%08X",
-                                    input1,
-                                    input2,
-                                    result
-                                );
+    // Calc instruction PC
+    // The single instruction is a 4 byte long
+    const int currentInstructionIndex = pc / 4;
 
-                        break;
+    int codeLineCounter = 0;
+    int highlightedLine = -1;
 
-                        // Instruction SLL "Shift Left Logical"
-                        case ALU_SLL:
-                            mvwprintw(winProg, row, colComment,
-                                      "// sll: 0x%08X << %d = 0x%08X",
-                                      input1, input2 & 0x1F, result);
+    for (int i = 0; i < lineCount; i++) {
+        const char *trimmed = asmLines[i];
 
-                        break;
+        // Skip space char
+        while (*trimmed == ' ' || *trimmed == '\t') trimmed++;
 
-                        // Instruction SLT "Set Less Than"
-                        case ALU_SLT:
-                            mvwprintw(winProg, row, colComment,
-                                      "// slt: 0x%08X < 0x%08X = 0x%08X",
-                                      input1, input2, result);
+        // Skip line empty, comments and directives
+        if (*trimmed == '\0' || *trimmed == '#' || *trimmed == '.' || *trimmed == '_') {
+            continue;
+        }
 
-                        break;
+        // Skip tag (line end ':')
+        const char *colon = strchr(trimmed, ':');
+        if (colon && *(colon + 1) == '\0') {
+            continue;
+        }
 
-                        // Instruction XOR
-                        case ALU_XOR:
-                            mvwprintw(winProg, row, colComment,
-                                      "// xor: 0x%08X ^ 0x%08X = 0x%08X",
-                                      input1, input2, result);
+        // This is an instruction
+        if (codeLineCounter == currentInstructionIndex) {
+            highlightedLine = i;
 
-                        break;
-
-                        // // Instruction SRA
-                        case ALU_SRA:
-                            mvwprintw(winProg, row, colComment,
-                                          "// sra: 0x%08X >>> %d = 0x%08X",
-                                          input1, input2 & 0x1F, result);
-
-                        break;
-
-                        // Instruction SRL
-                        case ALU_SRL:
-                            mvwprintw(winProg, row, colComment,
-                                          "// srl: 0x%08X >> %d = 0x%08X",
-                                          input1, input2 & 0x1F, result);
-
-                        break;
-
-                        // Instruction OR
-                        case ALU_OR:
-                            mvwprintw(winProg, row, colComment,
-                                      "// or:  0x%08X | 0x%08X = 0x%08X",
-                                      input1, input2, result);
-
-                        break;
-
-                        // Instruction AND
-                        case ALU_AND:
-                            mvwprintw(winProg, row, colComment,
-                                      "// and: 0x%08X & 0x%08X = 0x%08X",
-                                      input1, input2, result);
-
-                        break;
-
-                        default: mvwprintw(winProg, row, colComment, "// op non riconosciuta"); break;
-                    }
-
-                    break;
-
-                case 0x67:
-                    mvwprintw(
-                        winProg,
-                        row,
-                        colComment,
-                        "// jalr: ra -> 0x%08X, (rs1=0x%08X + %d)",
-                        pc + 4,
-                        input1,
-                        (int16_t)currentDecoded.immediate
-                    );
-
-                break;
-
-                // Instructions I-Type
-                case 0x13:
-
-                    switch (aluOp) {
-
-                        // Instruction ADDI
-                        case ALU_ADDI:
-                            mvwprintw(winProg, row, colComment,
-                                      "// addi: 0x%08X + %d = 0x%08X",
-                                      input1,
-                                      (int16_t)currentDecoded.immediate,
-                                      result);
-
-                        break;
-
-                        // Instruction SLLI
-                        case ALU_SLLI:
-                            mvwprintw(winProg, row, colComment,
-                                      "// slli: 0x%08X << %d = 0x%08X",
-                                      input1,
-                                      currentDecoded.immediate,
-                                      result);
-
-                        break;
-
-                        // Instruction XORI
-                        case ALU_XORI:
-                            mvwprintw(winProg, row, colComment,
-                                      "// xori: 0x%08X ^ 0x%08X = 0x%08X",
-                                      input1,
-                                      currentDecoded.immediate,
-                                      result);
-
-                        break;
-
-                        // Instruction SRAI
-                        case ALU_SRAI:
-
-                            mvwprintw(winProg, row, colComment,
-                                          "// srai: 0x%08X >>> %d = 0x%08X",
-                                          input1,
-                                          currentDecoded.immediate,
-                                          result);
-
-                        break;
-
-                        // Instruction SRLI
-                        case ALU_SRLI:
-                            mvwprintw(winProg, row, colComment,
-                                          "// srli: 0x%08X >> %d = 0x%08X",
-                                          input1,
-                                          currentDecoded.immediate,
-                                          result);
-
-                        break;
-
-                        // Instruction ORI
-                        case ALU_ORI:
-                            mvwprintw(winProg, row, colComment,
-                                      "// ori:  0x%08X | 0x%08X = 0x%08X",
-                                      input1,
-                                      currentDecoded.immediate,
-                                      result);
-
-                        break;
-
-                        // Instruction ANDI
-                        case ALU_ANDI:
-                            mvwprintw(winProg, row, colComment,
-                                      "// andi: 0x%08X & 0x%08X = 0x%08X",
-                                      input1,
-                                      currentDecoded.immediate,
-                                      result);
-
-                        break;
-
-                        default: mvwprintw(winProg, row, colComment, "// op non riconosciuta"); break;
-                    }
-
-                    break;
-
-                default: mvwprintw(winProg, row, colComment, "// op non riconosciuta"); break;
-
+            if (currentInstructionIndex < options.instruction_count) {
+                usageInstruction = decodeInstruction(options.instructions[currentInstructionIndex].instruction);
             }
 
+            break;
+        }
+
+        codeLineCounter++;
+
+    }
+
+    const int maxRows = getmaxy(winProg) - 3;
+    int startLine    = 0;
+
+    if (highlightedLine >= maxRows) {
+        startLine = highlightedLine - maxRows / 2;
+        if (startLine < 0) startLine = 0;
+
+    }
+
+    for (int i = startLine; i < lineCount && i - startLine < maxRows; i++) {
+        const int row = 2 + (i - startLine);
+
+        if (i == highlightedLine) {
+
+            // Current line PC
+            wattron(winProg, COLOR_PAIR(4) | A_BOLD);
+            mvwprintw(winProg, row, 2, "-> %s", asmLines[i]);
+            wattroff(winProg, COLOR_PAIR(4) | A_BOLD);
+
+            // Add comments for debug
+            wattron(winProg, COLOR_PAIR(5));
+            constexpr int colComment = 50; // Pos comment
+
+            if (currentInstructionIndex < options.instruction_count) {
+                const AluOp aluOp = getInstructionEnum(usageInstruction.opcode, usageInstruction.funct3, usageInstruction.funct7Bit30);
+
+                switch (usageInstruction.opcode) {
+                    case 0x33: // R-type
+                        switch (aluOp) {
+                            case ALU_ADD:
+                                mvwprintw(winProg, row, colComment,
+                                          "// add: 0x%08X + 0x%08X = 0x%08X",
+                                          input1, input2, result);
+                                break;
+                            case ALU_SUB:
+                                mvwprintw(winProg, row, colComment,
+                                          "// sub: 0x%08X - 0x%08X = 0x%08X",
+                                          input1, input2, result);
+                                break;
+
+                            default:
+                                mvwprintw(winProg, row, colComment, "// PC: 0x%08X", pc);
+                                break;
+                        }
+                        break;
+
+                    case 0x13: // I-type
+                        switch (aluOp) {
+                            case ALU_ADDI:
+                                mvwprintw(winProg, row, colComment,
+                                          "// addi: 0x%08X + %d = 0x%08X",
+                                          input1, (int16_t)usageInstruction.immediate, result);
+                                break;
+
+                            default:
+                                mvwprintw(winProg, row, colComment, "// PC: 0x%08X", pc);
+                                break;
+                        }
+                        break;
+
+                    default:
+                        mvwprintw(winProg, row, colComment, "// PC: 0x%08X", pc);
+                        break;
+                }
+            }
             wattroff(winProg, COLOR_PAIR(5));
 
         } else {
-            // All instructions
+
             wattron(winProg, COLOR_PAIR(0));
-            mvwprintw(winProg, row, 2, "   0x%08X: %-30s", address, instrStr);
+            mvwprintw(winProg, row, 2, "   %s", asmLines[i]);
             wattroff(winProg, COLOR_PAIR(0));
+
         }
     }
 
-    // Refresh instructions windows
+cleanup:
+    // Free memory
+    if (asmLines) {
+        for (int i = 0; i < lineCount; i++) {
+            free(asmLines[i]);
+        }
+
+        free(asmLines);
+
+    }
+
     printRegisterTable(winRegs, *charCurrent, offset);
     wnoutrefresh(winProg);
     wnoutrefresh(winRegs);
@@ -481,76 +424,60 @@ bool printProgramWithCurrentInstruction(
         wnoutrefresh(winCmd);
         doupdate();
 
-        const int ch      = wgetch(winStatus);
+        const int ch = wgetch(winStatus);
 
         if (ch == 'q' || ch == 'Q') {
             quitRequested = true;
             break;
-
         }
 
         if (ch == 'e' || ch == 'E') {
             *selectCurrent = PROG_WINDOW;
-
         }
 
         if (ch == 't' || ch == 'T') {
             *selectCurrent = REGS_WINDOW;
-
         }
 
         if (ch == 'r' || ch == 'R') {
             *selectCurrent = STATUS_WINDOW;
-
         }
 
-
         switch (*selectCurrent) {
-
             case PROG_WINDOW:
 
-                // Enter
-                if (ch == 'j' || ch == 'J') continueExecution = true;
+                if (usageInstruction.opcode != 0x73) { // Not work if ecall
+                    if (ch == 'j' || ch == 'J') continueExecution = true;
+                }
 
-            break;
-
+                break;
 
             case STATUS_WINDOW:
-
-                // Backspace
                 if (ch == 'n' || ch == 'N') { step++; }
-
-            break;
+                break;
 
             case REGS_WINDOW:
-
                 if (ch == KEY_UP && offset > 0) {
                     offset--;
                 }
 
-                int availableRows = getmaxy(winRegs) - 4;
+                const int availableRows = getmaxy(winRegs) - 4;
                 if (ch == KEY_DOWN && offset + availableRows < 32) {
                     offset++;
                 }
 
                 if (ch == 'd' || ch == 'D') {
                     *charCurrent = 'd';
-
                     printRegisterTable(winRegs, *charCurrent, offset);
                     wnoutrefresh(winRegs);
-
                 }
 
                 if (ch == 'h' || ch == 'H') {
                     *charCurrent = 'h';
-
                     printRegisterTable(winRegs, *charCurrent, offset);
                     wnoutrefresh(winRegs);
-
                 }
-
-            break;
-
+                break;
 
             default: break;
         }

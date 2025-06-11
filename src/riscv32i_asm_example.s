@@ -37,6 +37,8 @@ _start:
     addi t0, zero, 20
     addi t1, zero, 5
 
+    ecall
+
 CODE:
     add  t0, t0, t1
 
