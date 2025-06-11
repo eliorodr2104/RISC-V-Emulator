@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <unistd.h>
 
 #include "args_handler.h"
 #include "cpu.h"

@@ -69,6 +69,7 @@ src/include/aluControl.h
         src/include/args_handler.h
         src/cli-handler/asm_file_parser.c
         src/cli-handler/asm_file_parser.h
+        src/include/tui/main/windows.h
 )
 
 # Create executable

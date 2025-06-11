@@ -35,6 +35,18 @@ ControlSignals getControlSignals(
             signals.regWrite  = true;      // scrive risultato in rd
             break;
 
+        // UJ-Type: jal. (opcode = 0x6F)
+        case 0x6F:
+            signals.branch    = false;
+            signals.memRead   = false;
+            signals.memToReg  = false;
+            signals.operation = 0x6F;      // Operation code
+            signals.memWrite  = false;
+            signals.aluSrc    = true;      // usa immediato
+            signals.regWrite  = true;      // scrive risultato in rd
+
+        break;
+
         // Store: SW, SH, SB, etc. (opcode = 0x23)
         case 0x23: // STORE
             signals.branch    = false;

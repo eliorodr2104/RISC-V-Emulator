@@ -102,6 +102,17 @@ int executeSingleStep(
 
         nextPc = (base + offset) & ~1;
 
+    } else if (decodedInstruction.opcode == 0x6F) { // Execution jal
+        if (unitControlRet.regWrite) {
+
+
+            writeRegister(decodedInstruction.rd, cpu->pc + 4);
+        }
+
+        const int32_t offset = decodedInstruction.immediate;
+
+        nextPc = (cpu->pc + offset) & ~1;;
+
     } else if (unitControlRet.regWrite) {
         writeRegister(decodedInstruction.rd, result.result);
 
