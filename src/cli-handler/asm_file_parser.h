@@ -6,6 +6,6 @@
 #define ASM_FILE_PARSER_H
 #include "args_handler.h"
 
-int parse_riscv_file(const options_t *opts);
+int parse_riscv_file(options_t **opts);
 
 #endif //ASM_FILE_PARSER_H

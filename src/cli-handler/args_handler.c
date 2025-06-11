@@ -10,26 +10,15 @@
 #include "../include/args_handler.h"
 
 #include "asm_file_parser.h"
+#include "tools.h"
 
 static void print_help(const char *program_name);
 static char **split_args(const char *args_str, int *count);
 static void add_breakpoint(options_t *opts, const char *addr);
-static int load_binary(options_t *opt);
 
-
-
-// Funzione principale per parsare un file RISC-V
-static int load_binary(options_t *opt) {
-    if (!opt || !opt->binary_file) {
-        fprintf(stderr, "Parametri non validi\n");
-        return -1;
-    }
-
-    return parse_riscv_file(opt);
-}
 
 void print_options(const options_t *opts) {
-    if (opts->args_count > 0) {
+    if (opts->args_count > 0 && opts->args != NULL) {
         printf("Binary arguments: ");
         for (int i = 0; i < opts->args_count; i++) {
             printf("%s ", opts->args[i]);
@@ -37,7 +26,7 @@ void print_options(const options_t *opts) {
         printf("\n");
     }
 
-    if (opts->breakpoint_count > 0) {
+    if (opts->breakpoint_count > 0 && opts->breakpoints != NULL) {
         printf("Breakpoints: ");
         for (int i = 0; i < opts->breakpoint_count; i++) {
             printf("%s ", opts->breakpoints[i]);
@@ -46,12 +35,15 @@ void print_options(const options_t *opts) {
     }
 
     // Shows the loaded instructions
-    printf("\n=== Loaded Instructions ===\n");
-    for (int i = 0; i < opts->instruction_count; i++) {
-        printf("0x%08x: 0x%08x\n",
-               opts->instructions[i].address,
-               opts->instructions[i].instruction
-               );
+    if (opts->instruction_count > 0 && opts->instructions != NULL) {
+        printf("\n Successfully loaded %d instructions", opts->instruction_count);
+        printf("\n=== Loaded Instructions ===\n");
+        for (int i = 0; i < opts->instruction_count; i++) {
+            printf("0x%08x: 0x%08x \n",
+                   opts->instructions[i].address,
+                   opts->instructions[i].instruction
+                  );
+        }
     }
 }
 
@@ -197,7 +189,7 @@ int handle_args(int argc, char *argv[], options_t *opts) {
             case 'f':
                 if (!opts->step_mode) {
                     opts->full_execution = true;
-                    printf("Full execution mode enabled\n");
+                    // printf("Full execution mode enabled\n");
                 } else
                     fprintf(stderr, "Can't use both step by step and full execution mode, try again with only one of the two\n");
                 break;
@@ -205,7 +197,7 @@ int handle_args(int argc, char *argv[], options_t *opts) {
             case 's':
                 if (!opts->full_execution) {
                     opts->step_mode = true;
-                    printf("Step by step mode enabled\n");
+                    // printf("Step by step mode enabled\n");
                 } else
                     fprintf(stderr, "Can't use both step by step and full execution mode, try again with only one of the two\n");
                 break;
@@ -215,7 +207,7 @@ int handle_args(int argc, char *argv[], options_t *opts) {
 
             case 'a':
                 opts->args = split_args(optarg, &opts->args_count);
-                printf("Arguments for binary (%d args):\n", opts->args_count);
+                // printf("Arguments for binary (%d args):\n", opts->args_count);
                 for (int i = 0; i < opts->args_count; i++) {
                     printf("  argv[%d] = '%s'\n", i, opts->args[i]);
                 }
@@ -223,7 +215,7 @@ int handle_args(int argc, char *argv[], options_t *opts) {
 
             case 'b':
                 add_breakpoint(opts, optarg);
-                printf("Breakpoint added at: %s\n", optarg);
+                // printf("Breakpoint added at: %s\n", optarg);
                 break;
 
             default:
@@ -240,7 +232,7 @@ int handle_args(int argc, char *argv[], options_t *opts) {
     }
 
     // loads the binary
-    if (!load_binary(opts))
+    if (parse_riscv_file(&opts) == -1)
         return -1;
 
     return 0;

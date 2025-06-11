@@ -26,7 +26,7 @@ static int32_t signExtend(const uint32_t value, const int bits) {
     return (int32_t)(value << shift) >> shift;
 }
 
-
+void print_binary(uint32_t bin);
 void formatInstruction(DecodedInstruction decoded, char* buffer, size_t size);
 const char* getInstructionName(uint8_t opcode, uint8_t funct3, uint8_t funct7Bit30);
 

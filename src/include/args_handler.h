@@ -26,13 +26,10 @@ typedef struct {
     // data of the bin given
     riscv_instruction_t *instructions;   // Array of the instructions
     int instruction_count;               // instruction count
-    uint32_t entry_point;                // address of the entry point
-    uint32_t text_start;                 // address of the '.text' section
-    uint32_t text_size;                  // size    of the '.text' section
 } options_t;
 
 // public functions
-int handle_args(int argc, char *argv[], options_t *opts);
+int  handle_args(int argc, char *argv[], options_t *opts);
 void print_options(const options_t *opts);
 void free_options(const options_t *opts);
 

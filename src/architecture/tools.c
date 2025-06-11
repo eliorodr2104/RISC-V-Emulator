@@ -2,10 +2,20 @@
 // Created by Eliomar Alejandro Rodriguez Ferrer on 03/06/25.
 //
 
+#include "tools.h"
+
+#include <inttypes.h>
 #include <stdio.h>
 
 #include "aluControl.h"
 #include "instructionMemory.h"
+
+void print_binary(uint32_t bin) {
+    printf("\n");
+    for (int i = 31; i >= 0; --i) {
+        printf("%"PRIu32, bin >> i & 1);
+    }
+}
 
 const char* getInstructionName(const uint8_t opcode, const uint8_t funct3, const uint8_t funct7Bit30) {
     switch(opcode) {

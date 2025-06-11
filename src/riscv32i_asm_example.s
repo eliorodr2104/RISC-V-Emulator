@@ -12,6 +12,6 @@ _start:
 
     add t0, t0, t1
 
-exit:
-    addi x17, x0, 10  # call number 10 = exit
-    ecall
+#exit:
+#    addi x17, x0, 10  # call number 10 = exit
+#    ecall
