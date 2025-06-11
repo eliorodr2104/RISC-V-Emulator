@@ -56,7 +56,7 @@ static int read_binary_file(const char *filepath, options_t *opts) {
     opts->instruction_count = file_size / 4;
 
     // printf("\n allocating memory...");
-    opts->instructions = malloc(opts->instruction_count * sizeof(uint32_t));
+    opts->instructions = malloc(opts->instruction_count * sizeof(riscv_instruction_t));
     if (!opts->instructions) return -1;
 
     for (int i = 0; i < opts->instruction_count; i++) {
@@ -77,7 +77,7 @@ static int read_binary_file(const char *filepath, options_t *opts) {
 
         opts->instructions[i].instruction = instr;
         // printf("\nloaded instructions: ");
-        // print_binary(instr);
+        print_binary(instr);
     }
 
     // printf("\n closing file...");
