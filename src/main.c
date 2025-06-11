@@ -13,6 +13,8 @@ int main(const int argc, char** argv) {
     if (result != 0)
         return result;
 
+    opts.instruction_count_aligned = opts.instruction_count * 4;
+
     Cpu* cpu = newCpu();
 
     WINDOW* winProg   = nullptr;

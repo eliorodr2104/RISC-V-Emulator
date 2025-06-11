@@ -30,6 +30,7 @@ typedef struct {
     // data of the bin given
     riscv_instruction_t *instructions;   // Array of the instructions
     int instruction_count;               // instruction count
+    int instruction_count_aligned;       // Instr count align * 4
 } options_t;
 
 // public functions
