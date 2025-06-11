@@ -82,15 +82,15 @@ void formatInstruction(const DecodedInstruction decoded, char* buffer, size_t si
     const char* name = getInstructionName(decoded.opcode, decoded.funct3, decoded.funct7Bit30);
 
     if (decoded.opcode == 0x13) { // Tipo I
-        snprintf(buffer, size, "%s %s, %-4s, %d",
+        snprintf(buffer, size, "%s %-4s, %-4s, %d",
                 name, register_names[decoded.rd], register_names[decoded.rs1], decoded.immediate);
     }
     else if (decoded.opcode == 0x33) { // Tipo R
-        snprintf(buffer, size, "%s %s, %-4s, %s",
+        snprintf(buffer, size, "%s %-4s, %-4s, %s",
                 name, register_names[decoded.rd], register_names[decoded.rs1], register_names[decoded.rs2]);
     }
     else if (decoded.opcode == 0x67) { // JALR
-        snprintf(buffer, size, "%s %s, %-4s, %d",
+        snprintf(buffer, size, "%s %-4s, %-4s, %d",
                 name, register_names[decoded.rd], register_names[decoded.rs1], decoded.immediate);
     }
     else {
