@@ -5,9 +5,6 @@
 #ifndef INSTRUCTIONMEMORY_H
 #define INSTRUCTIONMEMORY_H
 
-#define MAX_INSTRUCTIONS 27
-#define SIZE_INSTRUCTIONS MAX_INSTRUCTIONS * 4
-
 #include "cpu.h"
 
 typedef struct {
@@ -20,11 +17,9 @@ typedef struct {
     uint8_t  funct7Bit30;   // [30]    - Bit 30 per controllore ALU
 } DecodedInstruction;
 
-extern uint32_t instructions[];
-
 uint32_t           fetchInstruction (
-    Cpu* cpu,
-    options_t options
+    Cpu      * cpu,
+    options_t  options
 );
 DecodedInstruction decodeInstruction(uint32_t instruction);
 

@@ -36,7 +36,7 @@ void runCpuFull(
     int currentChar = 'h';
     AssemblyData* data = newAssemblyData(options);
 
-    while (cpu->pc < SIZE_INSTRUCTIONS) {
+    while (cpu->pc < options.instruction_count_aligned) {
         executeSingleStep(winProg, winRegs, winStatus, winCmd, window, &currentChar, cpu, options, data, 0);
 
     }
@@ -44,19 +44,20 @@ void runCpuFull(
 }
 
 void runCpuStepByStep(
-    WINDOW*  winProg,
-    WINDOW*  winRegs,
-    WINDOW*  winStatus,
-    WINDOW*  winCmd,
-    Windows* window,
-    Cpu* cpu,
+          WINDOW *  winProg,
+          WINDOW *  winRegs,
+          WINDOW *  winStatus,
+          WINDOW *  winCmd,
+          Windows*  window,
+          Cpu    *  cpu,
     const options_t options
 ) {
     int currentChar = 'h';
     AssemblyData* data = newAssemblyData(options);
 
-    while (cpu->pc < SIZE_INSTRUCTIONS) {
+    while (cpu->pc < options.instruction_count_aligned) {
         if (!executeSingleStep(winProg, winRegs, winStatus, winCmd, window, &currentChar, cpu, options, data, 1)) break;
+
     }
 
 }
@@ -108,14 +109,14 @@ int executeSingleStep(
         cpu->pc,
         options,
         data,
-        &offsetProg)
+        &offsetProg
 
-    ) {
+    )) {
         return 0;
 
     }
 
-    // Esecuzione per JALR
+    // Execution jalr
     if (decodedInstruction.opcode == 0x67 && decodedInstruction.funct3 == 0x0) {
         if (unitControlRet.regWrite) {
             writeRegister(decodedInstruction.rd, cpu->pc + 4);
