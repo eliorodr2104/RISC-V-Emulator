@@ -42,7 +42,7 @@ static int read_binary_file(const char *filepath, options_t *opts) {
 
     // get file size
     fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
+    const long file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
     // return -1 if the file is empty
@@ -56,7 +56,7 @@ static int read_binary_file(const char *filepath, options_t *opts) {
     opts->instruction_count = file_size / 4;
 
     // printf("\n allocating memory...");
-    opts->instructions = malloc(opts->instruction_count * sizeof(uint32_t));
+    opts->instructions = malloc(opts->instruction_count * sizeof(riscv_instruction_t));
     if (!opts->instructions) return -1;
 
     for (int i = 0; i < opts->instruction_count; i++) {
