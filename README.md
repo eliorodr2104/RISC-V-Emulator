@@ -121,15 +121,4 @@ This project started as an experiment while studying for a university exam lol.
 Contributions are welcome! Feel free to open issues or submit pull requests.
 
 
-## Stats
-
-<a href="https://www.star-history.com/#eliorodr2104/RISC-V-Emulator&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=eliorodr2104/RISC-V-Emulator&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=eliorodr2104/RISC-V-Emulator&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=eliorodr2104/RISC-V-Emulator&type=Date" />
- </picture>
-</a>
-
-
 
