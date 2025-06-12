@@ -9,7 +9,7 @@
 #include "cpu.h"
 
 /**
- * @brief Function to handle user choices for execution mode
+ * @brief Function to handle user choices for execution mode (Exported by CLion for readability)
  * @param winProg
  * @param winRegs
  * @param winStatus
@@ -21,15 +21,15 @@
  * @param cols
  */
 void show_mode_chooser_window(
-    WINDOW    *winProg,
-    WINDOW    *winRegs,
-    WINDOW    *winStatus,
-    WINDOW    *winCmd,
-    Cpu       *cpu,
-    options_t  options,
-    Windows   *currentWindow,
-    const int  rows,
-    const int  cols
+    WINDOW*   winProg,
+    WINDOW*   winRegs,
+    WINDOW*   winStatus,
+    WINDOW*   winCmd,
+    Cpu*      cpu,
+    options_t options,
+    Windows*  currentWindow,
+    const int rows,
+    const int cols
 ) {
     WINDOW* menuWin = newwin(7, 40, (rows-7)/2, (cols-40)/2);
     box(menuWin, 0, 0);
@@ -108,11 +108,11 @@ void show_mode_chooser_window(
  * @param options
  */
 void userChoices(
-    WINDOW* winProg,
-    WINDOW* winRegs,
-    WINDOW* winStatus,
-    WINDOW* winCmd,
-    Cpu* cpu,
+    WINDOW*   winProg,
+    WINDOW*   winRegs,
+    WINDOW*   winStatus,
+    WINDOW*   winCmd,
+    Cpu*      cpu,
     options_t options
 ) {
 
@@ -143,12 +143,15 @@ void userChoices(
     }
 }
 
+/**
+ * @brief Function to draw the command window with help information
+ * @param winCmd
+ * @param window
+ */
 void commandWindow(
           WINDOW* winCmd,
     const Windows window
-
 ) {
-
     // Header definition
     werase(winCmd);
     wbkgd(winCmd, COLOR_PAIR(0)); // background black, text white default
