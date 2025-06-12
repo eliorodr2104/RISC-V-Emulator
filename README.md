@@ -1,4 +1,17 @@
-# RISC-V Core Emulator
+<h1 align="center">RISC-V Emulator</h1>
+
+<div align="center">
+
+![GitHub last commit](https://img.shields.io/github/last-commit/eliorodr2104/RISC-V-Emulator?style=for-the-badge&labelColor=101418&color=9ccbfb)
+![GitHub Repo stars](https://img.shields.io/github/stars/eliorodr2104/RISC-V-Emulator?style=for-the-badge&labelColor=101418&color=b9c8da)
+![GitHub repo size](https://img.shields.io/github/repo-size/eliorodr2104/RISC-V-Emulator?style=for-the-badge&labelColor=101418&color=d3bfe6)
+![GitHub issues](https://img.shields.io/github/issues/eliorodr2104/RISC-V-Emulator?style=for-the-badge&labelColor=101418&color=ffb4a2)
+
+</div>
+
+> [!WARNING]
+> The project is still under development, but you are welcome to help!
+---
 
 A low-level RISC-V CPU emulator that executes machine language instructions in step-by-step mode for educational purposes. This project provides a simulation environment to visually understand and work with the RISC-V architecture at the instruction level.
 
