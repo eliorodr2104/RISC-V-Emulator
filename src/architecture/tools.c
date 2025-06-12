@@ -81,10 +81,9 @@ AluOp getInstructionEnum(const uint8_t opcode, const uint8_t funct3, const uint8
 void formatInstruction(const DecodedInstruction decoded, char* buffer, size_t size) {
     const char* name = getInstructionName(decoded.opcode, decoded.funct3, decoded.funct7Bit30);
 
-    if (decoded.opcode == 0x13) { // Tipo I
+    if (decoded.opcode == 0x13) // Tipo I
         snprintf(buffer, size, "%s %-4s, %-4s, %d",
-                name, register_names[decoded.rd], register_names[decoded.rs1], decoded.immediate);
-    }
+                 name, register_names[decoded.rd], register_names[decoded.rs1], decoded.immediate);
     else if (decoded.opcode == 0x33) { // Tipo R
         snprintf(buffer, size, "%s %-4s, %-4s, %s",
                 name, register_names[decoded.rd], register_names[decoded.rs1], register_names[decoded.rs2]);
