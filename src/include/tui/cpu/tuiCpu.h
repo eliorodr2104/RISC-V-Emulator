@@ -54,4 +54,17 @@ void drawPipeline(
 
 );
 
+void redrawProgram(
+    WindowsManagement windowManagement,
+    int*              offsetProg,
+    const AssemblyData* data,
+    int        highlightedLine,
+    int        maxRows,
+    int        step,
+    DecodedInstruction usageInstruction,
+    const int*      charCurrent,
+    int       offset,
+    const Cpu* cpu
+);
+
 #endif //TUI_H

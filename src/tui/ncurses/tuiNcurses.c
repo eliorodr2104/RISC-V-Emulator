@@ -77,6 +77,12 @@ bool initNcurses(
         return false;
     }
 
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
+    keypad(*winStatus, TRUE);
+    keypad(*winCmd, TRUE);
+    nodelay(*winProg, TRUE);
+    nodelay(*winRegs, TRUE);
+
     return true;
 }
 

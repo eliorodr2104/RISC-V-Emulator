@@ -204,9 +204,6 @@ bool printProgramWithCurrentInstruction(
 
     DecodedInstruction usageInstruction = {};
 
-    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
-    keypad(windowManagement.winStatus, TRUE);
-
     int rowToLineMapping[data->lineCount];
     int visibleRows = 0;
 
@@ -215,27 +212,13 @@ bool printProgramWithCurrentInstruction(
     wbkgd(windowManagement.winProg, COLOR_PAIR(0));
     box(windowManagement.winProg, 0, 0);
 
-    if (*windowManagement.currentWindow == PROG_WINDOW) {
+    wattron(windowManagement.winProg,  COLOR_PAIR(2) | A_BOLD);
+    mvwprintw(windowManagement.winProg, 0, 2, " E");
+    wattroff(windowManagement.winProg, COLOR_PAIR(2) | A_BOLD);
 
-        wattron(windowManagement.winProg,  COLOR_PAIR(2) | A_BOLD);
-        mvwprintw(windowManagement.winProg, 0, 2, " E");
-        wattroff(windowManagement.winProg, COLOR_PAIR(2) | A_BOLD);
-
-        wattron(windowManagement.winProg, COLOR_PAIR(1) | A_BOLD);
-        mvwprintw(windowManagement.winProg, 0, 4, "xecution status ");
-        wattroff(windowManagement.winProg, COLOR_PAIR(1) | A_BOLD);
-
-    } else {
-
-        wattron(windowManagement.winProg,  COLOR_PAIR(2) | A_DIM);
-        mvwprintw(windowManagement.winProg, 0, 2, " E");
-        wattroff(windowManagement.winProg, COLOR_PAIR(2) | A_DIM);
-
-        wattron(windowManagement.winProg, COLOR_PAIR(1) | A_DIM);
-        mvwprintw(windowManagement.winProg, 0, 4, "xecution status ");
-        wattroff(windowManagement.winProg, COLOR_PAIR(1) | A_DIM);
-
-    }
+    wattron(windowManagement.winProg, COLOR_PAIR(1) | A_BOLD);
+    mvwprintw(windowManagement.winProg, 0, 4, "xecution status ");
+    wattroff(windowManagement.winProg, COLOR_PAIR(1) | A_BOLD);
 
     // Calc instruction PC
     const int currentInstructionIndex = cpu->pc / 4;
@@ -348,23 +331,18 @@ bool printProgramWithCurrentInstruction(
     }
 
     printRegisterTable(windowManagement.winRegs, *charCurrent, offset);
-    wnoutrefresh(windowManagement.winProg);
-    wnoutrefresh(windowManagement.winRegs);
-
-    nodelay(windowManagement.winStatus, FALSE);
+    drawPipeline(windowManagement.winStatus, usageInstruction, cpu->pc, step);
 
     bool quitRequested     = false;
     bool continueExecution = false;
 
+    // Input loop
     while (1) {
-        printRegisterTable(windowManagement.winRegs, *charCurrent, offset);
+        wnoutrefresh(windowManagement.winProg);
         wnoutrefresh(windowManagement.winRegs);
-
-        drawPipeline(windowManagement.winStatus, usageInstruction, cpu->pc, step);
-        commandWindow(windowManagement.winCmd, *windowManagement.currentWindow);
-
         wnoutrefresh(windowManagement.winStatus);
         wnoutrefresh(windowManagement.winCmd);
+
         doupdate();
 
         const int ch = wgetch(windowManagement.winStatus);
@@ -426,15 +404,18 @@ bool printProgramWithCurrentInstruction(
 
                 if (ch == KEY_UP && *offsetProg > 0) {
                     (*offsetProg)--;
-                    goto redraw_program;
+                    redrawProgram(windowManagement, offsetProg, data, highlightedLine, maxRows, step, usageInstruction, charCurrent, offset, cpu);
                 }
 
                 if (ch == KEY_DOWN) {
                     int maxOffset = data->lineCount - maxRows;
                     if (maxOffset < 0) maxOffset = 0;
+
                     if (*offsetProg < maxOffset) {
                         (*offsetProg)++;
-                        goto redraw_program;
+
+                        redrawProgram(windowManagement, offsetProg, data, highlightedLine, maxRows, step, usageInstruction, charCurrent, offset, cpu);
+
                     }
                 }
 
@@ -448,29 +429,37 @@ bool printProgramWithCurrentInstruction(
                 break;
 
             case STATUS_WINDOW:
-                if (ch == 'n' || ch == 'N') { step++; }
+                if (ch == 'n' || ch == 'N') {
+                    step++;
+                    drawPipeline(windowManagement.winStatus, usageInstruction, cpu->pc, step);
+
+                }
                 break;
 
             case REGS_WINDOW:
                 if (ch == KEY_UP && offset > 0) {
                     offset--;
+                    printRegisterTable(windowManagement.winRegs, *charCurrent, offset);
+
                 }
 
                 const int availableRows = getmaxy(windowManagement.winRegs) - 4;
                 if (ch == KEY_DOWN && offset + availableRows < 32) {
                     offset++;
+                    printRegisterTable(windowManagement.winRegs, *charCurrent, offset);
+
                 }
 
                 if (ch == 'd' || ch == 'D') {
                     *charCurrent = 'd';
                     printRegisterTable(windowManagement.winRegs, *charCurrent, offset);
-                    wnoutrefresh(windowManagement.winRegs);
+
                 }
 
                 if (ch == 'h' || ch == 'H') {
                     *charCurrent = 'h';
                     printRegisterTable(windowManagement.winRegs, *charCurrent, offset);
-                    wnoutrefresh(windowManagement.winRegs);
+
                 }
                 break;
 
@@ -479,48 +468,63 @@ bool printProgramWithCurrentInstruction(
 
         if (step > 5 || continueExecution) break;
 
-        continue;
-
-    redraw_program:
-
-        werase(windowManagement.winProg);
-        wbkgd(windowManagement.winProg, COLOR_PAIR(0));
-        box(windowManagement.winProg, 0, 0);
-
-        if (*windowManagement.currentWindow == PROG_WINDOW) {
-            wattron(windowManagement.winProg,  COLOR_PAIR(2) | A_BOLD);
-            mvwprintw(windowManagement.winProg, 0, 2, " E");
-            wattroff(windowManagement.winProg, COLOR_PAIR(2) | A_BOLD);
-
-            wattron(windowManagement.winProg, COLOR_PAIR(1) | A_BOLD);
-            mvwprintw(windowManagement.winProg, 0, 4, "xecution status ");
-            wattroff(windowManagement.winProg, COLOR_PAIR(1) | A_BOLD);
-        }
-
-
-        startLine = *offsetProg;
-        int maxStartLine_redraw = data->lineCount - maxRows;
-        if (maxStartLine_redraw < 0) maxStartLine_redraw = 0;
-        if (startLine > maxStartLine_redraw) startLine = maxStartLine_redraw;
-
-        for (int i = startLine; i < data->lineCount && (i - startLine) < maxRows; i++) {
-            const int row = 2 + (i - startLine);
-
-            if (i == highlightedLine) {
-                wattron(windowManagement.winProg, COLOR_PAIR(4) | A_BOLD);
-                mvwprintw(windowManagement.winProg, row, 2, "-> %s", data->asmLines[i]);
-                wattroff(windowManagement.winProg, COLOR_PAIR(4) | A_BOLD);
-
-            } else {
-                wattron(windowManagement.winProg, COLOR_PAIR(0));
-                mvwprintw(windowManagement.winProg, row, 2, "   %s", data->asmLines[i]);
-                wattroff(windowManagement.winProg, COLOR_PAIR(0));
-
-            }
-        }
-
-        wnoutrefresh(windowManagement.winProg);
     }
 
     return quitRequested;
+}
+
+void redrawProgram(
+    const WindowsManagement windowManagement,
+    int*              offsetProg,
+    const AssemblyData* data,
+    const int        highlightedLine,
+    const int        maxRows,
+    const int        step,
+    const DecodedInstruction usageInstruction,
+    const int*      charCurrent,
+    const int       offset,
+    const Cpu* cpu
+
+
+) {
+    printRegisterTable(windowManagement.winRegs, *charCurrent, offset);
+    drawPipeline(windowManagement.winStatus, usageInstruction, cpu->pc, step);
+    commandWindow(windowManagement.winCmd, *windowManagement.currentWindow);
+
+    werase(windowManagement.winProg);
+    wbkgd(windowManagement.winProg, COLOR_PAIR(0));
+    box(windowManagement.winProg, 0, 0);
+
+    wattron(windowManagement.winProg,  COLOR_PAIR(2) | A_BOLD);
+    mvwprintw(windowManagement.winProg, 0, 2, " E");
+    wattroff(windowManagement.winProg, COLOR_PAIR(2) | A_BOLD);
+
+    wattron(windowManagement.winProg, COLOR_PAIR(1) | A_BOLD);
+    mvwprintw(windowManagement.winProg, 0, 4, "xecution status ");
+    wattroff(windowManagement.winProg, COLOR_PAIR(1) | A_BOLD);
+
+    int maxStartLine_redraw = data->lineCount - maxRows;
+    if (maxStartLine_redraw < 0) maxStartLine_redraw = 0;
+    if (*offsetProg > maxStartLine_redraw) *offsetProg = maxStartLine_redraw;
+
+    for (int i = *offsetProg; i < data->lineCount && (i - *offsetProg) < maxRows; i++) {
+        const int row = 2 + (i - *offsetProg);
+
+        if (i == highlightedLine) {
+            wattron(windowManagement.winProg, COLOR_PAIR(4) | A_BOLD);
+            mvwprintw(windowManagement.winProg, row, 2, "-> %s", data->asmLines[i]);
+            wattroff(windowManagement.winProg, COLOR_PAIR(4) | A_BOLD);
+
+        } else {
+            wattron(windowManagement.winProg, COLOR_PAIR(0));
+            mvwprintw(windowManagement.winProg, row, 2, "   %s", data->asmLines[i]);
+            wattroff(windowManagement.winProg, COLOR_PAIR(0));
+
+        }
+    }
+
+    wnoutrefresh(windowManagement.winRegs);
+    wnoutrefresh(windowManagement.winProg);
+    wnoutrefresh(windowManagement.winStatus);
+    wnoutrefresh(windowManagement.winCmd);
 }
