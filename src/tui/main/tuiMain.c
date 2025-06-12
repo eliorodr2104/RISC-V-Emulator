@@ -16,38 +16,21 @@
  * @param winCmd
  * @param cpu
  * @param options
+ * @param currentWindow
+ * @param rows
+ * @param cols
  */
-void userChoices(
-    WINDOW* winProg,
-    WINDOW* winRegs,
-    WINDOW* winStatus,
-    WINDOW* winCmd,
-    Cpu* cpu,
-    options_t options
+void show_mode_chooser_window(
+    WINDOW    *winProg,
+    WINDOW    *winRegs,
+    WINDOW    *winStatus,
+    WINDOW    *winCmd,
+    Cpu       *cpu,
+    options_t  options,
+    Windows   *currentWindow,
+    const int  rows,
+    const int  cols
 ) {
-
-    Windows* currentWindow = malloc(sizeof *currentWindow);
-    if (!currentWindow) { perror("malloc error"); return; }
-
-    *currentWindow = PROG_WINDOW;
-
-    int rows, cols;
-    getmaxyx(stdscr, rows, cols);
-
-
-    if (options.execution_mode == FULL) {
-        runCpuFull(winProg, winRegs, winStatus, winCmd, currentWindow, cpu, options);
-        return;
-    }
-
-    if (options.execution_mode == STEP_BY_STEP) {
-        commandWindow   (winCmd, *currentWindow);
-        runCpuStepByStep(winProg, winRegs, winStatus, winCmd, currentWindow, cpu, options);
-        return;
-    }
-
-
-
     WINDOW* menuWin = newwin(7, 40, (rows-7)/2, (cols-40)/2);
     box(menuWin, 0, 0);
     wattron(menuWin, COLOR_PAIR(2) | A_BOLD);
@@ -112,6 +95,51 @@ void userChoices(
             default:
                 return;
         }
+    }
+}
+
+/**
+ * @brief Function to handle user choices for execution mode
+ * @param winProg
+ * @param winRegs
+ * @param winStatus
+ * @param winCmd
+ * @param cpu
+ * @param options
+ */
+void userChoices(
+    WINDOW* winProg,
+    WINDOW* winRegs,
+    WINDOW* winStatus,
+    WINDOW* winCmd,
+    Cpu* cpu,
+    options_t options
+) {
+
+    Windows* currentWindow = malloc(sizeof *currentWindow);
+    if (!currentWindow) { perror("malloc error"); return; }
+
+    *currentWindow = PROG_WINDOW;
+
+    int rows, cols;
+    getmaxyx(stdscr, rows, cols);
+
+
+    switch (options.execution_mode) {
+        case DEFAULT:
+            show_mode_chooser_window(winProg, winRegs, winStatus, winCmd, cpu, options, currentWindow, rows, cols);
+            break;
+
+        case FULL:
+            runCpuFull(winProg, winRegs, winStatus, winCmd, currentWindow, cpu, options);
+            break;
+
+        case STEP_BY_STEP:
+            commandWindow   (winCmd, *currentWindow);
+            runCpuStepByStep(winProg, winRegs, winStatus, winCmd, currentWindow, cpu, options);
+            break;
+        default:
+            break;
     }
 }
 
