@@ -9,8 +9,9 @@
 
 </div>
 
+
 > [!WARNING]
-> The project is still under development, but you are welcome to help!
+> The project is still under development, but all the help is welcome!
 ---
 
 A low-level RISC-V CPU emulator that executes machine language instructions in step-by-step mode for educational purposes. This project provides a simulation environment to visually understand and work with the RISC-V architecture at the instruction level.
@@ -118,3 +119,17 @@ This project started as an experiment while studying for a university exam lol.
 ## Contributing
 
 Contributions are welcome! Feel free to open issues or submit pull requests.
+
+
+## Stats
+
+<a href="https://www.star-history.com/#eliorodr2104/RISC-V-Emulator&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=eliorodr2104/RISC-V-Emulator&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=eliorodr2104/RISC-V-Emulator&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=eliorodr2104/RISC-V-Emulator&type=Date" />
+ </picture>
+</a>
+
+
+
