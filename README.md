@@ -2,6 +2,8 @@
 
 A low-level RISC-V CPU emulator that executes machine language instructions in step-by-step mode for educational purposes. This project provides a simulation environment to visually understand and work with the RISC-V architecture at the instruction level.
 
+This project is heavily inspired by the [Helix Editor](https://github.com/helix-editor/helix).
+
 ## Overview
 
 This emulator is designed to:
@@ -17,13 +19,14 @@ This emulator is designed to:
 - [x]  Interpretation of machine language instructions
 - [x]  Partial support of the RV32I ISA
 - [x]  Real-time display of register status
+- [x]  Cli interface for parsing a .s or binary file 
 
 ### In Development
 - [ ]  Support for Type-I "load" instructions
 - [ ]  Support for Type-S "save" instructions
 - [ ]  Full support of the ISA RV32I
 - [ ]  Support for memory management
-- [ ]  Cli interface for parsing a .s or binary file 
+
 
 ## Getting Started
 
