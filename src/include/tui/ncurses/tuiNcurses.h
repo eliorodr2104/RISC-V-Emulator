@@ -10,7 +10,7 @@
 // ########################
 // # Ncurses functions    #
 // ########################
-void initNcurses(
+bool initNcurses(
     WINDOW** winRegs,
     WINDOW** winProg,
     WINDOW** winStatus,

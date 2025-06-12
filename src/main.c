@@ -36,7 +36,7 @@ int main(const int argc, char** argv) {
     WINDOW* winCmd    = nullptr;
 
     // Initialize ncurses and create windows for program, registers, status, and command
-    initNcurses(&winRegs, &winProg, &winStatus, &winCmd);
+    if (!initNcurses(&winRegs, &winProg, &winStatus, &winCmd)) return 1;
 
     // Create a structure to manage the windows and passed the current windows and the struct
     const WindowsManagement winManagement = {
@@ -46,7 +46,6 @@ int main(const int argc, char** argv) {
         .winCmd        = winCmd
     };
 
-    // TODO(Add control if the windows are created correctly)
     // Show the mode chooser window to select the execution mode
     userChoices(winManagement, cpu, opts);
 

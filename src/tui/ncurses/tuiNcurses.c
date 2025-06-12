@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void initNcurses(
+bool initNcurses(
     WINDOW** winRegs,
     WINDOW** winProg,
     WINDOW** winStatus,
@@ -70,6 +70,14 @@ void initNcurses(
     *winStatus = newwin(regsHeight - 10, regsWidth, regsHeight + 8, progWidth);
 
     *winCmd = newwin(3, cols, rows - 3, 0);
+
+    // Check if windows are created correctly, if not, end ncurses
+    if (!*winProg || !*winRegs || !*winStatus || !*winCmd) {
+        endwin();
+        return false;
+    }
+
+    return true;
 }
 
 void closeNcurses(
