@@ -40,11 +40,16 @@ int main(const int argc, char** argv) {
 
     // Create a structure to manage the windows and passed the current windows and the struct
     const WindowsManagement winManagement = {
-        .winProg       = winProg,
-        .winRegs       = winRegs,
-        .winStatus     = winStatus,
-        .winCmd        = winCmd
+        .winProg       = &(WindowAndStatus) { .window = winProg,   .isActive = true },
+        .winRegs       = &(WindowAndStatus) { .window = winRegs,   .isActive = true },
+        .winStatus     = &(WindowAndStatus) { .window = winStatus, .isActive = true },
+        .winCmd        = &(WindowAndStatus) { .window = winCmd,    .isActive = true }
     };
+
+    /*if (!initNcursesWithResize(&winManagement)) {
+        fprintf(stderr, "Failed to initialize ncurses with resize handling\n");
+        return 1;
+    }*/
 
     // Show the mode chooser window to select the execution mode
     userChoices(winManagement, cpu, opts);

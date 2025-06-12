@@ -18,6 +18,13 @@ typedef enum {
 
 } Windows;
 
+typedef struct {
+
+    WINDOW* window;
+    bool isActive;
+
+} WindowAndStatus;
+
 /**
  * @brief Struct to manage the windows in the TUI
  *
@@ -34,10 +41,10 @@ typedef enum {
  */
 typedef struct {
 
-    WINDOW * winProg;
-    WINDOW * winRegs;
-    WINDOW * winStatus;
-    WINDOW * winCmd;
+    WindowAndStatus* winProg;
+    WindowAndStatus* winRegs;
+    WindowAndStatus* winStatus;
+    WindowAndStatus* winCmd;
     Windows* currentWindow;
 
 } WindowsManagement;

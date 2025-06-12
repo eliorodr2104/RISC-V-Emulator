@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include "cpu.h"
+#include "tuiNcurses.h"
 
 /**
  * @brief Function to show the mode chooser window
@@ -93,7 +94,8 @@ void show_mode_chooser_window(
 
 
                 } else if (highlight == 1) {
-                    commandWindow   (windowManagement.winCmd, *windowManagement.currentWindow);
+                    if (windowManagement.winCmd->isActive) commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
+
                     runCpuStepByStep(windowManagement, cpu, options);
 
 
@@ -152,12 +154,17 @@ void userChoices(
             break;
 
         case STEP_BY_STEP:
-            commandWindow   (windowManagement.winCmd, *windowManagement.currentWindow);
+            if (windowManagement.winCmd->isActive) commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
+
             runCpuStepByStep(windowManagement, cpu, options);
             break;
         default:
             break;
     }
+
+    closeNcurses(&windowManagement.winRegs->window, &windowManagement.winProg->window, &windowManagement.winStatus->window);
+    free(windowManagement.currentWindow);
+
 }
 
 /**

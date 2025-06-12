@@ -5,7 +5,13 @@
 #ifndef TUINCURSES_H
 #define TUINCURSES_H
 
+#define MIN_ROWS 25
+#define MIN_COLS 80
+
 #include <curses.h>
+
+#include "windowsManagement.h"
+
 
 // ########################
 // # Ncurses functions    #
@@ -24,5 +30,7 @@ void closeNcurses(
 );
 
 void mvwprintwWrap(WINDOW *win, int starty, int startx, const char *str);
+
+bool handleTerminalResize(const WindowsManagement* windowManagement);
 
 #endif //TUINCURSES_H
