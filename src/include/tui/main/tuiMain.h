@@ -10,10 +10,23 @@
 #include "args_handler.h"
 #include "cpu.h"
 #include "windows.h"
-
 // ########################
 // # Main print functions #
 // ########################
+
+void show_mode_chooser_window(
+    WINDOW*   winProg,
+    WINDOW*   winRegs,
+    WINDOW*   winStatus,
+    WINDOW*   winCmd,
+    Cpu*      cpu,
+    options_t options,
+    Windows*  currentWindow,
+    int       rows,
+    int       cols
+);
+
+
 void userChoices(
     WINDOW* winProg,
     WINDOW* winRegs,
