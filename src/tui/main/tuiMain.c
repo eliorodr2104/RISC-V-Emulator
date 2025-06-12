@@ -8,6 +8,15 @@
 
 #include "cpu.h"
 
+/**
+ * @brief Function to handle user choices for execution mode
+ * @param winProg
+ * @param winRegs
+ * @param winStatus
+ * @param winCmd
+ * @param cpu
+ * @param options
+ */
 void userChoices(
     WINDOW* winProg,
     WINDOW* winRegs,
@@ -24,6 +33,20 @@ void userChoices(
 
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
+
+
+    if (options.execution_mode == FULL) {
+        runCpuFull(winProg, winRegs, winStatus, winCmd, currentWindow, cpu, options);
+        return;
+    }
+
+    if (options.execution_mode == STEP_BY_STEP) {
+        commandWindow   (winCmd, *currentWindow);
+        runCpuStepByStep(winProg, winRegs, winStatus, winCmd, currentWindow, cpu, options);
+        return;
+    }
+
+
 
     WINDOW* menuWin = newwin(7, 40, (rows-7)/2, (cols-40)/2);
     box(menuWin, 0, 0);
