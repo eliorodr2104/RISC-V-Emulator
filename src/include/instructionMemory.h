@@ -17,7 +17,7 @@ typedef struct {
     uint8_t  funct7Bit30;   // [30]    - Bit 30 per controllore ALU
 } DecodedInstruction;
 
-uint32_t           fetchInstruction (
+uint32_t fetchInstruction (
     Cpu      * cpu,
     options_t  options
 );

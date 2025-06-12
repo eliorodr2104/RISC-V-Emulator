@@ -9,34 +9,31 @@
 #include "cpu.h"
 
 /**
- * @brief Function to handle user choices for execution mode (Exported by CLion for readability)
- * @param winProg
- * @param winRegs
- * @param winStatus
- * @param winCmd
+ * @brief Function to show the mode chooser window
+ *
+ * @param windowManagement
+ * Current window management structure
  * @param cpu
+ * Cpu structure containing the CPU state and their flags
  * @param options
- * @param currentWindow
+ * Options structure containing the execution mode and other options
  * @param rows
+ * Current terminal rows
  * @param cols
+ * Current terminal columns
  */
 void show_mode_chooser_window(
-    WINDOW*   winProg,
-    WINDOW*   winRegs,
-    WINDOW*   winStatus,
-    WINDOW*   winCmd,
-    Cpu*      cpu,
-    options_t options,
-    Windows*  currentWindow,
-    const int rows,
-    const int cols
+    const WindowsManagement windowManagement,
+          Cpu*              cpu,
+    const options_t         options,
+    const int32_t           rows,
+    const int32_t           cols
 ) {
-    WINDOW* menuWin = newwin(7, 40, (rows-7)/2, (cols-40)/2);
-    box(menuWin, 0, 0);
-    wattron(menuWin, COLOR_PAIR(2) | A_BOLD);
-    mvwprintw(menuWin, 1, 2, "Select mode:");
-    wattroff(menuWin, COLOR_PAIR(2) | A_BOLD);
 
+    // Create a new window for the mode chooser
+    WINDOW* menuWin = newwin(7, 40, (rows-7)/2, (cols-40)/2);
+
+    if (!menuWin) return;
     constexpr int n_choices = 3;
     int highlight = 0;
 
@@ -46,9 +43,20 @@ void show_mode_chooser_window(
         "3 - Exit"
     };
 
+    // Set the background color and border for the menu window
+    box(menuWin, 0, 0);
+
+    // Set title for the menu window
+    wattron(menuWin, COLOR_PAIR(2) | A_BOLD);
+    mvwprintw(menuWin, 1, 2, "Select mode:");
+    wattroff(menuWin, COLOR_PAIR(2) | A_BOLD);
+
+    // Set the keypad for the menu window to capture arrow keys
     keypad(menuWin, TRUE);
 
     while (1) {
+
+        // Show select and unselect rows
         for (int i = 0; i < n_choices; i++) {
 
             if (i == highlight) {
@@ -61,9 +69,14 @@ void show_mode_chooser_window(
 
             }
         }
+
+        // Refresh the menu window to show the changes
         wrefresh(menuWin);
 
+        // Wait for user input and handle it
         const int c = wgetch(menuWin);
+
+        // Handle user input for navigation and selection
         switch (c) {
             case KEY_UP:
                 highlight = (highlight == 0) ? n_choices - 1 : highlight - 1;
@@ -76,12 +89,12 @@ void show_mode_chooser_window(
             case 10:
 
                 if (highlight == 0) {
-                    runCpuFull(winProg, winRegs, winStatus, winCmd, currentWindow, cpu, options);
+                    runCpuFull(windowManagement, cpu, options);
 
 
                 } else if (highlight == 1) {
-                    commandWindow   (winCmd, *currentWindow);
-                    runCpuStepByStep(winProg, winRegs, winStatus, winCmd, currentWindow, cpu, options);
+                    commandWindow   (windowManagement.winCmd, *windowManagement.currentWindow);
+                    runCpuStepByStep(windowManagement, cpu, options);
 
 
                 } else {
@@ -100,43 +113,47 @@ void show_mode_chooser_window(
 
 /**
  * @brief Function to handle user choices for execution mode
- * @param winProg
- * @param winRegs
- * @param winStatus
- * @param winCmd
+ *
+ * @param windowManagement
+ * Current window management structure
  * @param cpu
+ * Cpu structure containing the CPU state and their flags
  * @param options
+ * Current options structure containing the execution mode and other options
  */
 void userChoices(
-    WINDOW*   winProg,
-    WINDOW*   winRegs,
-    WINDOW*   winStatus,
-    WINDOW*   winCmd,
-    Cpu*      cpu,
-    options_t options
+          WindowsManagement windowManagement,
+          Cpu*              cpu,
+    const options_t         options
 ) {
 
-    Windows* currentWindow = malloc(sizeof *currentWindow);
-    if (!currentWindow) { perror("malloc error"); return; }
+    // Allocate memory for the current window pointer
+    windowManagement.currentWindow = malloc(sizeof windowManagement.currentWindow);
 
-    *currentWindow = PROG_WINDOW;
+    // Check if memory allocation was successful
+    if (!windowManagement.currentWindow) { perror("Alloc memory for the current windows is not successfully"); return; }
 
-    int rows, cols;
+    // Set the current window to the program window (default -> PROG_WINDOW)
+    *windowManagement.currentWindow= PROG_WINDOW;
+
+    int32_t rows, cols;
+
+    // Get the current terminal size
     getmaxyx(stdscr, rows, cols);
 
-
+    // Select current window based on the execution mode
     switch (options.execution_mode) {
         case DEFAULT:
-            show_mode_chooser_window(winProg, winRegs, winStatus, winCmd, cpu, options, currentWindow, rows, cols);
+            show_mode_chooser_window(windowManagement, cpu, options, rows, cols);
             break;
 
         case FULL:
-            runCpuFull(winProg, winRegs, winStatus, winCmd, currentWindow, cpu, options);
+            runCpuFull(windowManagement, cpu, options);
             break;
 
         case STEP_BY_STEP:
-            commandWindow   (winCmd, *currentWindow);
-            runCpuStepByStep(winProg, winRegs, winStatus, winCmd, currentWindow, cpu, options);
+            commandWindow   (windowManagement.winCmd, *windowManagement.currentWindow);
+            runCpuStepByStep(windowManagement, cpu, options);
             break;
         default:
             break;
@@ -145,23 +162,27 @@ void userChoices(
 
 /**
  * @brief Function to draw the command window with help information
+ *
  * @param winCmd
+ * The window where the command help will be displayed
  * @param window
+ * Given window type to display specific commands
  */
 void commandWindow(
           WINDOW* winCmd,
     const Windows window
 ) {
-    // Header definition
+    // Header definition and set background color and border
     werase(winCmd);
-    wbkgd(winCmd, COLOR_PAIR(0)); // background black, text white default
+    wbkgd(winCmd, COLOR_PAIR(0));
     box(winCmd, 0, 0);
 
+    // Set title for the command window
     wattron(winCmd,  COLOR_PAIR(1) | A_BOLD);
     mvwprintw(winCmd, 0, 2, " Help ");
     wattroff(winCmd, COLOR_PAIR(1) | A_BOLD);
 
-
+    // Command definitions and draw
     switch (window) {
 
         case PROG_WINDOW:

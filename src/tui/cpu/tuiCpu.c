@@ -179,20 +179,16 @@ void drawPipeline(
     switch (step) {
         case 0: mvwprintwWrap(winStatus, 10, 5, "PC sends address to instruction memory"); break;
         case 1: mvwprintwWrap(winStatus, 10, 5, "Memory instruction provides the addresses of the registers"); break;
-        case 2: mvwprintw(winStatus, 11, 2, "3. REGISTRI leggono i valori sorgente"); break;
-        case 3: mvwprintw(winStatus, 11, 2, "4. ALU esegue l'operazione ADD sui valori"); break;
-        case 4: mvwprintw(winStatus, 11, 2, "5. Il risultato viene scritto nei REGISTRI (write back)"); break;
-        case 5: mvwprintw(winStatus, 11, 2, "6. Il PC viene aggiornato a PC+4"); break;
+        case 2: mvwprintwWrap(winStatus, 11, 2, "3. REGISTRI leggono i valori sorgente"); break;
+        case 3: mvwprintwWrap(winStatus, 11, 2, "4. ALU esegue l'operazione ADD sui valori"); break;
+        case 4: mvwprintwWrap(winStatus, 11, 2, "5. Il risultato viene scritto nei REGISTRI (write back)"); break;
+        case 5: mvwprintwWrap(winStatus, 11, 2, "6. Il PC viene aggiornato a PC+4"); break;
         default: break;
     }
 }
 
 bool printProgramWithCurrentInstruction(
-          WINDOW*  winProg,
-          WINDOW*  winRegs,
-          WINDOW*  winStatus,
-          WINDOW*  winCmd,
-          Windows* selectCurrent,
+    const WindowsManagement windowManagement,
           int*     charCurrent,
     const int32_t  input1,
     const int32_t  input2,
@@ -209,58 +205,64 @@ bool printProgramWithCurrentInstruction(
     DecodedInstruction usageInstruction = {};
 
     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
-    keypad(winStatus, TRUE);
+    keypad(windowManagement.winStatus, TRUE);
 
     int rowToLineMapping[data->lineCount];
     int visibleRows = 0;
 
     // Header definition
-    werase(winProg);
-    wbkgd(winProg, COLOR_PAIR(0));
-    box(winProg, 0, 0);
+    werase(windowManagement.winProg);
+    wbkgd(windowManagement.winProg, COLOR_PAIR(0));
+    box(windowManagement.winProg, 0, 0);
 
-    if (*selectCurrent == PROG_WINDOW) {
+    if (*windowManagement.currentWindow == PROG_WINDOW) {
 
-        wattron(winProg,  COLOR_PAIR(2) | A_BOLD);
-        mvwprintw(winProg, 0, 2, " E");
-        wattroff(winProg, COLOR_PAIR(2) | A_BOLD);
+        wattron(windowManagement.winProg,  COLOR_PAIR(2) | A_BOLD);
+        mvwprintw(windowManagement.winProg, 0, 2, " E");
+        wattroff(windowManagement.winProg, COLOR_PAIR(2) | A_BOLD);
 
-        wattron(winProg, COLOR_PAIR(1) | A_BOLD);
-        mvwprintw(winProg, 0, 4, "xecution status ");
-        wattroff(winProg, COLOR_PAIR(1) | A_BOLD);
+        wattron(windowManagement.winProg, COLOR_PAIR(1) | A_BOLD);
+        mvwprintw(windowManagement.winProg, 0, 4, "xecution status ");
+        wattroff(windowManagement.winProg, COLOR_PAIR(1) | A_BOLD);
 
     } else {
 
-        wattron(winProg,  COLOR_PAIR(2) | A_DIM);
-        mvwprintw(winProg, 0, 2, " E");
-        wattroff(winProg, COLOR_PAIR(2) | A_DIM);
+        wattron(windowManagement.winProg,  COLOR_PAIR(2) | A_DIM);
+        mvwprintw(windowManagement.winProg, 0, 2, " E");
+        wattroff(windowManagement.winProg, COLOR_PAIR(2) | A_DIM);
 
-        wattron(winProg, COLOR_PAIR(1) | A_DIM);
-        mvwprintw(winProg, 0, 4, "xecution status ");
-        wattroff(winProg, COLOR_PAIR(1) | A_DIM);
+        wattron(windowManagement.winProg, COLOR_PAIR(1) | A_DIM);
+        mvwprintw(windowManagement.winProg, 0, 4, "xecution status ");
+        wattroff(windowManagement.winProg, COLOR_PAIR(1) | A_DIM);
 
     }
 
     // Calc instruction PC
     const int currentInstructionIndex = cpu->pc / 4;
-    int highlightedLine = -1;
+          int highlightedLine = -1;
 
     if (currentInstructionIndex < options.instruction_count) {
+
         highlightedLine = data->instructionToLineMap[currentInstructionIndex];
         usageInstruction = decodeInstruction(options.instructions[currentInstructionIndex].instruction);
+
     }
 
-    const int maxRows = getmaxy(winProg) - 3;
+    const int maxRows = getmaxy(windowManagement.winProg) - 3;
     int startLine     = *offsetProg;
 
     if (highlightedLine >= 0) {
         if (highlightedLine < startLine) {
+
             *offsetProg = highlightedLine;
             startLine = *offsetProg;
+
         } else if (highlightedLine >= startLine + maxRows) {
+
             *offsetProg = highlightedLine - maxRows + 1;
             if (*offsetProg < 0) *offsetProg = 0;
             startLine = *offsetProg;
+
         }
     }
 
@@ -279,87 +281,93 @@ bool printProgramWithCurrentInstruction(
         if (i == highlightedLine) {
 
             // Current line PC
-            wattron(winProg, COLOR_PAIR(4) | A_BOLD);
-            mvwprintw(winProg, row, 2, "-> %s", data->asmLines[i]);
-            wattroff(winProg, COLOR_PAIR(4) | A_BOLD);
+            wattron(windowManagement.winProg, COLOR_PAIR(4) | A_BOLD);
+            mvwprintw(windowManagement.winProg, row, 2, "-> %s", data->asmLines[i]);
+            wattroff(windowManagement.winProg, COLOR_PAIR(4) | A_BOLD);
 
             // Add comments for debug
-            wattron(winProg, COLOR_PAIR(5));
+            wattron(windowManagement.winProg, COLOR_PAIR(5));
 
             if (currentInstructionIndex < options.instruction_count) {
                 const AluOp aluOp = getInstructionEnum(usageInstruction.opcode, usageInstruction.funct3, usageInstruction.funct7Bit30);
 
-                switch (usageInstruction.opcode) {
-                    case 0x33: // R-type
-                        switch (aluOp) {
-                            case ALU_ADD:
-                                mvwprintw(winProg, row, SPACE_COMMENT,
-                                          "// add: 0x%08X + 0x%08X = 0x%08X",
-                                          input1, input2, result);
-                                break;
-                            case ALU_SUB:
-                                mvwprintw(winProg, row, SPACE_COMMENT,
-                                          "// sub: 0x%08X - 0x%08X = 0x%08X",
-                                          input1, input2, result);
-                                break;
+                // Add comment for ecall
+                if (usageInstruction.opcode == 0x73) {
+                    mvwprintw(windowManagement.winProg, row, SPACE_COMMENT, "// ecall - End program");
 
-                            default:
-                                mvwprintw(winProg, row, SPACE_COMMENT, "// PC: 0x%08X", cpu->pc);
-                                break;
-                        }
-                        break;
+                } else {
+                    switch (usageInstruction.opcode) {
+                        case 0x33: // R-type
+                            switch (aluOp) {
+                                case ALU_ADD:
+                                    mvwprintw(windowManagement.winProg, row, SPACE_COMMENT,
+                                            "// add: 0x%08X + 0x%08X = 0x%08X",
+                                            input1, input2, result);
+                                    break;
+                                case ALU_SUB:
+                                    mvwprintw(windowManagement.winProg, row, SPACE_COMMENT,
+                                            "// sub: 0x%08X - 0x%08X = 0x%08X",
+                                            input1, input2, result);
+                                    break;
 
-                    case 0x13: // I-type
-                        switch (aluOp) {
-                            case ALU_ADDI:
-                                mvwprintw(winProg, row, SPACE_COMMENT,
-                                          "// addi: 0x%08X + %d = 0x%08X",
-                                          input1, (int16_t)usageInstruction.immediate, result);
-                                break;
+                                default:
+                                    mvwprintw(windowManagement.winProg, row, SPACE_COMMENT, "// PC: 0x%08X", cpu->pc);
+                                    break;
+                            }
+                            break;
 
-                            default:
-                                mvwprintw(winProg, row, SPACE_COMMENT, "// PC: 0x%08X", cpu->pc);
-                                break;
-                        }
-                        break;
+                        case 0x13: // I-type
+                            switch (aluOp) {
+                                case ALU_ADDI:
+                                    mvwprintw(windowManagement.winProg, row, SPACE_COMMENT,
+                                            "// addi: 0x%08X + %d = 0x%08X",
+                                            input1, (int16_t)usageInstruction.immediate, result);
+                                    break;
 
-                    default:
-                        mvwprintw(winProg, row, SPACE_COMMENT, "// PC: 0x%08X", cpu->pc);
-                        break;
+                                default:
+                                    mvwprintw(windowManagement.winProg, row, SPACE_COMMENT, "// PC: 0x%08X", cpu->pc);
+                                    break;
+                            }
+                            break;
+
+                        default:
+                            mvwprintw(windowManagement.winProg, row, SPACE_COMMENT, "// PC: 0x%08X", cpu->pc);
+                            break;
+                    }
                 }
             }
-            wattroff(winProg, COLOR_PAIR(5));
+            wattroff(windowManagement.winProg, COLOR_PAIR(5));
 
         } else {
 
-            wattron(winProg, COLOR_PAIR(0));
-            mvwprintw(winProg, row, 2, "   %s", data->asmLines[i]);
-            wattroff(winProg, COLOR_PAIR(0));
+            wattron(windowManagement.winProg, COLOR_PAIR(0));
+            mvwprintw(windowManagement.winProg, row, 2, "   %s", data->asmLines[i]);
+            wattroff(windowManagement.winProg, COLOR_PAIR(0));
 
         }
     }
 
-    printRegisterTable(winRegs, *charCurrent, offset);
-    wnoutrefresh(winProg);
-    wnoutrefresh(winRegs);
+    printRegisterTable(windowManagement.winRegs, *charCurrent, offset);
+    wnoutrefresh(windowManagement.winProg);
+    wnoutrefresh(windowManagement.winRegs);
 
-    nodelay(winStatus, FALSE);
+    nodelay(windowManagement.winStatus, FALSE);
 
     bool quitRequested     = false;
     bool continueExecution = false;
 
     while (1) {
-        printRegisterTable(winRegs, *charCurrent, offset);
-        wnoutrefresh(winRegs);
+        printRegisterTable(windowManagement.winRegs, *charCurrent, offset);
+        wnoutrefresh(windowManagement.winRegs);
 
-        drawPipeline(winStatus, usageInstruction, cpu->pc, step);
-        commandWindow(winCmd, *selectCurrent);
+        drawPipeline(windowManagement.winStatus, usageInstruction, cpu->pc, step);
+        commandWindow(windowManagement.winCmd, *windowManagement.currentWindow);
 
-        wnoutrefresh(winStatus);
-        wnoutrefresh(winCmd);
+        wnoutrefresh(windowManagement.winStatus);
+        wnoutrefresh(windowManagement.winCmd);
         doupdate();
 
-        const int ch = wgetch(winStatus);
+        const int ch = wgetch(windowManagement.winStatus);
 
         if (ch == KEY_MOUSE) {
             MEVENT event;
@@ -367,8 +375,8 @@ bool printProgramWithCurrentInstruction(
 
                 // Control click is in intern win
                 int prog_y, prog_x, prog_max_y, prog_max_x;
-                getbegyx(winProg, prog_y, prog_x);
-                getmaxyx(winProg, prog_max_y, prog_max_x);
+                getbegyx(windowManagement.winProg, prog_y, prog_x);
+                getmaxyx(windowManagement.winProg, prog_max_y, prog_max_x);
 
                 // If click in range win then set instruction
                 if (event.x >= prog_x && event.x < prog_x + prog_max_x &&
@@ -379,7 +387,7 @@ bool printProgramWithCurrentInstruction(
                     if (event.bstate & BUTTON1_CLICKED) {
 
                         // Click the left bottom
-                        const int clicked_row = event.y - prog_y - 2; // -2 for header and border
+                        const int clicked_row = (event.y - prog_y - 2); // -2 for header and border
 
                         if (clicked_row >= 0 && clicked_row < visibleRows) {
 
@@ -402,18 +410,18 @@ bool printProgramWithCurrentInstruction(
         }
 
         if (ch == 'e' || ch == 'E') {
-            *selectCurrent = PROG_WINDOW;
+            *windowManagement.currentWindow = PROG_WINDOW;
         }
 
         if (ch == 't' || ch == 'T') {
-            *selectCurrent = REGS_WINDOW;
+            *windowManagement.currentWindow = REGS_WINDOW;
         }
 
         if (ch == 'r' || ch == 'R') {
-            *selectCurrent = STATUS_WINDOW;
+            *windowManagement.currentWindow = STATUS_WINDOW;
         }
 
-        switch (*selectCurrent) {
+        switch (*windowManagement.currentWindow) {
             case PROG_WINDOW:
 
                 if (ch == KEY_UP && *offsetProg > 0) {
@@ -430,7 +438,7 @@ bool printProgramWithCurrentInstruction(
                     }
                 }
 
-                if (usageInstruction.opcode != 0x73) { // Not work if ecall
+                if (usageInstruction.opcode != 0x73) {
                     if (ch == 'j' || ch == 'J') {
                         continueExecution = true;
 
@@ -448,21 +456,21 @@ bool printProgramWithCurrentInstruction(
                     offset--;
                 }
 
-                const int availableRows = getmaxy(winRegs) - 4;
+                const int availableRows = getmaxy(windowManagement.winRegs) - 4;
                 if (ch == KEY_DOWN && offset + availableRows < 32) {
                     offset++;
                 }
 
                 if (ch == 'd' || ch == 'D') {
                     *charCurrent = 'd';
-                    printRegisterTable(winRegs, *charCurrent, offset);
-                    wnoutrefresh(winRegs);
+                    printRegisterTable(windowManagement.winRegs, *charCurrent, offset);
+                    wnoutrefresh(windowManagement.winRegs);
                 }
 
                 if (ch == 'h' || ch == 'H') {
                     *charCurrent = 'h';
-                    printRegisterTable(winRegs, *charCurrent, offset);
-                    wnoutrefresh(winRegs);
+                    printRegisterTable(windowManagement.winRegs, *charCurrent, offset);
+                    wnoutrefresh(windowManagement.winRegs);
                 }
                 break;
 
@@ -475,18 +483,18 @@ bool printProgramWithCurrentInstruction(
 
     redraw_program:
 
-        werase(winProg);
-        wbkgd(winProg, COLOR_PAIR(0));
-        box(winProg, 0, 0);
+        werase(windowManagement.winProg);
+        wbkgd(windowManagement.winProg, COLOR_PAIR(0));
+        box(windowManagement.winProg, 0, 0);
 
-        if (*selectCurrent == PROG_WINDOW) {
-            wattron(winProg,  COLOR_PAIR(2) | A_BOLD);
-            mvwprintw(winProg, 0, 2, " E");
-            wattroff(winProg, COLOR_PAIR(2) | A_BOLD);
+        if (*windowManagement.currentWindow == PROG_WINDOW) {
+            wattron(windowManagement.winProg,  COLOR_PAIR(2) | A_BOLD);
+            mvwprintw(windowManagement.winProg, 0, 2, " E");
+            wattroff(windowManagement.winProg, COLOR_PAIR(2) | A_BOLD);
 
-            wattron(winProg, COLOR_PAIR(1) | A_BOLD);
-            mvwprintw(winProg, 0, 4, "xecution status ");
-            wattroff(winProg, COLOR_PAIR(1) | A_BOLD);
+            wattron(windowManagement.winProg, COLOR_PAIR(1) | A_BOLD);
+            mvwprintw(windowManagement.winProg, 0, 4, "xecution status ");
+            wattroff(windowManagement.winProg, COLOR_PAIR(1) | A_BOLD);
         }
 
 
@@ -499,19 +507,19 @@ bool printProgramWithCurrentInstruction(
             const int row = 2 + (i - startLine);
 
             if (i == highlightedLine) {
-                wattron(winProg, COLOR_PAIR(4) | A_BOLD);
-                mvwprintw(winProg, row, 2, "-> %s", data->asmLines[i]);
-                wattroff(winProg, COLOR_PAIR(4) | A_BOLD);
+                wattron(windowManagement.winProg, COLOR_PAIR(4) | A_BOLD);
+                mvwprintw(windowManagement.winProg, row, 2, "-> %s", data->asmLines[i]);
+                wattroff(windowManagement.winProg, COLOR_PAIR(4) | A_BOLD);
 
             } else {
-                wattron(winProg, COLOR_PAIR(0));
-                mvwprintw(winProg, row, 2, "   %s", data->asmLines[i]);
-                wattroff(winProg, COLOR_PAIR(0));
+                wattron(windowManagement.winProg, COLOR_PAIR(0));
+                mvwprintw(windowManagement.winProg, row, 2, "   %s", data->asmLines[i]);
+                wattroff(windowManagement.winProg, COLOR_PAIR(0));
 
             }
         }
 
-        wnoutrefresh(winProg);
+        wnoutrefresh(windowManagement.winProg);
     }
 
     return quitRequested;

@@ -7,12 +7,10 @@
 #include "assemblyData.h"
 #include "ncurses.h"
 #include "instructionMemory.h"
+#include "windowsManagement.h"
 
 extern const char* register_names[32];
 
-// ########################
-// # CPU print functions  #
-// ########################
 void printRegisterTable(
     WINDOW* winRegs,
     int     currentSetting,
@@ -20,42 +18,39 @@ void printRegisterTable(
 );
 
 bool printProgramWithCurrentInstruction(
-    WINDOW*   winProg,
-    WINDOW*   winRegs,
-    WINDOW*   winStatus,
-    WINDOW*   winCmd,
-    Windows*  selectCurrent,
-    int*      charCurrent,
-    int32_t   input1,
-    int32_t   input2,
-    int32_t   result,
-    Cpu*   cpu,
-    options_t options,
-    const AssemblyData* data,
-    int*      offsetProg
+          WindowsManagement windowManagement,
+          int*              charCurrent,
+          int32_t           input1,
+          int32_t           input2,
+          int32_t           result,
+          Cpu*              cpu,
+          options_t         options,
+    const AssemblyData*     data,
+    int*                    offsetProg
 
 );
 
 static void drawBlock(
-    WINDOW* win,
-    const int y,
-    const int x,
-    const char* label,
-    const bool highlight
+          WINDOW* win,
+    const int     y,
+    const int     x,
+    const char*   label,
+    const bool    highlight
 
 ) {
-
     if (highlight) attron(COLOR_BLACK);
+
     mvwprintw(win, y, x, "[%s]", label);
+
     if (highlight) attroff(COLOR_BLACK);
 
 }
 
 void drawPipeline(
-    WINDOW* winStatus,
+    WINDOW*            winStatus,
     DecodedInstruction currentDecoded,
-    int32_t pc,
-    int step
+    int32_t            pc,
+    int                step
 
 );
 

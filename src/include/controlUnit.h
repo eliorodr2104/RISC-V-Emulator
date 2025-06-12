@@ -6,16 +6,41 @@
 #define CONTROLUNIT_H
 #include <stdint.h>
 
+/**
+ * @brief Struct to hold control signals for the CPU
+ *
+ * @var ControlSignals::branch
+ * Indicates if the instruction is a branch instruction
+ * @var ControlSignals::memRead
+ * Indicates if the instruction reads from memory
+ * @var ControlSignals::memToReg
+ * Indicates if the instruction writes to a register from memory
+ * @var ControlSignals::operation
+ * The operation code for ALU operations
+ * @var ControlSignals::memWrite
+ * Indicates if the instruction writes to memory
+ * @var ControlSignals::aluSrc
+ * Indicates if the ALU uses an immediate value as source
+ * @var ControlSignals::regWrite
+ * Indicates if the instruction writes to a register
+ */
 typedef struct {
-    bool branch;      // 1 se istruzione di branch
-    bool memRead;     // 1 se legge dalla memoria
-    bool memToReg;    // 1 se il dato da scrivere nel registro viene dalla memoria
-    uint8_t operation;    // Codice operazione ALU (2 bit: 00, 01, 10)
-    bool memWrite;    // 1 se scrive in memoria
-    bool aluSrc;      // 1 se secondo operando ALU viene da immediato
-    bool regWrite;    // 1 se scrive nel registro destinazione
+    bool    branch;
+    bool    memRead;
+    bool    memToReg;
+    uint8_t operation;
+    bool    memWrite;
+    bool    aluSrc;
+    bool    regWrite;
+
 } ControlSignals;
 
+/**
+ * @brief Get control signals based on the opcode
+ *
+ * @param opcode The opcode of the instruction
+ * @return ControlSignals structure with the control signals set
+ */
 ControlSignals getControlSignals(
     uint8_t opcode
 );

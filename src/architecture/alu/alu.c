@@ -47,7 +47,7 @@ AluResult alu1bit(
             break;
 
         // Operation
-        // 0010 -> AND
+        // 0010 -> ADD
         // 0110 -> SUB
         case 2:
 
@@ -90,7 +90,10 @@ Alu32BitResult alu32bit(
     const bool less,
     const uint8_t operation
 ) {
-    Alu32BitResult alu32BitResult;
+    Alu32BitResult alu32BitResult = { 0, 0, 0};
+
+    if (operation == 0xE) return alu32BitResult;
+
           bool carryIn          = getBit(operation, 3);
     const uint32_t aluOperation = (operation & 0b111); //bitsToInt(3, (bool[]){ operation[2], operation[3], operation[4] });
 

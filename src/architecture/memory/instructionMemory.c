@@ -16,7 +16,7 @@ uint32_t fetchInstruction(
 
     const uint32_t instructionIndex = cpu->pc / 4;
 
-    if (instructionIndex >= options.instruction_count_aligned) return 0;
+    if (instructionIndex >= options.instruction_count) return 0;
 
     return options.instructions[instructionIndex].instruction;
 }

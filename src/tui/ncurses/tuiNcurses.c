@@ -80,7 +80,6 @@ void closeNcurses(
 ) {
     refresh();
 
-    // Clean
     delwin(*winProg);
     delwin(*winRegs);
     delwin(*winStatus);
