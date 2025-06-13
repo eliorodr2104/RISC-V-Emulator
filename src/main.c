@@ -35,9 +35,6 @@ int main(const int argc, char** argv) {
     WINDOW* winStatus = nullptr;
     WINDOW* winCmd    = nullptr;
 
-    // Initialize ncurses and create windows for program, registers, status, and command
-    if (!initNcurses(&winRegs, &winProg, &winStatus, &winCmd)) return 1;
-
     // Create a structure to manage the windows and passed the current windows and the struct
     const WindowsManagement winManagement = {
         .winProg       = &(WindowAndStatus) { .window = winProg,   .isActive = true },
@@ -45,6 +42,9 @@ int main(const int argc, char** argv) {
         .winStatus     = &(WindowAndStatus) { .window = winStatus, .isActive = true },
         .winCmd        = &(WindowAndStatus) { .window = winCmd,    .isActive = true }
     };
+
+    // Initialize ncurses and create windows for program, registers, status, and command
+    if (!initNcurses(winManagement)) return 1;
 
     /*if (!initNcursesWithResize(&winManagement)) {
         fprintf(stderr, "Failed to initialize ncurses with resize handling\n");

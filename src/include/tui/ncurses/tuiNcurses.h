@@ -17,10 +17,7 @@
 // # Ncurses functions    #
 // ########################
 bool initNcurses(
-    WINDOW** winRegs,
-    WINDOW** winProg,
-    WINDOW** winStatus,
-    WINDOW** winCmd
+    WindowsManagement windowsManagement
 );
 
 void closeNcurses(

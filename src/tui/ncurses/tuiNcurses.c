@@ -16,10 +16,7 @@
 #include "windowsManagement.h"
 
 bool initNcurses(
-    WINDOW** winRegs,
-    WINDOW** winProg,
-    WINDOW** winStatus,
-    WINDOW** winCmd
+    const WindowsManagement windowsManagement
 ) {
     setlocale(LC_ALL, "");
 
@@ -58,19 +55,39 @@ bool initNcurses(
     const int progHeight = rows;
     const int progWidth  = cols - regsWidth;
 
+    windowsManagement.winStatus->isActive = rows > 44 && cols > 154;
+
     // Left Window
-    *winProg = newwin(progHeight - 3, progWidth, 0, 0);
+    windowsManagement.winProg->window = newwin(progHeight - 3, progWidth, 0, 0);
 
     // Right Window
-    *winRegs = newwin(regsHeight + 8, regsWidth, 0, progWidth);
+    if (windowsManagement.winRegs->isActive && windowsManagement.winStatus->isActive) {
+        windowsManagement.winRegs->window = newwin(regsHeight + 8, regsWidth, 0, progWidth);
+
+    } else if (!windowsManagement.winStatus->isActive) {
+        windowsManagement.winRegs->window = newwin(progHeight - 3, regsWidth, 0, progWidth);
+
+    }
 
     // Bottom Right Window
-    *winStatus = newwin(regsHeight - 10, regsWidth, regsHeight + 8, progWidth);
 
-    *winCmd = newwin(3, cols, rows - 3, 0);
+    if (windowsManagement.winStatus->isActive) {
+        windowsManagement.winStatus->window = newwin(regsHeight - 10, regsWidth, regsHeight + 8, progWidth);
+
+    } else {
+        windowsManagement.winStatus->window = newwin(0, 0, 0, 0); // Create a empty window if not active
+
+    }
+
+    windowsManagement.winCmd->window = newwin(3, cols, rows - 3, 0);
 
     // Check if windows are created correctly, if not, end ncurses
-    if (!*winProg || !*winRegs || !*winStatus || !*winCmd) {
+    if (!windowsManagement.winProg->window ||
+        !windowsManagement.winRegs->window ||
+        !windowsManagement.winStatus->window ||
+        !windowsManagement.winCmd->window
+
+    ) {
         endwin();
         return false;
     }
@@ -81,10 +98,10 @@ bool initNcurses(
 
     }
 
-    keypad(*winStatus, TRUE);
-    keypad(*winCmd, TRUE);
-    nodelay(*winProg, TRUE);
-    nodelay(*winRegs, TRUE);
+    keypad(windowsManagement.winStatus->window, TRUE);
+    keypad(windowsManagement.winCmd->window, TRUE);
+    nodelay(windowsManagement.winProg->window, TRUE);
+    nodelay(windowsManagement.winRegs->window, TRUE);
 
     return true;
 }
@@ -144,7 +161,7 @@ void mvwprintwWrap(WINDOW *win, const int starty, const int startx, const char *
  * @param cols Numero di colonne correnti
  * @return true se le dimensioni sono sufficienti, false altrimenti
  */
-bool checkTerminalSize(int rows, int cols) {
+bool checkTerminalSize(const int rows, const int cols) {
     return (rows >= MIN_ROWS && cols >= MIN_COLS);
 }
 
@@ -220,7 +237,7 @@ bool recreateWindows(const WindowsManagement* windowManagement) {
     const int progHeight = rows;
     const int progWidth  = cols - regsWidth;
 
-    if (rows / 3 < 30) windowManagement->winStatus->isActive = false;
+    windowManagement->winStatus->isActive = rows > 44 && cols > 154;
 
     // Ridimensiona e riposiziona la finestra principale (sinistra)
     if (windowManagement->winProg->window && windowManagement->winProg->isActive) {
@@ -233,12 +250,16 @@ bool recreateWindows(const WindowsManagement* windowManagement) {
     }
 
     // Ridimensiona e riposiziona la finestra registri (destra in alto)
-    if (windowManagement->winRegs->window && windowManagement->winRegs->isActive) {
-        wresize(windowManagement->winRegs->window, regsHeight + 8, regsWidth);
+    if (windowManagement->winRegs->window &&
+        windowManagement->winRegs->isActive &&
+        windowManagement->winStatus->isActive
+    ) {
+
+        windowManagement->winRegs->window = newwin(regsHeight + 8, regsWidth, 0, progWidth);
         mvwin(windowManagement->winRegs->window, 0, progWidth);
 
-    } else {
-        wresize(windowManagement->winRegs->window, 0, 0);
+    } else if (!windowManagement->winStatus->isActive) {
+        wresize(windowManagement->winRegs->window, progHeight - 3, regsWidth);
         mvwin(windowManagement->winRegs->window, 0, progWidth);
 
     }

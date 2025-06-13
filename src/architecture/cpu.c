@@ -117,14 +117,6 @@ int executeSingleStep(
 
 ) {
 
-    //if (needsResize()) {
-    //    if (!handleTerminalResize((WindowsManagement*)&windowManagement)) {
-    //        return 0; // Errore nel resize
-    //    }
-        // Aggiorna tutte le finestre dopo il resize
-        //refreshAllWindows(&windowManagement, cpu, options, data, *currentChar, 1);
-    //}
-
     // Calculate the next program counter value, this value is temp, because, the PC can change if execute a jalr or jal instruction
     int32_t nextPc      = cpu->pc + 4;
 

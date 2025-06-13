@@ -2,7 +2,7 @@
 // Created by Eliomar Alejandro Rodriguez Ferrer on 02/06/25.
 //
 
-#define SPACE_COMMENT 50
+#define SPACE_COMMENT 30
 
 #include "tuiCpu.h"
 
@@ -188,7 +188,7 @@ void drawPipeline(
 }
 
 bool printProgramWithCurrentInstruction(
-     WindowsManagement windowManagement,
+    const WindowsManagement windowManagement,
           int*     charCurrent,
     const int32_t  input1,
     const int32_t  input2,
@@ -331,7 +331,7 @@ bool printProgramWithCurrentInstruction(
     }
 
     printRegisterTable(windowManagement.winRegs->window, *charCurrent, offset);
-    drawPipeline(windowManagement.winStatus->window, usageInstruction, cpu->pc, step);
+    if (windowManagement.winStatus->isActive) drawPipeline(windowManagement.winStatus->window, usageInstruction, cpu->pc, step);
 
     bool quitRequested     = false;
     bool continueExecution = false;
@@ -342,13 +342,13 @@ bool printProgramWithCurrentInstruction(
         wnoutrefresh(windowManagement.winProg->window);
         wnoutrefresh(windowManagement.winRegs->window);
 
-        wnoutrefresh(windowManagement.winStatus->window);
+        if (windowManagement.winStatus->isActive) wnoutrefresh(windowManagement.winStatus->window);
 
         wnoutrefresh(windowManagement.winCmd->window);
 
         doupdate();
 
-        const int ch = wgetch(windowManagement.winStatus->window);
+        const int ch = wgetch(windowManagement.winProg->window);
 
         if (ch == KEY_RESIZE) {
 
@@ -443,7 +443,7 @@ bool printProgramWithCurrentInstruction(
                 break;
 
             case STATUS_WINDOW:
-                if (ch == 'n' || ch == 'N') {
+                if (ch == 'n' || ch == 'N' && windowManagement.winStatus->isActive) {
                     step++;
                     drawPipeline(windowManagement.winStatus->window, usageInstruction, cpu->pc, step);
 
@@ -502,7 +502,9 @@ void redrawProgram(
 
 ) {
     printRegisterTable(windowManagement.winRegs->window, *charCurrent, offset);
-    drawPipeline(windowManagement.winStatus->window, usageInstruction, cpu->pc, step);
+
+    if (windowManagement.winStatus->isActive)  drawPipeline(windowManagement.winStatus->window, usageInstruction, cpu->pc, step);
+
     commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
 
     werase(windowManagement.winProg->window);
@@ -539,6 +541,8 @@ void redrawProgram(
 
     wnoutrefresh(windowManagement.winRegs->window);
     wnoutrefresh(windowManagement.winProg->window);
-    wnoutrefresh(windowManagement.winStatus->window);
+
+    if (windowManagement.winStatus->isActive) wnoutrefresh(windowManagement.winStatus->window);
+
     wnoutrefresh(windowManagement.winCmd->window);
 }
