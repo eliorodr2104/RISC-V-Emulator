@@ -92,11 +92,6 @@ bool initNcurses(
         return false;
     }
 
-    if (has_mouse()) {
-        mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
-        mouseinterval(0);
-
-    }
 
     keypad(windowsManagement.winStatus->window, TRUE);
     keypad(windowsManagement.winCmd->window, TRUE);

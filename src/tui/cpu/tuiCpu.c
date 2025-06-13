@@ -336,19 +336,31 @@ bool printProgramWithCurrentInstruction(
     bool quitRequested     = false;
     bool continueExecution = false;
 
+    bool redraw = true;
+
     // Input loop
     while (1) {
 
-        wnoutrefresh(windowManagement.winProg->window);
-        wnoutrefresh(windowManagement.winRegs->window);
+        if (redraw) {
 
-        if (windowManagement.winStatus->isActive) wnoutrefresh(windowManagement.winStatus->window);
+            wnoutrefresh(windowManagement.winProg->window);
+            wnoutrefresh(windowManagement.winRegs->window);
 
-        wnoutrefresh(windowManagement.winCmd->window);
+            if (windowManagement.winStatus->isActive) wnoutrefresh(windowManagement.winStatus->window);
 
-        doupdate();
+            wnoutrefresh(windowManagement.winCmd->window);
+
+            doupdate();
+
+            redraw = false;
+
+        }
+
+        wtimeout(windowManagement.winProg->window, 50);
 
         const int ch = wgetch(windowManagement.winProg->window);
+
+        if (ch == ERR) continue;
 
         if (ch == KEY_RESIZE) {
 
@@ -357,7 +369,7 @@ bool printProgramWithCurrentInstruction(
                  break;
             }
 
-            redrawProgram(windowManagement, offsetProg, data, highlightedLine, maxRows, step, usageInstruction, charCurrent, offset, cpu);
+            //redrawProgram(windowManagement, offsetProg, data, highlightedLine, maxRows, step, usageInstruction, charCurrent, offset, cpu);
 
         }
 

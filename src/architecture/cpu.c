@@ -50,10 +50,10 @@ void runCpuFull(
     int currentChar = 'h';
     const AssemblyData* data = newAssemblyData(options);
 
-    while (cpu->pc < options.instruction_count_aligned) {
+    /*while (cpu->pc < options.instruction_count_aligned) {
         executeSingleStep(windowManagement, &currentChar, cpu, options, data, 0);
 
-    }
+    }*/
 
 }
 
