@@ -92,9 +92,13 @@ bool initNcurses(
         return false;
     }
 
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
 
     keypad(windowsManagement.winStatus->window, TRUE);
     keypad(windowsManagement.winCmd->window, TRUE);
+    keypad(windowsManagement.winProg->window, TRUE);
+    keypad(windowsManagement.winRegs->window, TRUE);
+
     nodelay(windowsManagement.winProg->window, TRUE);
     nodelay(windowsManagement.winRegs->window, TRUE);
 
@@ -301,8 +305,12 @@ bool recreateWindows(const WindowsManagement* windowManagement) {
 
     // Riabilita le funzionalità necessarie
     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
+
     keypad(windowManagement->winStatus->window, TRUE);
     keypad(windowManagement->winCmd->window, TRUE);
+    keypad(windowManagement->winProg->window, TRUE);
+    keypad(windowManagement->winRegs->window, TRUE);
+
     nodelay(windowManagement->winProg->window, TRUE);
     nodelay(windowManagement->winRegs->window, TRUE);
 

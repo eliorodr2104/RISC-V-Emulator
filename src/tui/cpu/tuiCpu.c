@@ -24,10 +24,6 @@ const char* register_names[32] = {
     "s8",   "s9",  "s10", "s11", "t3",  "t4",  "t5",  "t6"
 };
 
-// ########################
-// # CPU print functions  #
-// ########################
-
 void printRegisterTable(
     WINDOW*   winRegs,
     const int currentSetting,
@@ -366,10 +362,11 @@ bool printProgramWithCurrentInstruction(
 
             if (!handleTerminalResize(&windowManagement)) {
                 quitRequested = true;
-                 break;
+                break;
             }
 
-            //redrawProgram(windowManagement, offsetProg, data, highlightedLine, maxRows, step, usageInstruction, charCurrent, offset, cpu);
+            redraw = true;
+            redrawProgram(windowManagement, offsetProg, data, highlightedLine, maxRows, step, usageInstruction, charCurrent, offset, cpu);
 
         }
 
@@ -430,6 +427,8 @@ bool printProgramWithCurrentInstruction(
 
                 if (ch == KEY_UP && *offsetProg > 0) {
                     (*offsetProg)--;
+
+                    redraw = true;
                     redrawProgram(windowManagement, offsetProg, data, highlightedLine, maxRows, step, usageInstruction, charCurrent, offset, cpu);
                 }
 
@@ -440,8 +439,8 @@ bool printProgramWithCurrentInstruction(
                     if (*offsetProg < maxOffset) {
                         (*offsetProg)++;
 
+                        redraw = true;
                         redrawProgram(windowManagement, offsetProg, data, highlightedLine, maxRows, step, usageInstruction, charCurrent, offset, cpu);
-
                     }
                 }
 
@@ -457,6 +456,8 @@ bool printProgramWithCurrentInstruction(
             case STATUS_WINDOW:
                 if (ch == 'n' || ch == 'N' && windowManagement.winStatus->isActive) {
                     step++;
+
+                    redraw = true;
                     drawPipeline(windowManagement.winStatus->window, usageInstruction, cpu->pc, step);
 
                 }
@@ -465,6 +466,8 @@ bool printProgramWithCurrentInstruction(
             case REGS_WINDOW:
                 if (ch == KEY_UP && offset > 0) {
                     offset--;
+
+                    redraw = true;
                     printRegisterTable(windowManagement.winRegs->window, *charCurrent, offset);
 
                 }
@@ -472,18 +475,24 @@ bool printProgramWithCurrentInstruction(
                 const int availableRows = getmaxy(windowManagement.winRegs->window) - 4;
                 if (ch == KEY_DOWN && offset + availableRows < 32) {
                     offset++;
+
+                    redraw = true;
                     printRegisterTable(windowManagement.winRegs->window, *charCurrent, offset);
 
                 }
 
                 if (ch == 'd' || ch == 'D') {
                     *charCurrent = 'd';
+
+                    redraw = true;
                     printRegisterTable(windowManagement.winRegs->window, *charCurrent, offset);
 
                 }
 
                 if (ch == 'h' || ch == 'H') {
                     *charCurrent = 'h';
+
+                    redraw = true;
                     printRegisterTable(windowManagement.winRegs->window, *charCurrent, offset);
 
                 }

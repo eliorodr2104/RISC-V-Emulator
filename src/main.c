@@ -46,11 +46,6 @@ int main(const int argc, char** argv) {
     // Initialize ncurses and create windows for program, registers, status, and command
     if (!initNcurses(winManagement)) return 1;
 
-    /*if (!initNcursesWithResize(&winManagement)) {
-        fprintf(stderr, "Failed to initialize ncurses with resize handling\n");
-        return 1;
-    }*/
-
     // Show the mode chooser window to select the execution mode
     userChoices(winManagement, cpu, opts);
 
