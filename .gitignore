@@ -1,0 +1,23 @@
+# Build folder CMake
+cmake-build-debug/
+cmake-build-release/
+build/
+
+# Temp files
+*~
+*.swp
+
+# IDE Settings
+.idea/
+
+# File macOS
+.DS_Store
+
+# Executable/binary
+*.exe
+*.out
+*.o
+
+# Log and report
+*.log
+coverage/
