@@ -12,7 +12,6 @@
 #include "instructionMemory.h"
 #include "registerMemory.h"
 #include "tuiCpu.h"
-#include "tuiNcurses.h"
 #include "windowsManagement.h"
 
 /**
@@ -31,6 +30,10 @@ Cpu* newCpu() {
     cpu->pc = 0;
     cpu->resetFlag = -1;
 
+    /*for (int i = 0; i < 32; i++) {
+        writeRegister(i, 0);
+    }*/
+
     // Return CPU instance
     return cpu;
 }
@@ -47,8 +50,8 @@ void runCpuFull(
           Cpu*              cpu,
     const options_t         options
 ) {
-    int currentChar = 'h';
-    const AssemblyData* data = newAssemblyData(options);
+    // int currentChar = 'h';
+    //const AssemblyData* data = newAssemblyData(options);
 
     /*while (cpu->pc < options.instruction_count_aligned) {
         executeSingleStep(windowManagement, &currentChar, cpu, options, data, 0);

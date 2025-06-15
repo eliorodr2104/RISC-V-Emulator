@@ -21,6 +21,7 @@
 typedef struct {
     int32_t pc;
     int32_t resetFlag;
+    int32_t registers[32];
 
 } Cpu;
 
