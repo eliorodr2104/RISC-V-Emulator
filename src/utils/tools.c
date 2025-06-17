@@ -5,7 +5,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-#include "aluControl.h"
+#include "alu_control.h"
 #include "tui_cpu.h"
 #include "tools.h"
 

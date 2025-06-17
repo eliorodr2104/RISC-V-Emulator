@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 #include "tui_cpu.h"
-#include "aluControl.h"
+#include "alu_control.h"
 #include "assembly_data.h"
 #include "cpu.h"
 #include "decode.h"

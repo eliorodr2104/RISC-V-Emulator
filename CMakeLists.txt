@@ -38,7 +38,7 @@ endif()
 set(SOURCE_FILES
         # Alu source files
         src/alu/alu.c
-        src/alu/aluControl.c
+        src/alu/alu_control.c
 
         # Main source files
         src/app/main.c
@@ -75,7 +75,7 @@ set(SOURCE_FILES
 set(HEADER_FILES
         # Alu headers
         src/alu/include/alu.h
-        src/alu/include/aluControl.h
+        src/alu/include/alu_control.h
 
         # Assembler handler headers files
         src/asm-handler/include/args_handler.h

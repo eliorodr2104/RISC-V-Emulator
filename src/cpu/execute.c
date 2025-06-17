@@ -4,7 +4,7 @@
 
 
 #include "alu.h"
-#include "aluControl.h"
+#include "alu_control.h"
 #include "control_unit.h"
 #include "cpu.h"
 #include "decode.h"
@@ -51,7 +51,7 @@ int executeSingleStep(
     const ControlSignals unitControlRet         = getControlSignals(decodedInstruction.opcode);
 
     // Determine the ALU operation based on the operation code, funz3 and funz7Bit30
-    const AluOp aluOpEnum                       = getAluControl(
+    const AluOp aluOpEnum                       = get_alu_control(
                                                         unitControlRet.operation,
                                                         decodedInstruction.funct3,
                                                         decodedInstruction.funct7Bit30
@@ -59,7 +59,7 @@ int executeSingleStep(
 
     // TODO(Union the getAluOperationBits and getAluControl functions)
     // Get the ALU operation bits for the ALU operation enum
-    getAluOperationBits(aluOpEnum, &operation);
+    get_alu_operation_bits(aluOpEnum, &operation);
 
     // Invalid operation, return 0 to indicate an error
     if (operation == 0xF) return 0;
@@ -69,10 +69,10 @@ int executeSingleStep(
 
     // Determine the second operand based on whether the ALU source is immediate or a register
     // if aluSrc is true, then use the immediate value, otherwise use the value from rs2 register
-    const int32_t secondOperand = unitControlRet.aluSrc ? decodedInstruction.immediate : getValueRegister(decodedInstruction.rs2);
+    const int32_t secondOperand = unitControlRet.alu_src ? decodedInstruction.immediate : getValueRegister(decodedInstruction.rs2);
 
     // Perform the ALU operation with the first register value, second operand, and operation bits
-    const Alu32BitResult result = alu32bit(firstRegisterValue, secondOperand, 0, operation);
+    const Alu32BitResult result = alu_32_bit(firstRegisterValue, secondOperand, 0, operation);
 
     // Show all instructions and highlight the current instruction in a program window
     // If the function returns true, then it means that the program should stop executing
@@ -96,7 +96,7 @@ int executeSingleStep(
     if ((decodedInstruction.opcode == 0x67 && decodedInstruction.funct3 == 0x0) || decodedInstruction.opcode == 0x6F) {
 
         // If the unit control signals indicate that rd register should be written next instruction
-        if (unitControlRet.regWrite) {
+        if (unitControlRet.reg_write) {
             writeRegister(decodedInstruction.rd, cpu->pc + 4);
         }
 
@@ -104,7 +104,7 @@ int executeSingleStep(
         nextPc = (decodedInstruction.opcode == 0x6F ? (cpu->pc + secondOperand) & ~1 : (firstRegisterValue + secondOperand) & ~1);
 
         // If the instruction is not jalr or jal, then write the result to the rd register if regWrite is true
-    } else if (unitControlRet.regWrite) {
+    } else if (unitControlRet.reg_write) {
         writeRegister(decodedInstruction.rd, result.result);
 
     }
@@ -152,7 +152,7 @@ void executeInstructionSilently(Cpu* cpu, const options_t options) {
     const ControlSignals unitControlRet = getControlSignals(decodedInstruction.opcode);
 
     // Determine the ALU operation based on the operation code, funct3, and funct7Bit30
-    const AluOp aluOpEnum = getAluControl(
+    const AluOp aluOpEnum = get_alu_control(
         unitControlRet.operation,
         decodedInstruction.funct3,
         decodedInstruction.funct7Bit30
@@ -163,7 +163,7 @@ void executeInstructionSilently(Cpu* cpu, const options_t options) {
 
     // TODO(Union the getAluOperationBits and getAluControl functions)
     // Get the ALU operation bits for the ALU operation enum
-    getAluOperationBits(aluOpEnum, &operation);
+    get_alu_operation_bits(aluOpEnum, &operation);
 
     // Invalid operation, return early
     if (operation == 0xFF) return;
@@ -172,10 +172,10 @@ void executeInstructionSilently(Cpu* cpu, const options_t options) {
     const int32_t firstRegisterValue = getValueRegister(decodedInstruction.rs1);
 
     // Determine the second operand based on whether the ALU source is immediate or a register
-    const int32_t secondOperand      = unitControlRet.aluSrc ? decodedInstruction.immediate : getValueRegister(decodedInstruction.rs2);
+    const int32_t secondOperand      = unitControlRet.alu_src ? decodedInstruction.immediate : getValueRegister(decodedInstruction.rs2);
 
     // Perform the ALU operation with the first register value, second operand, and operation bits
-    const Alu32BitResult result = alu32bit(firstRegisterValue, secondOperand, 0, operation);
+    const Alu32BitResult result = alu_32_bit(firstRegisterValue, secondOperand, 0, operation);
 
     // Calculate the next program counter value, this value is temp, because, the PC can change if execute a jalr or jal instruction
     int32_t nextPc = cpu->pc + 4;
@@ -184,7 +184,7 @@ void executeInstructionSilently(Cpu* cpu, const options_t options) {
     if ((decodedInstruction.opcode == 0x67 && decodedInstruction.funct3 == 0x0) || decodedInstruction.opcode == 0x6F) {
 
         // If the unit control signals indicate that rd register should be written next instruction
-        if (unitControlRet.regWrite) {
+        if (unitControlRet.reg_write) {
             writeRegister(decodedInstruction.rd, cpu->pc + 4);
         }
 
@@ -192,7 +192,7 @@ void executeInstructionSilently(Cpu* cpu, const options_t options) {
         nextPc = (decodedInstruction.opcode == 0x6F ? (cpu->pc + secondOperand) & ~1 : (firstRegisterValue + secondOperand) & ~1);
 
         // If the instruction is not jalr or jal, then write the result to the rd register if regWrite is true
-    } else if (unitControlRet.regWrite) {
+    } else if (unitControlRet.reg_write) {
         writeRegister(decodedInstruction.rd, result.result);
 
     }

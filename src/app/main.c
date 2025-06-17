@@ -5,7 +5,6 @@
 #include "tui_ncurses.h"
 #include "tui_main.h"
 
-
 /**
  * @brief Main function to run the RISC-V CPU simulator
  * @param argc
@@ -38,10 +37,10 @@ int main(const int argc, char** argv) {
 
     // Create a structure to manage the windows and passed the current windows and the struct
     const WindowsManagement winManagement = {
-        .winProg       = &(WindowAndStatus) { .window = winProg,   .isActive = true },
-        .winRegs       = &(WindowAndStatus) { .window = winRegs,   .isActive = true },
-        .winStatus     = &(WindowAndStatus) { .window = winStatus, .isActive = true },
-        .winCmd        = &(WindowAndStatus) { .window = winCmd,    .isActive = true }
+        .winProg   = &(WindowAndStatus) { .window = winProg,   .isActive = true },
+        .winRegs   = &(WindowAndStatus) { .window = winRegs,   .isActive = true },
+        .winStatus = &(WindowAndStatus) { .window = winStatus, .isActive = true },
+        .winCmd    = &(WindowAndStatus) { .window = winCmd,    .isActive = true }
     };
 
     // Initialize ncurses and create windows for program, registers, status, and command

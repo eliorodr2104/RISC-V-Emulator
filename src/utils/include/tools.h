@@ -5,7 +5,7 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
-#include "aluControl.h"
+#include "alu_control.h"
 #include "decode.h"
 
 static bool getBit(const uint32_t x, const int i) {
