@@ -25,10 +25,10 @@
  */
 void show_mode_chooser_window(
     WindowsManagement windowManagement,
-    Cpu*              cpu,
+    Cpu               cpu,
     options_t         options,
-    int32_t          rows,
-    int32_t          cols
+    int32_t           rows,
+    int32_t           cols
 );
 
 /**
@@ -43,7 +43,7 @@ void show_mode_chooser_window(
  */
 void userChoices(
     WindowsManagement windowManagement,
-    Cpu*              cpu,
+    Cpu               cpu,
     options_t         options
 );
 

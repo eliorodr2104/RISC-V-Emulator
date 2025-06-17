@@ -78,7 +78,7 @@ AluOp getInstructionEnum(const uint8_t opcode, const uint8_t funct3, const uint8
 }
 
 void formatInstruction(const DecodedInstruction decoded, char* buffer, uint32_t size) {
-    const char* name = getInstructionName(decoded.opcode, decoded.funct3, decoded.funct7Bit30);
+    const char* name = getInstructionName(decoded.opcode, decoded.funz3, decoded.funz7_bit30);
 
     if (decoded.opcode == 0x33) { // Tipe R
         snprintf(buffer, size, "%s %-4s, %-4s, %s",

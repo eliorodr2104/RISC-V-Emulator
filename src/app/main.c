@@ -27,7 +27,7 @@ int main(const int argc, char** argv) {
     opts.instruction_count_aligned = opts.instruction_count * 4;
 
     // Initialize the CPU structure
-    Cpu* cpu = newCpu();
+    Cpu cpu = newCpu();
 
     // Initialize ncurses windows for the TUI
     WINDOW* winProg   = nullptr;

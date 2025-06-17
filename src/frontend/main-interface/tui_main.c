@@ -24,7 +24,7 @@
  */
 void show_mode_chooser_window(
     const WindowsManagement windowManagement,
-          Cpu*              cpu,
+          Cpu               cpu,
     const options_t         options,
     const int32_t           rows,
     const int32_t           cols
@@ -89,13 +89,13 @@ void show_mode_chooser_window(
             case 10:
 
                 if (highlight == 0) {
-                    runCpuFull(windowManagement, cpu, options);
+                    runCpuFull(cpu, options, windowManagement);
 
 
                 } else if (highlight == 1) {
                     if (windowManagement.winCmd->isActive) commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
 
-                    runCpuStepByStep(windowManagement, cpu, options);
+                    runCpuStepByStep(cpu, options, windowManagement);
 
 
                 } else {
@@ -124,7 +124,7 @@ void show_mode_chooser_window(
  */
 void userChoices(
           WindowsManagement windowManagement,
-          Cpu*              cpu,
+          Cpu               cpu,
     const options_t         options
 ) {
 
@@ -149,13 +149,13 @@ void userChoices(
             break;
 
         case FULL:
-            runCpuFull(windowManagement, cpu, options);
+            runCpuFull(cpu, options, windowManagement);
             break;
 
         case STEP_BY_STEP:
             if (windowManagement.winCmd->isActive) commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
 
-            runCpuStepByStep(windowManagement, cpu, options);
+            runCpuStepByStep(cpu, options, windowManagement);
             break;
         default:
             break;

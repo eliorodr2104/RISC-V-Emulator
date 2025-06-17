@@ -10,12 +10,8 @@
 
 #include <curses.h>
 
-#include "../../frontend/include/windows_management.h"
+#include "windows_management.h"
 
-
-// ########################
-// # Ncurses functions    #
-// ########################
 bool initNcurses(
     WindowsManagement windowsManagement
 );
@@ -29,5 +25,37 @@ void closeNcurses(
 void mvwprintwWrap(WINDOW *win, int starty, int startx, const char *str);
 
 bool handleTerminalResize(const WindowsManagement* windowManagement);
+
+/**
+ * @brief Prints the header of a window with a title and color.
+ *
+ * @param win The window where the header will be printed.
+ * @param start_y The starting y-coordinate for the header.
+ * @param start_x The starting x-coordinate for the header.
+ * @param title  The title to be printed in the header.
+ * @param color_pair The color pair to be used for the header text.
+ * @param style_text  The text style to be applied (e.g., A_BOLD).
+ */
+static void print_header_window(
+          WINDOW* win,
+    const int   start_y,
+    const int   start_x,
+    const char* title,
+    const int   color_pair,
+    const int   style_text
+
+) {
+
+    wattron  (win,  color_pair | style_text);
+    mvwprintw(win, start_y, start_x, title);
+    wattroff (win, COLOR_PAIR(2) | A_BOLD);
+
+}
+
+static void restart_window(WINDOW* window) {
+    werase(window);
+    wbkgd(window, COLOR_PAIR(0));
+    box(window, 0, 0);
+}
 
 #endif //TUINCURSES_H

@@ -1,7 +1,12 @@
-//
-// Created by Eliomar Alejandro Rodriguez Ferrer on 15/06/25.
-//
-
+/**
+* @file execute.h
+* @brief Execute complete instruction RISC-V in separate fields.
+*
+**
+* @author eliorodr2104
+* @date 15/06/25
+*
+*/
 
 #include "alu.h"
 #include "alu_control.h"
@@ -17,8 +22,8 @@
 /**
  * @brief Execute a single step of the CPU, fetching and decoding the instruction, and updating the CPU state.
  *
- * @param windowManagement The management structure for the TUI windows
- * @param currentChar Pointer to the current character input for interactive mode
+ * @param window_management The management structure for the TUI windows
+ * @param current_char Pointer to the current character input for interactive mode
  * @param cpu The CPU instance to run
  * @param options The options for execution
  * @param data The assembly data containing instructions and metadata
@@ -26,16 +31,16 @@
  * @return 1 if the step was executed successfully, 0 if an error occurred or execution should stop
  */
 int executeSingleStep(
-    const WindowsManagement windowManagement,
-          int         * currentChar,
-          Cpu         * cpu,
-    const options_t     options,
-          const AssemblyData* data,
-    const bool          interactive
+          Cpu               cpu,
+    const options_t         options,
+          AssemblyData*     data,
+    const WindowsManagement window_management,
+          int*              current_char,
+          bool              interactive
 
 ) {
 
-    // Calculate the next program counter value, this value is temp, because, the PC can change if execute a jalr or jal instruction
+    // Calculate the next program counter value, this value is temp, because the PC can change if execute a jalr or jal instruction
     int32_t nextPc      = cpu->pc + 4;
 
     // Get the ALU operation value
@@ -53,8 +58,8 @@ int executeSingleStep(
     // Determine the ALU operation based on the operation code, funz3 and funz7Bit30
     const AluOp aluOpEnum                       = get_alu_control(
                                                         unitControlRet.operation,
-                                                        decodedInstruction.funct3,
-                                                        decodedInstruction.funct7Bit30
+                                                        decodedInstruction.funz3,
+                                                        decodedInstruction.funz7_bit30
                                                     );
 
     // TODO(Union the getAluOperationBits and getAluControl functions)
@@ -77,8 +82,8 @@ int executeSingleStep(
     // Show all instructions and highlight the current instruction in a program window
     // If the function returns true, then it means that the program should stop executing
     if (printProgramWithCurrentInstruction(
-        windowManagement,
-        currentChar,
+        window_management,
+        current_char,
         firstRegisterValue,
         secondOperand,
         result.result,
@@ -93,7 +98,7 @@ int executeSingleStep(
     }
 
     // Control if the current instruction is a
-    if ((decodedInstruction.opcode == 0x67 && decodedInstruction.funct3 == 0x0) || decodedInstruction.opcode == 0x6F) {
+    if ((decodedInstruction.opcode == 0x67 && decodedInstruction.funz3 == 0x0) || decodedInstruction.opcode == 0x6F) {
 
         // If the unit control signals indicate that rd register should be written next instruction
         if (unitControlRet.reg_write) {
@@ -122,7 +127,11 @@ int executeSingleStep(
  * @param cpu The CPU instance to reset and re-execute
  * @param options The options for execution
  */
-void reExecuteUntilTarget(Cpu* cpu, const options_t options) {
+void reExecuteUntilTarget(
+          Cpu cpu,
+    const options_t options
+
+) {
 
     // Reset the CPU state to the initial state
     resetCpuState(cpu);
@@ -130,7 +139,7 @@ void reExecuteUntilTarget(Cpu* cpu, const options_t options) {
     // Count the number of instructions executed
     uint32_t currentInstruction = 0;
 
-    while (currentInstruction < cpu->resetFlag && cpu->pc < options.instruction_count_aligned) {
+    while (currentInstruction < cpu->reset_flag && cpu->pc < options.instruction_count_aligned) {
 
         executeInstructionSilently(cpu, options);
         currentInstruction++;
@@ -143,7 +152,10 @@ void reExecuteUntilTarget(Cpu* cpu, const options_t options) {
  * @param cpu The CPU instance to execute the instruction on
  * @param options The options for execution
  */
-void executeInstructionSilently(Cpu* cpu, const options_t options) {
+void executeInstructionSilently(
+          Cpu cpu,
+    const options_t options
+) {
 
     // Fetch and decode the instruction at the current program counter
     const DecodedInstruction decodedInstruction = decodeInstruction(fetchInstruction(cpu, options));
@@ -154,8 +166,8 @@ void executeInstructionSilently(Cpu* cpu, const options_t options) {
     // Determine the ALU operation based on the operation code, funct3, and funct7Bit30
     const AluOp aluOpEnum = get_alu_control(
         unitControlRet.operation,
-        decodedInstruction.funct3,
-        decodedInstruction.funct7Bit30
+        decodedInstruction.funz3,
+        decodedInstruction.funz7_bit30
     );
 
     // Get the ALU operation bits for the ALU operation enum
@@ -181,7 +193,7 @@ void executeInstructionSilently(Cpu* cpu, const options_t options) {
     int32_t nextPc = cpu->pc + 4;
 
     // Control if the current instruction is a
-    if ((decodedInstruction.opcode == 0x67 && decodedInstruction.funct3 == 0x0) || decodedInstruction.opcode == 0x6F) {
+    if ((decodedInstruction.opcode == 0x67 && decodedInstruction.funz3 == 0x0) || decodedInstruction.opcode == 0x6F) {
 
         // If the unit control signals indicate that rd register should be written next instruction
         if (unitControlRet.reg_write) {

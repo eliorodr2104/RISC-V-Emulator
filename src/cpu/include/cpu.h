@@ -1,60 +1,67 @@
-//
-// Created by Eliomar Alejandro Rodriguez Ferrer on 02/06/25.
-//
+
+/**
+ * @file cpu.h
+ * @brief Header file for the CPU structure and functions.
+ *
+ * @author eliorodr2104
+ * @date 02/06/25
+ *
+ */
 
 #ifndef CPU_H
 #define CPU_H
+
 #include <ncurses.h>
 
 #include "args_handler.h"
 #include "windows_management.h"
 
 /**
- * @brief Struct representing the CPU state
+ * @struct Cpu
+ * @brief Representing the CPU, their state and registers.
  *
- * @var CPU::pc
- * Representing the program counter, which points to the current instruction address
- * @var CPU::resetFlag
- * Flag indicating if the CPU should reset to a specific instruction address
+ * @param pc This is a program counter register, which points to the current instruction address
+ * @param resetFlag Flag indicating if the CPU should reset to a specific instruction address
+ * @param registers Array of 32 registers, each represented as a 32-bit signed integer
  */
-typedef struct {
+typedef struct cpu {
     int32_t pc;
-    int32_t resetFlag;
+    int32_t reset_flag;
     int32_t registers[32];
 
-} Cpu;
+} *Cpu;
 
 /**
  * @brief Create a new CPU instance
  *
  * @return A pointer to the newly created CPU instance, or nullptr if memory allocation fails
  */
-Cpu* newCpu();
+Cpu newCpu();
 
 /**
  * @brief Run the CPU in full execution mode, executing all instructions until completion.
  *
- * @param windowManagement The management structure for the TUI windows
+ * @param window_management The management structure for the TUI windows
  * @param cpu The CPU instance to run
  * @param options The options for execution
  */
 void runCpuFull(
-    WindowsManagement windowManagement,
-    Cpu* cpu,
-    options_t options
+    Cpu               cpu,
+    options_t         options,
+    WindowsManagement window_management
 );
 
 /**
  * @brief Run the CPU in step-by-step execution mode, allowing for interactive debugging.
  *
- * @param windowManagement The management structure for the TUI windows
+ * @param window_management The management structure for the TUI windows
  * @param cpu The CPU instance to run
  * @param options The options for execution
  */
 void runCpuStepByStep(
-    WindowsManagement windowManagement,
-    Cpu* cpu,
-    options_t options
+    Cpu               cpu,
+    options_t         options,
+    WindowsManagement window_management
 );
 
 /**
@@ -62,6 +69,6 @@ void runCpuStepByStep(
  *
  * @param cpu The CPU instance to reset
  */
-void resetCpuState(Cpu* cpu);
+void resetCpuState(Cpu cpu);
 
 #endif //CPU_H

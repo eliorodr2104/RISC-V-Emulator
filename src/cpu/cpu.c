@@ -1,10 +1,16 @@
-//
-// Created by Eliomar Alejandro Rodriguez Ferrer on 02/06/25.
-//
+
+/**
+ * @file cpu.c
+ * @brief Source file for the logic functions.
+ *
+ * @author eliorodr2104
+ * @date 02/06/25
+ *
+ */
 
 #include <stdlib.h>
 
-#include "include/cpu.h"
+#include "cpu.h"
 #include "assembly_data.h"
 #include "execute.h"
 #include "register_memory.h"
@@ -15,16 +21,16 @@
  *
  * @return A pointer to the newly created CPU instance, or nullptr if memory allocation fails
  */
-Cpu* newCpu() {
+Cpu newCpu() {
     // Allocate memory for the CPU structure
-    Cpu* cpu = malloc(sizeof(Cpu));
+    Cpu cpu = malloc(sizeof(struct cpu));
 
     // Check if memory allocation was successful
     if (!cpu) return nullptr;
 
     // Initialize the CPU state
     cpu->pc = 0;
-    cpu->resetFlag = -1;
+    cpu->reset_flag = -1;
 
     /*for (int i = 0; i < 32; i++) {
         writeRegister(i, 0);
@@ -37,14 +43,14 @@ Cpu* newCpu() {
 /**
  * @brief Run the CPU in full execution mode, executing all instructions until completion.
  *
- * @param windowManagement The management structure for the TUI windows
+ * @param window_management The management structure for the TUI windows
  * @param cpu The CPU instance to run
  * @param options The options for execution
  */
 void runCpuFull(
-    const WindowsManagement windowManagement,
-          Cpu*              cpu,
-    const options_t         options
+    Cpu               cpu,
+    options_t         options,
+    WindowsManagement window_management
 ) {
     // int currentChar = 'h';
     //const AssemblyData* data = newAssemblyData(options);
@@ -59,36 +65,36 @@ void runCpuFull(
 /**
  * @brief Run the CPU in step-by-step execution mode, allowing for interactive debugging.
  *
- * @param windowManagement The management structure for the TUI windows
+ * @param window_management The management structure for the TUI windows
  * @param cpu The CPU instance to run
  * @param options The options for execution
  */
 void runCpuStepByStep(
-    const WindowsManagement windowManagement,
-          Cpu*              cpu,
-    const options_t         options
+          Cpu               cpu,
+    const options_t         options,
+    const WindowsManagement window_management
 ) {
 
     // TODO(Add "currentChar" to the WindowsManagement struct, and pass AssemblyData to the function)
-          int           currentChar = 'h';
-    const AssemblyData* data        = newAssemblyData(options);
+    int           currentChar = 'h';
+    AssemblyData* data        = newAssemblyData(options);
 
     // While the program counter is less than the aligned instruction count
     while (cpu->pc < options.instruction_count_aligned) {
 
         // Execute a single step of the CPU, if the execution fails then break the loop
-        if (!executeSingleStep(windowManagement, &currentChar, cpu, options, data, true)) {
+        if (!executeSingleStep(cpu, options, data, window_management, &currentChar, true)) {
             break;
         }
 
         // If the reset flag is set to a valid value, re-execute instructions until the target instruction
-        if (cpu->resetFlag >= 0) {
+        if (cpu->reset_flag >= 0) {
 
             // Reset the CPU state to the initial state
             reExecuteUntilTarget(cpu, options);
 
             // Reset the reset flag to -1 to indicate that the CPU is no longer in a reset state
-            cpu->resetFlag = -1;
+            cpu->reset_flag = -1;
         }
 
     }
@@ -100,7 +106,7 @@ void runCpuStepByStep(
  *
  * @param cpu The CPU instance to reset
  */
-void resetCpuState(Cpu* cpu) {
+void resetCpuState(Cpu cpu) {
     // Reset the program counter to 0
     cpu->pc = 0;
 
