@@ -81,7 +81,7 @@ brew install ncurses
 
 brew tap riscv-software-src/riscv
 brew install riscv-tools
-
+brew install riscv-software-src/riscv/riscv-gnu-toolchain
 ```
 
 **Windows**:
