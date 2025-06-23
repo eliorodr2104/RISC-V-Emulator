@@ -13,7 +13,6 @@
 #include "cpu.h"
 #include "assembly_data.h"
 #include "execute.h"
-#include "register_memory.h"
 #include "windows_management.h"
 
 /**
@@ -112,6 +111,6 @@ void resetCpuState(Cpu cpu) {
 
     // Reset all registers to 0
     for (int i = 1; i < 32; i++) {
-        writeRegister(i, 0);
+        writeRegister(cpu, i, 0);
     }
 }

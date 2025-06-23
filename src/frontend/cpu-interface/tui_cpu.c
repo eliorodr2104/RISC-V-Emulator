@@ -13,7 +13,6 @@
 #include "decode.h"
 #include "tools.h"
 #include "ncurses.h"
-#include "register_memory.h"
 #include "tui_main.h"
 #include "tui_ncurses.h"
 
@@ -25,6 +24,7 @@ const char* register_names[32] = {
 };
 
 void printRegisterTable(
+    Cpu       cpu,
     WINDOW*   winRegs,
     const int currentSetting,
     const int offset
@@ -65,19 +65,19 @@ void printRegisterTable(
         mvwaddch(winRegs, row, column, ACS_VLINE);
 
         // Change color to green if the register is not zero
-        if (registers[i] != 0) {
+        if (cpu->registers[i] != 0) {
             wattron(winRegs, COLOR_PAIR(2) | A_BOLD);
         }
 
         if (currentSetting == 'd') {
             mvwprintw(winRegs, row, column + 3, "%-6s        %d",
-                  register_names[i], registers[i]);
+                  register_names[i], cpu->registers[i]);
 
         }
 
         if (currentSetting == 'h') {
             mvwprintw(winRegs, row, column + 3, "%-6s      0x%08X",
-                  register_names[i], registers[i]);
+                  register_names[i], cpu->registers[i]);
         }
 
         wattroff(winRegs, COLOR_PAIR(2) | A_BOLD);
@@ -189,7 +189,7 @@ bool printProgramWithCurrentInstruction(
     const int32_t  input1,
     const int32_t  input2,
     const int32_t  result,
-          Cpu*     cpu,
+          Cpu      cpu,
     const options_t options,
     const AssemblyData* data,
           int*     offsetProg
@@ -268,7 +268,7 @@ bool printProgramWithCurrentInstruction(
             wattron(windowManagement.winProg->window, COLOR_PAIR(5));
 
             if (currentInstructionIndex < options.instruction_count) {
-                const AluOp aluOp = getInstructionEnum(usageInstruction.opcode, usageInstruction.funct3, usageInstruction.funct7Bit30);
+                const AluOp aluOp = getInstructionEnum(usageInstruction.opcode, usageInstruction.funz3, usageInstruction.funz7_bit30);
 
                 // Add comment for ecall
                 if (usageInstruction.opcode == 0x73) {
@@ -326,7 +326,13 @@ bool printProgramWithCurrentInstruction(
         }
     }
 
-    printRegisterTable(windowManagement.winRegs->window, *charCurrent, offset);
+    printRegisterTable(
+        cpu,
+        windowManagement.winRegs->window,
+        *charCurrent,
+        offset
+    );
+
     if (windowManagement.winStatus->isActive) drawPipeline(windowManagement.winStatus->window, usageInstruction, cpu->pc, step);
 
     bool quitRequested     = false;
@@ -395,7 +401,7 @@ bool printProgramWithCurrentInstruction(
                             const int target_instruction = data->lineToInstructionMap[rowToLineMapping[clicked_row]];
 
                             if (target_instruction >= 0) {
-                                cpu->resetFlag = target_instruction;
+                                cpu->reset_flag = target_instruction;
 
                                 return false;
                             }
@@ -468,7 +474,12 @@ bool printProgramWithCurrentInstruction(
                     offset--;
 
                     redraw = true;
-                    printRegisterTable(windowManagement.winRegs->window, *charCurrent, offset);
+                    printRegisterTable(
+                         cpu,
+                         windowManagement.winRegs->window,
+                        *charCurrent,
+                         offset
+                    );
 
                 }
 
@@ -477,7 +488,12 @@ bool printProgramWithCurrentInstruction(
                     offset++;
 
                     redraw = true;
-                    printRegisterTable(windowManagement.winRegs->window, *charCurrent, offset);
+                    printRegisterTable(
+                         cpu,
+                         windowManagement.winRegs->window,
+                        *charCurrent,
+                         offset
+                    );
 
                 }
 
@@ -485,7 +501,12 @@ bool printProgramWithCurrentInstruction(
                     *charCurrent = 'd';
 
                     redraw = true;
-                    printRegisterTable(windowManagement.winRegs->window, *charCurrent, offset);
+                    printRegisterTable(
+                         cpu,
+                         windowManagement.winRegs->window,
+                        *charCurrent,
+                         offset
+                    );
 
                 }
 
@@ -493,7 +514,12 @@ bool printProgramWithCurrentInstruction(
                     *charCurrent = 'h';
 
                     redraw = true;
-                    printRegisterTable(windowManagement.winRegs->window, *charCurrent, offset);
+                    printRegisterTable(
+                         cpu,
+                         windowManagement.winRegs->window,
+                        *charCurrent,
+                         offset
+                    );
 
                 }
                 break;
@@ -509,20 +535,26 @@ bool printProgramWithCurrentInstruction(
 }
 
 void redrawProgram(
-    const WindowsManagement windowManagement,
-    int*              offsetProg,
-    const AssemblyData* data,
-    const int        highlightedLine,
-    const int        maxRows,
-    const int        step,
+    const WindowsManagement  windowManagement,
+          int*               offsetProg,
+    const AssemblyData*      data,
+    const int                highlightedLine,
+    const int                maxRows,
+    const int                step,
     const DecodedInstruction usageInstruction,
-    const int*      charCurrent,
-    const int       offset,
-    const Cpu* cpu
+    const int*               charCurrent,
+    const int                offset,
+          Cpu                cpu
 
 
 ) {
-    printRegisterTable(windowManagement.winRegs->window, *charCurrent, offset);
+
+    printRegisterTable(
+         cpu,
+         windowManagement.winRegs->window,
+        *charCurrent,
+         offset
+    );
 
     if (windowManagement.winStatus->isActive)  drawPipeline(windowManagement.winStatus->window, usageInstruction, cpu->pc, step);
 

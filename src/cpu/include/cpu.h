@@ -71,4 +71,27 @@ void runCpuStepByStep(
  */
 void resetCpuState(Cpu cpu);
 
+/**
+ * @brief Get the value of a specific register by its number.
+ *
+ * @param cpu The CPU instance
+ * @param register_number The number of the register to retrieve (0-31) in RISC-V 32 bit architecture
+ */
+static int32_t getValueRegister(
+    const Cpu      cpu,
+    const uint32_t register_number
+) {
+    return (register_number >= 32 ? 0 : cpu->registers[register_number]);
+}
+
+static bool writeRegister(
+    const Cpu       cpu,
+    const uint32_t register_number,
+    const int32_t  value
+) {
+    if (register_number == 0) return false;
+
+    return register_number < 32 ? (cpu->registers[register_number] = value, true) : false;
+}
+
 #endif //CPU_H

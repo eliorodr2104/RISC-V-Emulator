@@ -61,9 +61,6 @@ set(SOURCE_FILES
         src/frontend/cpu-interface/tui_cpu.c
         src/frontend/main-interface/tui_main.c
 
-        # Memory management source files
-        src/memory/register_memory.c
-
         # Ncurses handler source files
         src/ncurses-handler/tui_ncurses.c
 
@@ -95,9 +92,6 @@ set(HEADER_FILES
         src/frontend/include/tui_cpu.h
         src/frontend/include/tui_main.h
         src/frontend/include/windows_management.h
-
-        # Memory management headers files
-        src/memory/include/register_memory.h
 
         # Ncurses handler headers files
         src/ncurses-handler/include/tui_ncurses.h

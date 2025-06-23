@@ -12,6 +12,7 @@
 extern const char* register_names[32];
 
 void printRegisterTable(
+    Cpu     cpu,
     WINDOW* winRegs,
     int     currentSetting,
     int     offset
@@ -23,7 +24,7 @@ bool printProgramWithCurrentInstruction(
           int32_t           input1,
           int32_t           input2,
           int32_t           result,
-          Cpu*              cpu,
+          Cpu               cpu,
           options_t         options,
     const AssemblyData*     data,
     int*                    offsetProg
@@ -55,16 +56,16 @@ void drawPipeline(
 );
 
 void redrawProgram(
-    WindowsManagement windowManagement,
-    int*              offsetProg,
-    const AssemblyData* data,
-    int        highlightedLine,
-    int        maxRows,
-    int        step,
-    DecodedInstruction usageInstruction,
-    const int*      charCurrent,
-    int       offset,
-    const Cpu* cpu
+          WindowsManagement  windowManagement,
+          int*               offsetProg,
+    const AssemblyData*      data,
+          int                highlightedLine,
+          int                maxRows,
+          int                step,
+          DecodedInstruction usageInstruction,
+    const int*               charCurrent,
+          int                offset,
+          Cpu                cpu
 );
 
 #endif //TUI_H

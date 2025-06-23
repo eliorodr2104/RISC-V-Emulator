@@ -15,7 +15,6 @@
 #include "decode.h"
 #include "windows_management.h"
 #include "fetch.h"
-#include "register_memory.h"
 #include "tui_cpu.h"
 #include "execute.h"
 
@@ -70,11 +69,11 @@ int executeSingleStep(
     if (operation == 0xF) return 0;
 
     // Get the first register value based on the decoded instruction's rs1 field
-    const int32_t firstRegisterValue = getValueRegister(decodedInstruction.rs1);
+    const int32_t firstRegisterValue = getValueRegister(cpu, decodedInstruction.rs1);
 
     // Determine the second operand based on whether the ALU source is immediate or a register
     // if aluSrc is true, then use the immediate value, otherwise use the value from rs2 register
-    const int32_t secondOperand = unitControlRet.alu_src ? decodedInstruction.immediate : getValueRegister(decodedInstruction.rs2);
+    const int32_t secondOperand = unitControlRet.alu_src ? decodedInstruction.immediate : getValueRegister(cpu, decodedInstruction.rs2);
 
     // Perform the ALU operation with the first register value, second operand, and operation bits
     const Alu32BitResult result = alu_32_bit(firstRegisterValue, secondOperand, 0, operation);
@@ -102,7 +101,7 @@ int executeSingleStep(
 
         // If the unit control signals indicate that rd register should be written next instruction
         if (unitControlRet.reg_write) {
-            writeRegister(decodedInstruction.rd, cpu->pc + 4);
+            writeRegister(cpu, decodedInstruction.rd, cpu->pc + 4);
         }
 
         // Calculate the next program counter based on the jalr or jal instruction
@@ -110,7 +109,7 @@ int executeSingleStep(
 
         // If the instruction is not jalr or jal, then write the result to the rd register if regWrite is true
     } else if (unitControlRet.reg_write) {
-        writeRegister(decodedInstruction.rd, result.result);
+        writeRegister(cpu, decodedInstruction.rd, result.result);
 
     }
 
@@ -181,10 +180,10 @@ void executeInstructionSilently(
     if (operation == 0xFF) return;
 
     // Get the first register value based on the decoded instruction's rs1 field
-    const int32_t firstRegisterValue = getValueRegister(decodedInstruction.rs1);
+    const int32_t firstRegisterValue = getValueRegister(cpu, decodedInstruction.rs1);
 
     // Determine the second operand based on whether the ALU source is immediate or a register
-    const int32_t secondOperand      = unitControlRet.alu_src ? decodedInstruction.immediate : getValueRegister(decodedInstruction.rs2);
+    const int32_t secondOperand      = unitControlRet.alu_src ? decodedInstruction.immediate : getValueRegister(cpu, decodedInstruction.rs2);
 
     // Perform the ALU operation with the first register value, second operand, and operation bits
     const Alu32BitResult result = alu_32_bit(firstRegisterValue, secondOperand, 0, operation);
@@ -197,7 +196,7 @@ void executeInstructionSilently(
 
         // If the unit control signals indicate that rd register should be written next instruction
         if (unitControlRet.reg_write) {
-            writeRegister(decodedInstruction.rd, cpu->pc + 4);
+            writeRegister(cpu, decodedInstruction.rd, cpu->pc + 4);
         }
 
         // Calculate the next program counter based on the jalr or jal instruction
@@ -205,7 +204,7 @@ void executeInstructionSilently(
 
         // If the instruction is not jalr or jal, then write the result to the rd register if regWrite is true
     } else if (unitControlRet.reg_write) {
-        writeRegister(decodedInstruction.rd, result.result);
+        writeRegister(cpu, decodedInstruction.rd, result.result);
 
     }
 
