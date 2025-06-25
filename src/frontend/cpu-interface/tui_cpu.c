@@ -227,32 +227,31 @@ bool printProgramWithCurrentInstruction(
 
     }
 
-    const int maxRows = getmaxy(windowManagement.winProg->window) - 3;
-    int startLine     = *offsetProg;
+    const int maxRows          = getmaxy(windowManagement.winProg->window) - 3;
+    const int max_rows_padding = maxRows / 2;
+          int startLine        = *offsetProg;
 
-    if (highlightedLine >= 0) {
-        if (highlightedLine < startLine) {
+    if (highlightedLine >= 0 && highlightedLine < startLine) {
+        *offsetProg = highlightedLine;
+        startLine = *offsetProg;
 
-            *offsetProg = highlightedLine;
-            startLine = *offsetProg;
+    } else if (highlightedLine >= startLine + max_rows_padding) {
 
-        } else if (highlightedLine >= startLine + maxRows) {
+        *offsetProg = highlightedLine - max_rows_padding + 1;
+        if (*offsetProg < 0) *offsetProg = 0;
+        startLine = *offsetProg;
 
-            *offsetProg = highlightedLine - maxRows + 1;
-            if (*offsetProg < 0) *offsetProg = 0;
-            startLine = *offsetProg;
-
-        }
     }
 
-    int maxStartLine = data->lineCount - maxRows;
+    int maxStartLine = data->lineCount - max_rows_padding;
     if (maxStartLine < 0) maxStartLine = 0;
+
     if (startLine > maxStartLine) {
         startLine = maxStartLine;
         *offsetProg = startLine;
     }
 
-    for (int i = startLine; i < data->lineCount && (i - startLine) < maxRows; i++) {
+    for (int i = startLine; i < data->lineCount && i - startLine < maxRows; i++) {
         const int row = 2 + (i - startLine);
         rowToLineMapping[visibleRows] = i;
         visibleRows++;
@@ -388,13 +387,14 @@ bool printProgramWithCurrentInstruction(
                 // If click in range win then set instruction
                 if (event.x >= prog_x && event.x < prog_x + prog_max_x &&
                     event.y >= prog_y && event.y < prog_y + prog_max_y &&
-                    (event.bstate & BUTTON1_CLICKED)) {
+                    event.bstate & BUTTON1_CLICKED
+                ) {
 
                     // Click win
                     if (event.bstate & BUTTON1_CLICKED) {
 
                         // Click the left bottom
-                        const int clicked_row = (event.y - prog_y - 2); // -2 for header and border
+                        const int clicked_row = event.y - prog_y - 2; // -2 for header and border
 
                         if (clicked_row >= 0 && clicked_row < visibleRows) {
 
@@ -418,14 +418,17 @@ bool printProgramWithCurrentInstruction(
 
         if (ch == 'e' || ch == 'E') {
             *windowManagement.currentWindow = PROG_WINDOW;
+            commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
         }
 
         if (ch == 't' || ch == 'T') {
             *windowManagement.currentWindow = REGS_WINDOW;
+            commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
         }
 
         if (ch == 'r' || ch == 'R') {
             *windowManagement.currentWindow = STATUS_WINDOW;
+            commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
         }
 
         switch (*windowManagement.currentWindow) {
@@ -483,8 +486,7 @@ bool printProgramWithCurrentInstruction(
 
                 }
 
-                const int availableRows = getmaxy(windowManagement.winRegs->window) - 4;
-                if (ch == KEY_DOWN && offset + availableRows < 32) {
+                if (ch == KEY_DOWN && offset + getmaxy(windowManagement.winRegs->window) - 4 < 32) {
                     offset++;
 
                     redraw = true;
