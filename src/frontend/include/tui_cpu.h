@@ -68,4 +68,11 @@ void redrawProgram(
           Cpu                cpu
 );
 
+void draw_instruction_colored(
+          WINDOW* prog_window,
+    const char*   asm_current_line,
+          int     row,
+          bool    highlight
+);
+
 #endif //TUI_H

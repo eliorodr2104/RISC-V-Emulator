@@ -2,6 +2,7 @@
 
 #include "args_handler.h"
 #include "cpu.h"
+#include "ram.h"
 #include "tui_ncurses.h"
 #include "tui_main.h"
 
@@ -25,6 +26,11 @@ int main(const int argc, char** argv) {
 
     // Set the instruction count aligned to 4 bytes for RISC-V 32-bit architecture
     opts.instruction_count_aligned = opts.instruction_count * 4;
+
+    // RAM Initialization 1MB
+    RAM main_memory = new_ram(1024 * 1024);
+
+    if (!main_memory) return 1; // Ram allocation failed
 
     // Initialize the CPU structure
     Cpu cpu = newCpu();

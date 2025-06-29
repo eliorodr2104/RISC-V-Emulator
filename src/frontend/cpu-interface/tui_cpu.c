@@ -7,6 +7,9 @@
 #include <stdlib.h>
 
 #include "tui_cpu.h"
+
+#include <string.h>
+
 #include "alu_control.h"
 #include "assembly_data.h"
 #include "cpu.h"
@@ -256,12 +259,14 @@ bool printProgramWithCurrentInstruction(
         rowToLineMapping[visibleRows] = i;
         visibleRows++;
 
-        if (i == highlightedLine) {
+        draw_instruction_colored(
+            windowManagement.winProg->window,
+            data->asmLines[i],
+            row,
+            i == highlightedLine
+        );
 
-            // Current line PC
-            wattron(windowManagement.winProg->window, COLOR_PAIR(4) | A_BOLD);
-            mvwprintw(windowManagement.winProg->window, row, 2, "-> %s", data->asmLines[i]);
-            wattroff(windowManagement.winProg->window, COLOR_PAIR(4) | A_BOLD);
+        if (i == highlightedLine) {
 
             // Add comments for debug
             wattron(windowManagement.winProg->window, COLOR_PAIR(5));
@@ -282,6 +287,7 @@ bool printProgramWithCurrentInstruction(
                                             "// add: 0x%08X + 0x%08X = 0x%08X",
                                             input1, input2, result);
                                     break;
+
                                 case ALU_SUB:
                                     mvwprintw(windowManagement.winProg->window, row, SPACE_COMMENT,
                                             "// sub: 0x%08X - 0x%08X = 0x%08X",
@@ -315,13 +321,6 @@ bool printProgramWithCurrentInstruction(
                 }
             }
             wattroff(windowManagement.winProg->window, COLOR_PAIR(5));
-
-        } else {
-
-            wattron(windowManagement.winProg->window, COLOR_PAIR(0));
-            mvwprintw(windowManagement.winProg->window, row, 2, "   %s", data->asmLines[i]);
-            wattroff(windowManagement.winProg->window, COLOR_PAIR(0));
-
         }
     }
 
@@ -418,16 +417,22 @@ bool printProgramWithCurrentInstruction(
 
         if (ch == 'e' || ch == 'E') {
             *windowManagement.currentWindow = PROG_WINDOW;
+
+            redraw = true;
             commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
         }
 
         if (ch == 't' || ch == 'T') {
             *windowManagement.currentWindow = REGS_WINDOW;
+
+            redraw = true;
             commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
         }
 
         if (ch == 'r' || ch == 'R') {
             *windowManagement.currentWindow = STATUS_WINDOW;
+
+            redraw = true;
             commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
         }
 
@@ -581,17 +586,12 @@ void redrawProgram(
     for (int i = *offsetProg; i < data->lineCount && (i - *offsetProg) < maxRows; i++) {
         const int row = 2 + (i - *offsetProg);
 
-        if (i == highlightedLine) {
-            wattron(windowManagement.winProg->window, COLOR_PAIR(4) | A_BOLD);
-            mvwprintw(windowManagement.winProg->window, row, 2, "-> %s", data->asmLines[i]);
-            wattroff(windowManagement.winProg->window, COLOR_PAIR(4) | A_BOLD);
-
-        } else {
-            wattron(windowManagement.winProg->window, COLOR_PAIR(0));
-            mvwprintw(windowManagement.winProg->window, row, 2, "   %s", data->asmLines[i]);
-            wattroff(windowManagement.winProg->window, COLOR_PAIR(0));
-
-        }
+        draw_instruction_colored(
+            windowManagement.winProg->window,
+            data->asmLines[i],
+            row,
+            i == highlightedLine
+        );
     }
 
     wnoutrefresh(windowManagement.winRegs->window);
@@ -600,4 +600,80 @@ void redrawProgram(
     if (windowManagement.winStatus->isActive) wnoutrefresh(windowManagement.winStatus->window);
 
     wnoutrefresh(windowManagement.winCmd->window);
+}
+
+void draw_instruction_colored(
+    WINDOW* prog_window,
+    const char* asm_current_line,
+    const int row,
+    const bool highlight
+) {
+
+    if (highlight) mvwprintw(prog_window, row, 2, "->");
+
+          int col = 4;
+    const char* p = asm_current_line;
+
+    while (*p != '\0') {
+
+        if (*p == ' ' || *p == '\t') {
+            mvwprintw(prog_window, row, col++, "%c", *p);
+            p++;
+            continue;
+        }
+
+        char token[128] = {0};
+        int len = 0;
+        while (*p != '\0' && *p != ' ' && *p != '\t') {
+            token[len++] = *p++;
+        }
+        token[len] = '\0';
+
+        if (
+            strcmp(token, "add") == 0 ||
+            strcmp(token, "and") == 0 ||
+            strcmp(token, "or")  == 0 ||
+            strcmp(token, "sll") == 0 ||
+            strcmp(token, "srl") == 0
+        ) {
+            wattron(prog_window, COLOR_PAIR(8) | A_BOLD);
+            mvwprintw(prog_window, row, col, "%s", token);
+            wattroff(prog_window, COLOR_PAIR(8) | A_BOLD);
+
+        } else if (strcmp(token, ",") == 0) {
+            mvwprintw(prog_window, row, col, "%s", token);
+
+        } else if (
+            strcmp(token, "zero") == 0 ||
+            strcmp(token, "ra") == 0 ||
+            strcmp(token, "sp") == 0 ||
+            strcmp(token, "gp") == 0 ||
+            strcmp(token, "tp") == 0
+        ) {
+            wattron(prog_window, COLOR_PAIR(8) | A_BOLD);
+            mvwprintw(prog_window, row, col, "%s", token);
+            wattroff(prog_window, COLOR_PAIR(8) | A_BOLD);
+
+        } else if (token[0] == 'a') {
+            wattron(prog_window, COLOR_PAIR(9) | A_BOLD);
+            mvwprintw(prog_window, row, col, "%s", token);
+            wattroff(prog_window, COLOR_PAIR(9) | A_BOLD);
+
+        } else if (token[0] == 't') {
+            wattron(prog_window, COLOR_PAIR(10) | A_BOLD);
+            mvwprintw(prog_window, row, col, "%s", token);
+            wattroff(prog_window, COLOR_PAIR(10) | A_BOLD);
+
+        } else if (token[0] == 's') {
+            wattron(prog_window, COLOR_PAIR(11) | A_BOLD);
+            mvwprintw(prog_window, row, col, "%s", token);
+            wattroff(prog_window, COLOR_PAIR(11) | A_BOLD);
+
+        } else {
+            mvwprintw(prog_window, row, col, "%s", token);
+
+        }
+
+        col += len;
+    }
 }

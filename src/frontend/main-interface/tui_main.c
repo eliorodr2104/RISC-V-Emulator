@@ -230,7 +230,7 @@ void commandWindow(
             mvwprintw(winCmd, 1, 24, "h");
             wattroff(winCmd, COLOR_PAIR(7) | A_BOLD);
             mvwprintw(winCmd, 1, 25, ": ");
-            mvwprintw(winCmd, 1, 28, "Hex>");
+            mvwprintw(winCmd, 1, 27, "Hex>");
 
             break;
 

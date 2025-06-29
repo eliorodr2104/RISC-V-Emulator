@@ -6,6 +6,11 @@
 // # Ncurses functions    #
 // ########################
 
+#define COLOR_GRAY  8
+#define COLOR_GREEN 9
+#define COLOR_AQUA  10
+#define COLOR_BLUE  11
+
 #include <curses.h>
 #include <locale.h>
 #include <stdlib.h>
@@ -20,12 +25,22 @@ bool initNcurses(
 
     // Init screen TUI
     initscr();
+    if (!has_colors() || !can_change_color()) {
+        endwin();
+        fprintf(stderr, "The terminal not support colors.\n");
+        exit(1);
+    }
+
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
     curs_set(0);
 
-    init_color(236, 300, 300, 300);
+    init_color(COLOR_GRAY,  578, 510, 454);
+    init_color(COLOR_GREEN, 602, 591, 102);
+    init_color(COLOR_AQUA,  412, 615, 416);
+    init_color(COLOR_BLUE,  270, 533, 537);
+
 
     if (has_colors()) {
         start_color();
@@ -40,6 +55,12 @@ bool initNcurses(
         init_pair(6,            COLOR_CYAN,   COLOR_BLACK);  // pair 6: all registers
 
         init_pair(7,            COLOR_YELLOW, COLOR_BLACK);  // pair 7: Mark letter command
+
+
+        init_pair(8,            COLOR_GRAY,   COLOR_BLACK);  // pair 8: zero register
+        init_pair(9,            COLOR_GREEN,   COLOR_BLACK); // pair 9: zero register
+        init_pair(10,            COLOR_AQUA,   COLOR_BLACK); // pair 10: zero register
+        init_pair(11,            COLOR_BLUE,   COLOR_BLACK); // pair 11: zero register
     }
 
     // Calc dim and create windows

@@ -66,6 +66,7 @@ set(SOURCE_FILES
 
         # Utility source files
         src/utils/tools.c
+        src/memory/ram.c
 )
 
 # Define header files
@@ -98,6 +99,7 @@ set(HEADER_FILES
 
         # Utility headers files
         src/utils/include/tools.h
+        src/memory/include/ram.h
 )
 
 # Create executable

@@ -9,6 +9,10 @@
 #include "tui_cpu.h"
 #include "tools.h"
 
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 void print_binary(const uint32_t bin) {
     printf("\n");
@@ -93,4 +97,50 @@ void formatInstruction(const DecodedInstruction decoded, char* buffer, uint32_t 
     else {
         snprintf(buffer, size, "%s (0x%02X)", name, decoded.opcode);
     }
+}
+
+char **tokenize(const char *src, int *n_tokens) {
+    const char *p = src;
+    char **tokens = nullptr;
+    int count = 0;
+
+    while (*p) {
+
+        while (*p && isspace((unsigned char)*p)) p++;
+
+        if (!*p) break;
+
+        if (*p == ',') {
+            tokens = realloc(tokens, sizeof(*tokens) * (count + 2));
+            tokens[count++] = strdup(",");
+            p++;
+            continue;
+        }
+
+        const char *start = p;
+        while (*p && !isspace((unsigned char)*p) && *p != ',') p++;
+        size_t len = p - start;
+
+        tokens = realloc(tokens, sizeof(*tokens) * (count + 2));
+        tokens[count] = malloc(len + 1);
+        memcpy(tokens[count], start, len);
+        tokens[count][len] = '\0';
+        count++;
+    }
+
+    // Termina con NULL per comodità
+    tokens = realloc(tokens, sizeof(*tokens) * (count + 1));
+    tokens[count] = NULL;
+    *n_tokens = count;
+    return tokens;
+}
+
+void free_tokens(char** tokens) {
+    if (!tokens) return;
+
+    for (int i = 0; tokens[i] != NULL; i++) {
+        free(tokens[i]);
+    }
+
+    free(tokens);
 }

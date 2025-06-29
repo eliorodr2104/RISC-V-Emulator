@@ -32,4 +32,15 @@ const char* getInstructionName(uint8_t opcode, uint8_t funct3, uint8_t funct7Bit
 
 AluOp getInstructionEnum(uint8_t opcode, uint8_t funct3, uint8_t funct7Bit30);
 
+char **tokenize(const char *src, int *n_tokens);
+void free_tokens(char** tokens);
+
+static uint8_t size_string(const char* str)  {
+    const char *pointer = str;
+
+    while (*pointer) pointer++;
+
+    return (uint8_t)(pointer - str);
+}
+
 #endif //TOOLS_H
