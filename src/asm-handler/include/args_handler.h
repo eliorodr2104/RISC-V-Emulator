@@ -52,6 +52,6 @@ int  handle_args  (
     options_t *opts
 );
 void print_options(const options_t *opts);
-void free_options (const options_t *opts);
+void free_options (options_t *opts);
 
 #endif //ARGS_HANDLER_H

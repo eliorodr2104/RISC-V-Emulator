@@ -11,9 +11,23 @@
 #include <stdlib.h>
 
 #include "cpu.h"
+
 #include "assembly_data.h"
 #include "execute.h"
 #include "windows_management.h"
+
+/**
+ * @brief Destroy the CPU instance and free its resources.
+ *
+ * @param cpu Pointer to the CPU instance to be destroyed.
+ *
+ * This function frees the memory allocated for the CPU instance.
+ */
+void destroy_cpu(Cpu cpu) {
+    if (!cpu) return;
+
+    free(cpu);
+}
 
 /**
  * @brief Create a new CPU instance
@@ -31,9 +45,9 @@ Cpu newCpu() {
     cpu->pc = 0;
     cpu->reset_flag = -1;
 
-    /*for (int i = 0; i < 32; i++) {
-        writeRegister(i, 0);
-    }*/
+    for (int i = 0; i < 32; i++) {
+       cpu->registers[i] = 0;
+    }
 
     // Return CPU instance
     return cpu;
@@ -80,6 +94,7 @@ void runCpuStepByStep(
     AssemblyData* data        = newAssemblyData(options);
 
     if (!data) {
+        perror("Error initializing AssemblyData");
         return;
     }
 
@@ -87,7 +102,7 @@ void runCpuStepByStep(
     while (cpu->pc >= options.text_vaddr && cpu->pc < options.text_vaddr + options.text_size) {
 
         // Execute a single step of the CPU, if the execution fails then break the loop
-        if (!executeSingleStep(cpu, options, data, window_management, &currentChar, true, main_memory)) {
+        if (executeSingleStep(cpu, options, data, window_management, &currentChar, true, main_memory) == -1) {
             break;
         }
 
@@ -110,9 +125,9 @@ void runCpuStepByStep(
  *
  * @param cpu The CPU instance to reset
  */
-void resetCpuState(Cpu cpu) {
-    // Reset the program counter to 0
-    cpu->pc = 0;
+void resetCpuState(Cpu cpu, options_t options) {
+    // Reset the program counter
+    cpu->pc = options.entry_point;
 
     // Reset all registers to 0
     for (int i = 1; i < 32; i++) {

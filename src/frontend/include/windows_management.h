@@ -44,5 +44,7 @@ typedef struct {
     Windows *currentWindow;
 } WindowsManagement;
 
+void destroy_windows_management(WindowsManagement window_management);
+
 
 #endif //WINDOWSMANAGEMENT_H

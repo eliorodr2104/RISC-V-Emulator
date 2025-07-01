@@ -11,6 +11,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+void destroy_ram(RAM ram) {
+
+    if (!ram) return;
+
+    free(ram->data);
+    free(ram);
+}
+
 /**
  * @brief Create a new RAM instance with the specified size.
  * @param size Size of the RAM in bytes.

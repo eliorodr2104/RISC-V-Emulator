@@ -27,12 +27,13 @@
  * @param options The options for execution
  * @param data The assembly data containing instructions and metadata
  * @param interactive Flag indicating if the execution is in interactive mode
+ * @param main_memory The main memory instance where instructions are stored
  * @return 1 if the step was executed successfully, 0 if an error occurred or execution should stop
  */
 int executeSingleStep(
           Cpu               cpu,
     const options_t         options,
-          AssemblyData*     data,
+    const AssemblyData*     data,
     const WindowsManagement window_management,
           int*              current_char,
           bool              interactive,
@@ -43,7 +44,7 @@ int executeSingleStep(
     if (!cpu || !main_memory) return 0;
 
     // Calculate the next program counter value, this value is temp, because the PC can change if execute a jalr or jal instruction
-    int32_t nextPc      = cpu->pc + 4;
+    uint32_t nextPc      = cpu->pc + 4;
 
     // Get the ALU operation value
     uint8_t operation   = 0;
@@ -52,9 +53,9 @@ int executeSingleStep(
     int     offsetProg  = 1;
 
     const uint32_t raw_instruction = fetchInstruction(cpu, options, main_memory);
-    if (raw_instruction == 0) {
-
-        return 0;
+    if (raw_instruction == -1) {
+        perror("Error fetching instruction");
+        return -1;
     }
 
     // Fetch and decode the instruction at the current program counter
@@ -75,7 +76,10 @@ int executeSingleStep(
     get_alu_operation_bits(aluOpEnum, &operation);
 
     // Invalid operation, return 0 to indicate an error
-    if (operation == 0xF) return 0;
+    if (operation == 0xF) {
+        perror("Invalid operation");
+        return -1;
+    }
 
     // Get the first register value based on the decoded instruction's rs1 field
     const int32_t firstRegisterValue = getValueRegister(cpu, decodedInstruction.rs1);
@@ -101,21 +105,18 @@ int executeSingleStep(
         &offsetProg,
         main_memory
 
-    )) {
-        return 0;
+    )) { return -1; }
 
-    }
-
-    // Control if the current instruction is a
+    // Control if the current instruction is a jalr or jal instruction
     if ((decodedInstruction.opcode == 0x67 && decodedInstruction.funz3 == 0x0) || decodedInstruction.opcode == 0x6F) {
 
         // If the unit control signals indicate that rd register should be written next instruction
         if (unitControlRet.reg_write) {
-            writeRegister(cpu, decodedInstruction.rd, cpu->pc + 4);
+            writeRegister(cpu, decodedInstruction.rd, (int32_t)(cpu->pc + 4));
         }
 
         // Calculate the next program counter based on the jalr or jal instruction
-        nextPc = (decodedInstruction.opcode == 0x6F ? (cpu->pc + secondOperand) & ~1 : (firstRegisterValue + secondOperand) & ~1);
+        nextPc = decodedInstruction.opcode == 0x6F ? cpu->pc + secondOperand & ~1 : firstRegisterValue + secondOperand & ~1;
 
         // If the instruction is not jalr or jal, then write the result to the rd register if regWrite is true
     } else if (unitControlRet.reg_write) {
@@ -144,15 +145,15 @@ void reExecuteUntilTarget(
 ) {
 
     // Reset the CPU state to the initial state
-    resetCpuState(cpu);
+    resetCpuState(cpu, options);
 
     // Count the number of instructions executed
     uint32_t currentInstruction = 0;
 
-    while (currentInstruction < cpu->reset_flag && cpu->pc < options.text_size) {
-
+    while (currentInstruction < cpu->reset_flag && cpu->pc < options.text_vaddr + options.text_size) {
         executeInstructionSilently(cpu, options, main_memory);
         currentInstruction++;
+
     }
 }
 
@@ -168,8 +169,14 @@ void executeInstructionSilently(
           RAM       main_memory
 ) {
 
+    const uint32_t raw_instruction = fetchInstruction(cpu, options, main_memory);
+    if (raw_instruction == -1) {
+        perror("Error fetching instruction");
+        return;
+    }
+
     // Fetch and decode the instruction at the current program counter
-    const DecodedInstruction decodedInstruction = decodeInstruction(fetchInstruction(cpu, options, main_memory));
+    const DecodedInstruction decodedInstruction = decodeInstruction(raw_instruction);
 
     // Get the control signals for the instruction based on its opcode
     const ControlSignals unitControlRet = getControlSignals(decodedInstruction.opcode);
@@ -201,18 +208,18 @@ void executeInstructionSilently(
     const Alu32BitResult result = alu_32_bit(firstRegisterValue, secondOperand, 0, operation);
 
     // Calculate the next program counter value, this value is temp, because, the PC can change if execute a jalr or jal instruction
-    int32_t nextPc = cpu->pc + 4;
+    uint32_t nextPc = cpu->pc + 4;
 
     // Control if the current instruction is a
     if ((decodedInstruction.opcode == 0x67 && decodedInstruction.funz3 == 0x0) || decodedInstruction.opcode == 0x6F) {
 
         // If the unit control signals indicate that rd register should be written next instruction
         if (unitControlRet.reg_write) {
-            writeRegister(cpu, decodedInstruction.rd, cpu->pc + 4);
+            writeRegister(cpu, decodedInstruction.rd, (int32_t)cpu->pc + 4);
         }
 
         // Calculate the next program counter based on the jalr or jal instruction
-        nextPc = (decodedInstruction.opcode == 0x6F ? (cpu->pc + secondOperand) & ~1 : (firstRegisterValue + secondOperand) & ~1);
+        nextPc = decodedInstruction.opcode == 0x6F ? cpu->pc + secondOperand & ~1 : firstRegisterValue + secondOperand & ~1;
 
         // If the instruction is not jalr or jal, then write the result to the rd register if regWrite is true
     } else if (unitControlRet.reg_write) {

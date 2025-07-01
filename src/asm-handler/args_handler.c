@@ -109,7 +109,7 @@ void add_breakpoint(options_t *opts, const char *addr) {
  * @brief free options
  * @param opts options obj to free
  */
-void free_options(const options_t *opts) {
+void free_options(options_t *opts) {
     if (!opts) return;
 
     if (opts->binary_file) free(opts->binary_file);
@@ -128,6 +128,12 @@ void free_options(const options_t *opts) {
         free(opts->breakpoints);
     }
 
+    if (opts->text_data) free(opts->text_data);
+
+
+    if (opts->data_data) free(opts->data_data);
+
+    free(opts);
 }
 
 /**

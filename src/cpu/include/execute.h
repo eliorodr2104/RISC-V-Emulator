@@ -29,7 +29,7 @@
 int executeSingleStep(
     Cpu               cpu,
     options_t         options,
-    AssemblyData*     data,
+    const AssemblyData*     data,
     WindowsManagement window_management,
     int*              current_char,
     bool              interactive,

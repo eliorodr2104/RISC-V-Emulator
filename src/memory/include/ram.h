@@ -24,6 +24,14 @@ typedef struct ram {
 } *RAM;
 
 /**
+ * @brief Destroy the RAM instance and free its resources.
+ * @param ram Pointer to the RAM instance to be destroyed.
+ *
+ * This function frees the memory allocated for the RAM data and the RAM instance itself.
+ */
+void destroy_ram(RAM ram);
+
+/**
  * @brief Create a new RAM instance with the specified size.
  * @param size Size of the RAM in bytes.
  *

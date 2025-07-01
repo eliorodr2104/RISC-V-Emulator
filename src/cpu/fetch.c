@@ -19,6 +19,7 @@
  *
  * @param cpu The CPU instance from which to fetch the instruction.
  * @param options The options containing instruction data and metadata.
+ * @param main_memory The main memory instance where instructions are stored.
  *
  * @return The fetched instruction as a 32-bit unsigned integer, or 0 if no valid instruction is found.
  */
@@ -30,11 +31,13 @@ uint32_t fetchInstruction(
 ) {
 
     if (cpu->pc < options.text_vaddr || cpu->pc >= options.text_vaddr + options.text_size) {
-        return 0;
+        perror("Invalid program counter, outside the text section");
+        return -1;
     }
 
     if (cpu->pc % 4 != 0) {
-        return 0;
+        perror("Program counter must be aligned to 4 bytes for RISC-V instructions");
+        return -1;
     }
 
     return read_ram32bit(main_memory, cpu->pc);

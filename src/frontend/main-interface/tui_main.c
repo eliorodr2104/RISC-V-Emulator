@@ -21,20 +21,27 @@
  * Current terminal rows
  * @param cols
  * Current terminal columns
+ * @param main_memory
+ * Ram structure containing the main memory
  */
 void show_mode_chooser_window(
     const WindowsManagement windowManagement,
           Cpu               cpu,
-    const options_t         options,
+    const options_t*        options,
     const int32_t           rows,
     const int32_t           cols,
           RAM               main_memory
 ) {
 
     // Create a new window for the mode chooser
-    WINDOW* menuWin = newwin(7, 40, (rows-7)/2, (cols-40)/2);
+    WINDOW* menu_win = newwin(7, 40, (rows-7)/2, (cols-40)/2);
 
-    if (!menuWin) return;
+    if (!menu_win) {
+        perror("Error creating mode chooser window");
+        return;
+    }
+
+
     constexpr int n_choices = 3;
     int highlight = 0;
 
@@ -45,15 +52,15 @@ void show_mode_chooser_window(
     };
 
     // Set the background color and border for the menu window
-    box(menuWin, 0, 0);
+    box(menu_win, 0, 0);
 
     // Set title for the menu window
-    wattron(menuWin, COLOR_PAIR(2) | A_BOLD);
-    mvwprintw(menuWin, 1, 2, "Select mode:");
-    wattroff(menuWin, COLOR_PAIR(2) | A_BOLD);
+    wattron(menu_win, COLOR_PAIR(2) | A_BOLD);
+    mvwprintw(menu_win, 1, 2, "Select mode:");
+    wattroff(menu_win, COLOR_PAIR(2) | A_BOLD);
 
     // Set the keypad for the menu window to capture arrow keys
-    keypad(menuWin, TRUE);
+    keypad(menu_win, TRUE);
 
     while (1) {
 
@@ -61,21 +68,21 @@ void show_mode_chooser_window(
         for (int i = 0; i < n_choices; i++) {
 
             if (i == highlight) {
-                wattron(menuWin, A_REVERSE);
-                mvwprintw(menuWin, i + 3, 4, "%s", choices[i]);
-                wattroff(menuWin, A_REVERSE);
+                wattron(menu_win, A_REVERSE);
+                mvwprintw(menu_win, i + 3, 4, "%s", choices[i]);
+                wattroff(menu_win, A_REVERSE);
 
             } else {
-                mvwprintw(menuWin, i + 3, 4, "%s", choices[i]);
+                mvwprintw(menu_win, i + 3, 4, "%s", choices[i]);
 
             }
         }
 
         // Refresh the menu window to show the changes
-        wrefresh(menuWin);
+        wrefresh(menu_win);
 
         // Wait for user input and handle it
-        const int c = wgetch(menuWin);
+        const int c = wgetch(menu_win);
 
         // Handle user input for navigation and selection
         switch (c) {
@@ -90,13 +97,13 @@ void show_mode_chooser_window(
             case 10:
 
                 if (highlight == 0) {
-                    runCpuFull(cpu, options, windowManagement);
+                    runCpuFull(cpu, *options, windowManagement);
 
 
                 } else if (highlight == 1) {
                     if (windowManagement.winCmd->isActive) commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
 
-                    runCpuStepByStep(cpu, options, windowManagement, main_memory);
+                    runCpuStepByStep(cpu, *options, windowManagement, main_memory);
 
 
                 } else {
@@ -122,50 +129,52 @@ void show_mode_chooser_window(
  * Cpu structure containing the CPU state and their flags
  * @param options
  * Current options structure containing the execution mode and other options
+ * @param main_memory
+ * Ram structure containing the main memory
  */
 void userChoices(
-          WindowsManagement windowManagement,
-          Cpu               cpu,
-    const options_t         options,
-          RAM               main_memory
+    WindowsManagement windowManagement,
+    Cpu               cpu,
+    options_t*        options,
+    RAM               main_memory
 ) {
 
     // Allocate memory for the current window pointer
     windowManagement.currentWindow = malloc(sizeof windowManagement.currentWindow);
 
     // Check if memory allocation was successful
-    if (!windowManagement.currentWindow) { perror("Alloc memory for the current windows is not successfully"); return; }
+    if (!windowManagement.currentWindow) {
+        perror("Alloc memory for the current windows is not successfully");
+        return;
+    }
 
     // Set the current window to the program window (default -> PROG_WINDOW)
     *windowManagement.currentWindow= PROG_WINDOW;
 
+    // Declare variables for terminal size
     int32_t rows, cols;
 
     // Get the current terminal size
     getmaxyx(stdscr, rows, cols);
 
     // Select current window based on the execution mode
-    switch (options.execution_mode) {
+    switch (options->execution_mode) {
         case DEFAULT:
             show_mode_chooser_window(windowManagement, cpu, options, rows, cols, main_memory);
             break;
 
         case FULL:
-            runCpuFull(cpu, options, windowManagement);
+            runCpuFull(cpu, *options, windowManagement);
             break;
 
         case STEP_BY_STEP:
             if (windowManagement.winCmd->isActive) commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
 
-            runCpuStepByStep(cpu, options, windowManagement, main_memory);
+            runCpuStepByStep(cpu, *options, windowManagement, main_memory);
             break;
         default:
             break;
     }
-
-    closeNcurses(&windowManagement.winRegs->window, &windowManagement.winProg->window, &windowManagement.winStatus->window);
-    free(windowManagement.currentWindow);
-
 }
 
 /**

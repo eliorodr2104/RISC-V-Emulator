@@ -51,7 +51,7 @@ static void drawBlock(
 void drawPipeline(
     WINDOW*            winStatus,
     DecodedInstruction currentDecoded,
-    int32_t            pc,
+    uint32_t           pc,
     int                step
 
 );

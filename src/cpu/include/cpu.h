@@ -32,6 +32,15 @@ typedef struct cpu {
 } *Cpu;
 
 /**
+ * @brief Destroy the CPU instance and free its resources.
+ *
+ * @param cpu Pointer to the CPU instance to be destroyed.
+ *
+ * This function frees the memory allocated for the CPU instance.
+ */
+void destroy_cpu(Cpu cpu);
+
+/**
  * @brief Create a new CPU instance
  *
  * @return A pointer to the newly created CPU instance, or nullptr if memory allocation fails
@@ -70,7 +79,7 @@ void runCpuStepByStep(
  *
  * @param cpu The CPU instance to reset
  */
-void resetCpuState(Cpu cpu);
+void resetCpuState(Cpu cpu, options_t options);
 
 /**
  * @brief Get the value of a specific register by its number.

@@ -26,7 +26,7 @@
 void show_mode_chooser_window(
     WindowsManagement windowManagement,
     Cpu               cpu,
-    options_t         options,
+    const options_t*        options,
     int32_t           rows,
     int32_t           cols,
     RAM               main_memory
@@ -45,7 +45,7 @@ void show_mode_chooser_window(
 void userChoices(
     WindowsManagement windowManagement,
     Cpu               cpu,
-    options_t         options,
+    options_t*        options,
     RAM               main_memory
 );
 

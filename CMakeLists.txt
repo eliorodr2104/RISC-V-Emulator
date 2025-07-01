@@ -68,6 +68,7 @@ set(SOURCE_FILES
         src/utils/tools.c
         src/memory/ram.c
         src/asm-handler/elf.c
+        src/frontend/windows_management.c
 )
 
 # Define header files

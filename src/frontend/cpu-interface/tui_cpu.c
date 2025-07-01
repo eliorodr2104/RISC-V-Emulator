@@ -106,7 +106,7 @@ void printRegisterTable(
 void drawPipeline(
           WINDOW* winStatus,
     const DecodedInstruction currentDecoded,
-    const int32_t pc,
+    const uint32_t pc,
     const int step
 
 ) {
@@ -200,12 +200,48 @@ bool printProgramWithCurrentInstruction(
           RAM      main_memory
 ) {
 
+    if (!data) {
+        fprintf(stderr, "ERROR: data is NULL\n");
+        return true;
+    }
+
+    if (!data->asmLines) {
+        fprintf(stderr, "ERROR: data->asmLines is NULL\n");
+        return true;
+    }
+
+    if (!data->lineToInstructionMap) {
+        fprintf(stderr, "ERROR: data->lineToInstructionMap is NULL\n");
+        return true;
+    }
+
+    if (!data->instructionToLineMap) {
+        fprintf(stderr, "ERROR: data->instructionToLineMap is NULL\n");
+        return true;
+    }
+
+    if (data->lineCount <= 0) {
+        fprintf(stderr, "ERROR: data->lineCount = %d\n", data->lineCount);
+        return true;
+    }
+
     int step       = 0;
-    int offset     = 0; // Offset for registers
+    int offset     = 0;
 
-    DecodedInstruction usageInstruction = {};
+    DecodedInstruction usageInstruction = { 0, 0, 0, 0, 0, 0, 0 };
 
-    int rowToLineMapping[data->lineCount];
+    // INIZIALIZZAZIONE SICURA DELL'ARRAY
+    int* rowToLineMapping = malloc(sizeof(int) * data->lineCount);
+    if (!rowToLineMapping) {
+        fprintf(stderr, "ERROR: Failed to allocate rowToLineMapping\n");
+        return true;
+    }
+
+    // Inizializza tutto a -1
+    for (int i = 0; i < data->lineCount; i++) {
+        rowToLineMapping[i] = -1;
+    }
+
     int visibleRows = 0;
 
     // Header definition
@@ -230,7 +266,6 @@ bool printProgramWithCurrentInstruction(
 
         if (currentInstructionIndex < options.text_size / 4) {
             highlightedLine = data->instructionToLineMap[currentInstructionIndex];
-
         }
 
         usageInstruction = decodeInstruction(raw_instruction);
@@ -260,8 +295,25 @@ bool printProgramWithCurrentInstruction(
         *offsetProg = startLine;
     }
 
+    // CONTROLLO SICURO DEL LOOP DI DISEGNO
     for (int i = startLine; i < data->lineCount && i - startLine < maxRows; i++) {
+        if (i < 0 || i >= data->lineCount) {
+            fprintf(stderr, "ERROR: Invalid line index %d (lineCount=%d)\n", i, data->lineCount);
+            continue;
+        }
+
+        if (!data->asmLines[i]) {
+            fprintf(stderr, "ERROR: asmLines[%d] is NULL\n", i);
+            continue;
+        }
+
         const int row = 2 + (i - startLine);
+
+        if (visibleRows >= data->lineCount) {
+            fprintf(stderr, "ERROR: visibleRows=%d >= lineCount=%d\n", visibleRows, data->lineCount);
+            break;
+        }
+
         rowToLineMapping[visibleRows] = i;
         visibleRows++;
 
@@ -273,7 +325,6 @@ bool printProgramWithCurrentInstruction(
         );
 
         if (i == highlightedLine) {
-
             // Add comments for debug
             wattron(windowManagement.winProg->window, COLOR_PAIR(5));
 
@@ -341,7 +392,6 @@ bool printProgramWithCurrentInstruction(
 
     bool quitRequested     = false;
     bool continueExecution = false;
-
     bool redraw = true;
 
     // Input loop
@@ -381,6 +431,7 @@ bool printProgramWithCurrentInstruction(
         }
 
         if (ch == KEY_MOUSE) {
+
             MEVENT event;
             if (getmouse(&event) == OK) {
 
@@ -388,6 +439,7 @@ bool printProgramWithCurrentInstruction(
                 int prog_y, prog_x, prog_max_y, prog_max_x;
                 getbegyx(windowManagement.winProg->window, prog_y, prog_x);
                 getmaxyx(windowManagement.winProg->window, prog_max_y, prog_max_x);
+
 
                 // If click in range win then set instruction
                 if (event.x >= prog_x && event.x < prog_x + prog_max_x &&
@@ -401,19 +453,46 @@ bool printProgramWithCurrentInstruction(
                         // Click the left bottom
                         const int clicked_row = event.y - prog_y - 2; // -2 for header and border
 
-                        if (clicked_row >= 0 && clicked_row < visibleRows) {
-
-                            const int target_instruction = data->lineToInstructionMap[rowToLineMapping[clicked_row]];
-
-                            if (target_instruction >= 0) {
-                                cpu->reset_flag = target_instruction;
-
-                                return false;
-                            }
+                        if (clicked_row < 0) {
+                            continue;
                         }
+
+                        if (clicked_row >= visibleRows) {
+                            continue;
+                        }
+
+                        if (clicked_row >= data->lineCount) {
+                            continue;
+                        }
+
+                        const int mappedLine = rowToLineMapping[clicked_row];
+
+                        if (mappedLine < 0) {
+                            continue;
+                        }
+
+                        if (mappedLine >= data->lineCount) {
+                            fprintf(stderr, "ERROR: mappedLine=%d >= lineCount=%d\n", mappedLine, data->lineCount);
+                            continue;
+                        }
+
+                        const int target_instruction = data->lineToInstructionMap[mappedLine];
+
+                        if (target_instruction >= 0 && target_instruction < options.text_size / 4) {
+                            cpu->reset_flag = target_instruction;
+
+                            // CLEANUP
+                            free(rowToLineMapping);
+                            return false;
+
+                        }
+
                     }
-                }
-            }
+                } else
+                    fprintf(stderr, "ERROR: Click outside window bounds\n");
+
+            } else
+                fprintf(stderr, "ERROR: getmouse() failed\n");
         }
 
         if (ch == 'q' || ch == 'Q') {
@@ -544,6 +623,8 @@ bool printProgramWithCurrentInstruction(
 
     }
 
+    // CLEANUP
+    free(rowToLineMapping);
     return quitRequested;
 }
 
@@ -642,12 +723,9 @@ void draw_instruction_colored(
             strcmp(token, "sll") == 0 ||
             strcmp(token, "srl") == 0
         ) {
-            wattron(prog_window, COLOR_PAIR(8) | A_BOLD);
+            wattron(prog_window, COLOR_PAIR(7) | A_BOLD);
             mvwprintw(prog_window, row, col, "%s", token);
-            wattroff(prog_window, COLOR_PAIR(8) | A_BOLD);
-
-        } else if (strcmp(token, ",") == 0) {
-            mvwprintw(prog_window, row, col, "%s", token);
+            wattroff(prog_window, COLOR_PAIR(7) | A_BOLD);
 
         } else if (
             strcmp(token, "zero") == 0 ||
