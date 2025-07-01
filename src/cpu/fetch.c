@@ -24,15 +24,18 @@
  */
 uint32_t fetchInstruction(
           Cpu       cpu,
-    const options_t options
+    const options_t options,
+          RAM       main_memory
 
 ) {
 
-    if (!cpu) return 0;
+    if (cpu->pc < options.text_vaddr || cpu->pc >= options.text_vaddr + options.text_size) {
+        return 0;
+    }
 
-    const uint32_t instructionIndex = cpu->pc / 4;
+    if (cpu->pc % 4 != 0) {
+        return 0;
+    }
 
-    if (instructionIndex >= options.instruction_count) return 0;
-
-    return options.instructions[instructionIndex].instruction;
+    return read_ram32bit(main_memory, cpu->pc);
 }

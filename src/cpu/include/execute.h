@@ -32,7 +32,8 @@ int executeSingleStep(
     AssemblyData*     data,
     WindowsManagement window_management,
     int*              current_char,
-    bool              interactive
+    bool              interactive,
+    RAM               main_memory
 
 );
 
@@ -44,7 +45,8 @@ int executeSingleStep(
  */
 void reExecuteUntilTarget(
     Cpu       cpu,
-    options_t options
+    options_t options,
+    RAM       main_memory
 
 );
 
@@ -56,7 +58,8 @@ void reExecuteUntilTarget(
  */
 void executeInstructionSilently(
     Cpu       cpu,
-    options_t options
+    options_t options,
+    RAM       main_memory
 );
 
 #endif //EXECUTE_H

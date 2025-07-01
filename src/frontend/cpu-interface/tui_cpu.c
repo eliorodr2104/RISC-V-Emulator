@@ -14,6 +14,7 @@
 #include "assembly_data.h"
 #include "cpu.h"
 #include "decode.h"
+#include "fetch.h"
 #include "tools.h"
 #include "ncurses.h"
 #include "tui_main.h"
@@ -195,7 +196,8 @@ bool printProgramWithCurrentInstruction(
           Cpu      cpu,
     const options_t options,
     const AssemblyData* data,
-          int*     offsetProg
+          int*     offsetProg,
+          RAM      main_memory
 ) {
 
     int step       = 0;
@@ -220,14 +222,18 @@ bool printProgramWithCurrentInstruction(
     wattroff(windowManagement.winProg->window, COLOR_PAIR(1) | A_BOLD);
 
     // Calc instruction PC
-    const int currentInstructionIndex = cpu->pc / 4;
+    const uint32_t currentInstructionIndex = (cpu->pc - options.text_vaddr) / 4;
           int highlightedLine = -1;
 
-    if (currentInstructionIndex < options.instruction_count) {
+    if (cpu->pc >= options.text_vaddr && cpu->pc < options.text_vaddr + options.text_size) {
+        const auto raw_instruction = fetchInstruction(cpu, options, main_memory);
 
-        highlightedLine = data->instructionToLineMap[currentInstructionIndex];
-        usageInstruction = decodeInstruction(options.instructions[currentInstructionIndex].instruction);
+        if (currentInstructionIndex < options.text_size / 4) {
+            highlightedLine = data->instructionToLineMap[currentInstructionIndex];
 
+        }
+
+        usageInstruction = decodeInstruction(raw_instruction);
     }
 
     const int maxRows          = getmaxy(windowManagement.winProg->window) - 3;
@@ -271,7 +277,7 @@ bool printProgramWithCurrentInstruction(
             // Add comments for debug
             wattron(windowManagement.winProg->window, COLOR_PAIR(5));
 
-            if (currentInstructionIndex < options.instruction_count) {
+            if (currentInstructionIndex < options.text_size) {
                 const AluOp aluOp = getInstructionEnum(usageInstruction.opcode, usageInstruction.funz3, usageInstruction.funz7_bit30);
 
                 // Add comment for ecall

@@ -4,6 +4,8 @@
 
 .data
 	# variables here
+	x: .word 10
+	y: .word 12
 
 .text
 

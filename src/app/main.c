@@ -15,7 +15,6 @@
  * @return 0 if successful, non-zero otherwise
  */
 int main(const int argc, char** argv) {
-
     // Initialize options' structure with null
     options_t opts = { nullptr };
 
@@ -24,9 +23,6 @@ int main(const int argc, char** argv) {
     if (result != 0)
         return result;
 
-    // Set the instruction count aligned to 4 bytes for RISC-V 32-bit architecture
-    opts.instruction_count_aligned = opts.instruction_count * 4;
-
     // RAM Initialization 1MB
     RAM main_memory = new_ram(1024 * 1024);
 
@@ -34,6 +30,23 @@ int main(const int argc, char** argv) {
 
     // Initialize the CPU structure
     Cpu cpu = newCpu();
+
+    // Load .data (variable's)
+    load_binary_to_ram(main_memory, opts.data_data, opts.data_size, opts.data_vaddr);
+
+    // Load .text (Instructions)
+    load_binary_to_ram(main_memory, opts.text_data, opts.text_size, opts.text_vaddr);
+
+    // Set PC (Program Counter) to the start of the text section
+    cpu->pc = opts.entry_point;
+
+    // Set stack pointer (SP) to the end of the RAM
+    cpu->registers[2] = 0x100000;
+
+    // Test to print the RAM state from address 0 to the stack pointer
+    //print_ram_state(main_memory, opts.data_vaddr, opts.data_vaddr + opts.data_size, 32);
+
+    //print_ram_state(main_memory, opts.text_vaddr, opts.text_vaddr + opts.text_size, 32);
 
     // Initialize ncurses windows for the TUI
     WINDOW* winProg   = nullptr;
@@ -53,7 +66,7 @@ int main(const int argc, char** argv) {
     if (!initNcurses(winManagement)) return 1;
 
     // Show the mode chooser window to select the execution mode
-    userChoices(winManagement, cpu, opts);
+    userChoices(winManagement, cpu, opts, main_memory);
 
     // Close ncurses windows and clean up resources
     closeNcurses(&winRegs, &winProg, &winStatus);

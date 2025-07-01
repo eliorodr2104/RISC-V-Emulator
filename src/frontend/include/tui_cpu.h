@@ -27,7 +27,8 @@ bool printProgramWithCurrentInstruction(
           Cpu               cpu,
           options_t         options,
     const AssemblyData*     data,
-    int*                    offsetProg
+    int*                    offsetProg,
+          RAM      main_memory
 
 );
 

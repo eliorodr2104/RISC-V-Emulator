@@ -27,7 +27,8 @@
  */
 uint32_t fetchInstruction (
     Cpu        cpu,
-    options_t  options
+    options_t  options,
+    RAM        main_memory
 );
 
 #endif //FETCH_H

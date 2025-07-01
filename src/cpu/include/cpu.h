@@ -25,7 +25,7 @@
  * @param registers Array of 32 registers, each represented as a 32-bit signed integer
  */
 typedef struct cpu {
-    int32_t pc;
+    uint32_t pc;
     int32_t reset_flag;
     int32_t registers[32];
 
@@ -61,7 +61,8 @@ void runCpuFull(
 void runCpuStepByStep(
     Cpu               cpu,
     options_t         options,
-    WindowsManagement window_management
+    WindowsManagement window_management,
+    RAM               main_memory
 );
 
 /**

@@ -7,6 +7,8 @@
 
 #include<stdint.h>
 
+#include "ram.h"
+
 typedef enum {
     DEFAULT, FULL, STEP_BY_STEP
 } execution_mode;
@@ -27,14 +29,28 @@ typedef struct {
     char **breakpoints;               // breakpoints for the asm program
     int breakpoint_count;
 
-    // data of the bin given
-    riscv_instruction_t *instructions;   // Array of the instructions
-    int instruction_count;               // instruction count
-    int instruction_count_aligned;       // Instr count align * 4
+    // Add options for load in memory the instructions
+    // Instruction (.text)
+    uint8_t* text_data;      // binary buffer.text
+    size_t text_size;         // byte
+    uint32_t text_vaddr;      // virtual address .text
+
+    // Data (.data)
+    uint8_t* data_data;      // binary buffer .data
+    size_t data_size;         // byte
+    uint32_t data_vaddr;      // virtual address .data
+
+    // Entry point
+    uint32_t entry_point;
+
 } options_t;
 
 // public functions
-int  handle_args  (int argc, char *argv[], options_t *opts);
+int  handle_args  (
+    int argc,
+    char *argv[],
+    options_t *opts
+);
 void print_options(const options_t *opts);
 void free_options (const options_t *opts);
 

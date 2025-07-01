@@ -31,18 +31,6 @@ void print_options(const options_t *opts) {
         }
         printf("\n");
     }
-
-    // Shows the loaded instructions
-    if (opts->instruction_count > 0 && opts->instructions != NULL) {
-        printf("\n Successfully loaded %d instructions", opts->instruction_count);
-        printf("\n=== Loaded Instructions ===\n");
-        for (int i = 0; i < opts->instruction_count; i++) {
-            printf("0x%08x: 0x%08x \n",
-                   opts->instructions[i].address,
-                   opts->instructions[i].instruction
-                  );
-        }
-    }
 }
 
 /**
@@ -140,13 +128,6 @@ void free_options(const options_t *opts) {
         free(opts->breakpoints);
     }
 
-    // Free of the instructions
-    if (opts->instructions) {
-        for (int i = 0; i < opts->instruction_count; i++) {
-            free(&opts->instructions[i]);
-        }
-        free(opts->instructions);
-    }
 }
 
 /**
@@ -156,7 +137,11 @@ void free_options(const options_t *opts) {
  * @param opts options (obj containing the options)
  * @return 1: printed help. 0: success, -1: error occurred
  */
-int handle_args(int argc, char *argv[], options_t *opts) {
+int handle_args(
+    int argc,
+    char *argv[],
+    options_t *opts
+) {
     const struct option long_options[] = {
         {"full-execution", no_argument, nullptr, 'f'},
         {"step", no_argument, nullptr, 's'},

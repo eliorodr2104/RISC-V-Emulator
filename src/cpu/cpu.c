@@ -71,18 +71,23 @@ void runCpuFull(
 void runCpuStepByStep(
           Cpu               cpu,
     const options_t         options,
-    const WindowsManagement window_management
+    const WindowsManagement window_management,
+          RAM               main_memory
 ) {
 
     // TODO(Add "currentChar" to the WindowsManagement struct, and pass AssemblyData to the function)
     int           currentChar = 'h';
     AssemblyData* data        = newAssemblyData(options);
 
+    if (!data) {
+        return;
+    }
+
     // While the program counter is less than the aligned instruction count
-    while (cpu->pc < options.instruction_count_aligned) {
+    while (cpu->pc >= options.text_vaddr && cpu->pc < options.text_vaddr + options.text_size) {
 
         // Execute a single step of the CPU, if the execution fails then break the loop
-        if (!executeSingleStep(cpu, options, data, window_management, &currentChar, true)) {
+        if (!executeSingleStep(cpu, options, data, window_management, &currentChar, true, main_memory)) {
             break;
         }
 
@@ -90,7 +95,7 @@ void runCpuStepByStep(
         if (cpu->reset_flag >= 0) {
 
             // Reset the CPU state to the initial state
-            reExecuteUntilTarget(cpu, options);
+            reExecuteUntilTarget(cpu, options, main_memory);
 
             // Reset the reset flag to -1 to indicate that the CPU is no longer in a reset state
             cpu->reset_flag = -1;

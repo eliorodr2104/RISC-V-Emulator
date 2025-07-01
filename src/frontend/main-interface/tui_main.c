@@ -27,7 +27,8 @@ void show_mode_chooser_window(
           Cpu               cpu,
     const options_t         options,
     const int32_t           rows,
-    const int32_t           cols
+    const int32_t           cols,
+          RAM               main_memory
 ) {
 
     // Create a new window for the mode chooser
@@ -79,11 +80,11 @@ void show_mode_chooser_window(
         // Handle user input for navigation and selection
         switch (c) {
             case KEY_UP:
-                highlight = (highlight == 0) ? n_choices - 1 : highlight - 1;
+                highlight = highlight == 0 ? n_choices - 1 : highlight - 1;
                 break;
 
             case KEY_DOWN:
-                highlight = (highlight == n_choices - 1) ? 0 : highlight + 1;
+                highlight = highlight == n_choices - 1 ? 0 : highlight + 1;
                 break;
 
             case 10:
@@ -95,7 +96,7 @@ void show_mode_chooser_window(
                 } else if (highlight == 1) {
                     if (windowManagement.winCmd->isActive) commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
 
-                    runCpuStepByStep(cpu, options, windowManagement);
+                    runCpuStepByStep(cpu, options, windowManagement, main_memory);
 
 
                 } else {
@@ -125,7 +126,8 @@ void show_mode_chooser_window(
 void userChoices(
           WindowsManagement windowManagement,
           Cpu               cpu,
-    const options_t         options
+    const options_t         options,
+          RAM               main_memory
 ) {
 
     // Allocate memory for the current window pointer
@@ -145,7 +147,7 @@ void userChoices(
     // Select current window based on the execution mode
     switch (options.execution_mode) {
         case DEFAULT:
-            show_mode_chooser_window(windowManagement, cpu, options, rows, cols);
+            show_mode_chooser_window(windowManagement, cpu, options, rows, cols, main_memory);
             break;
 
         case FULL:
@@ -155,7 +157,7 @@ void userChoices(
         case STEP_BY_STEP:
             if (windowManagement.winCmd->isActive) commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
 
-            runCpuStepByStep(cpu, options, windowManagement);
+            runCpuStepByStep(cpu, options, windowManagement, main_memory);
             break;
         default:
             break;

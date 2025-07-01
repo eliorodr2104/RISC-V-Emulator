@@ -54,6 +54,15 @@ void write_ram32bit(RAM ram, uint32_t address, uint32_t value);
  */
 uint32_t read_ram32bit(RAM ram, uint32_t address);
 
+/**
+ * @brief Load instructions into RAM from a binary data array.
+ * @param ram Pointer to the RAM instance where instructions will be loaded.
+ *
+ * This function loads instructions into RAM, starting from address 0x0.
+ */
+void load_binary_to_ram(RAM ram, const uint8_t *binary, size_t size, uint32_t start_addr);
+
+void print_ram_state(RAM ram, uint32_t start_addr, uint32_t end_addr, size_t max_lines);
 
 
 #endif //RAM_H

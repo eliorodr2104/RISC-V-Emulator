@@ -35,9 +35,12 @@ int executeSingleStep(
           AssemblyData*     data,
     const WindowsManagement window_management,
           int*              current_char,
-          bool              interactive
+          bool              interactive,
+          RAM               main_memory
 
 ) {
+
+    if (!cpu || !main_memory) return 0;
 
     // Calculate the next program counter value, this value is temp, because the PC can change if execute a jalr or jal instruction
     int32_t nextPc      = cpu->pc + 4;
@@ -48,8 +51,14 @@ int executeSingleStep(
     // Offset for the program window, used to scroll through the instructions
     int     offsetProg  = 1;
 
+    const uint32_t raw_instruction = fetchInstruction(cpu, options, main_memory);
+    if (raw_instruction == 0) {
+
+        return 0;
+    }
+
     // Fetch and decode the instruction at the current program counter
-    const DecodedInstruction decodedInstruction = decodeInstruction(fetchInstruction(cpu, options));
+    const DecodedInstruction decodedInstruction = decodeInstruction(raw_instruction);
 
     // Get the control signals for the instruction based on its opcode
     const ControlSignals unitControlRet         = getControlSignals(decodedInstruction.opcode);
@@ -89,7 +98,8 @@ int executeSingleStep(
         cpu,
         options,
         data,
-        &offsetProg
+        &offsetProg,
+        main_memory
 
     )) {
         return 0;
@@ -128,7 +138,8 @@ int executeSingleStep(
  */
 void reExecuteUntilTarget(
           Cpu cpu,
-    const options_t options
+    const options_t options,
+          RAM       main_memory
 
 ) {
 
@@ -138,9 +149,9 @@ void reExecuteUntilTarget(
     // Count the number of instructions executed
     uint32_t currentInstruction = 0;
 
-    while (currentInstruction < cpu->reset_flag && cpu->pc < options.instruction_count_aligned) {
+    while (currentInstruction < cpu->reset_flag && cpu->pc < options.text_size) {
 
-        executeInstructionSilently(cpu, options);
+        executeInstructionSilently(cpu, options, main_memory);
         currentInstruction++;
     }
 }
@@ -153,11 +164,12 @@ void reExecuteUntilTarget(
  */
 void executeInstructionSilently(
           Cpu cpu,
-    const options_t options
+    const options_t options,
+          RAM       main_memory
 ) {
 
     // Fetch and decode the instruction at the current program counter
-    const DecodedInstruction decodedInstruction = decodeInstruction(fetchInstruction(cpu, options));
+    const DecodedInstruction decodedInstruction = decodeInstruction(fetchInstruction(cpu, options, main_memory));
 
     // Get the control signals for the instruction based on its opcode
     const ControlSignals unitControlRet = getControlSignals(decodedInstruction.opcode);
