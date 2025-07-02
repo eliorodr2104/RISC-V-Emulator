@@ -3,14 +3,13 @@
 //
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <getopt.h>
-#include "include/args_handler.h"
+#include "args_handler.h"
 
-#include "include/asm_file_parser.h"
+#include <ctype.h>
 
-static void print_help(const char *program_name);
+#include "asm_file_parser.h"
+
 static char **split_args(const char *args_str, int *count);
 static void add_breakpoint(options_t *opts, const char *addr);
 
@@ -31,22 +30,6 @@ void print_options(const options_t *opts) {
         }
         printf("\n");
     }
-}
-
-/**
- * @brief print help message
- * @param program_name name of the binary
- */
-void print_help(const char *program_name) {
-    printf("Usage: %s [binary_file] [options]\n\n", program_name);
-    printf("Options:\n");
-    printf("  -f, --full-execution      Execute the binary without stopping\n");
-    printf("  -s, --step                Execute step-by-step\n");
-    printf("  -h, --help                Show this help message\n");
-    printf("  -a, --args <ARGS>         Arguments to pass to the binary (space-separated)       NOTE: NOT IMPLEMENTED YET \n");
-    printf("  -b, --breakpoint <ADDR>   Set breakpoint at address (can be used multiple times)  NOTE: NOT IMPLEMENTED YET \n");
-    printf("\nExample:\n");
-    printf("  %s program.bin -a \"arg1 arg2\" -b 0x1004\n", program_name);
 }
 
 /**
@@ -154,6 +137,7 @@ int handle_args(
         {"help", no_argument, nullptr, 'h'},
         {"args", required_argument, nullptr, 'a'},
         {"breakpoint", required_argument, nullptr, 'b'},
+        {"ram", required_argument, nullptr, 'r'},
         {nullptr, 0, nullptr, 0}
     };
 
@@ -174,7 +158,7 @@ int handle_args(
         (opt = getopt_long(
             argc,
             argv,
-            "fsha:b:",
+            "fsha:b:r:",
             long_options,
             &option_index
         )) != -1
@@ -186,6 +170,7 @@ int handle_args(
                     // printf("Full execution mode enabled\n");
                 } else
                     fprintf(stderr, "Can't use both step by step and full execution mode, try again with only one of the two\n");
+
                 break;
 
             case 's':
@@ -201,10 +186,9 @@ int handle_args(
 
             case 'a':
                 fprintf(stderr, "Arguments for the asm execution are not implemented yet\n");
-                // opts->args = split_args(optarg, &opts->args_count);
-                // // printf("Arguments for binary (%d args):\n", opts->args_count);
-                // for (int i = 0; i < opts->args_count; i++)
-                //     printf("  argv[%d] = '%s'\n", i, opts->args[i]);
+                //opts->args = split_args(optarg, &opts->args_count);
+                // printf("Arguments for binary (%d args):\n", opts->args_count);
+                //for (int i = 0; i < opts->args_count; i++) printf("  argv[%d] = '%s'\n", i, opts->args[i]);
                 break;
             case 'b':
                 fprintf(stderr, "Breakpoints for the asm execution are not implemented yet\n");
@@ -212,11 +196,27 @@ int handle_args(
                 // printf("Breakpoint added at: %s\n", optarg);
                 break;
 
+            case 'r':
+
+                if (optarg) {
+                    int32_t ram_size = parse_memory_size(optarg);
+                    if (ram_size <= 0) ram_size = DEFAULT_RAM_SIZE;
+
+                    opts->ram_size = ram_size;
+
+                } else
+                    opts->ram_size = DEFAULT_RAM_SIZE;
+
+
+                break;
+
             default:
                 fprintf(stderr, "Unknown option. Use -h for help.\n");
                 return -1;
         }
     }
+
+    if (opts->ram_size <= 0) opts->ram_size = DEFAULT_RAM_SIZE;
 
     // check if the binary has been passed
     if (!opts->binary_file) {
@@ -230,5 +230,36 @@ int handle_args(
         return -1;
 
     return 0;
+}
+
+int32_t parse_memory_size(const char *size_str) {
+    if (!size_str) return -1;
+
+    char *endptr;
+    long value = strtol(size_str, &endptr, 10);
+
+    if (value <= 0) return -1;
+
+    switch (toupper(*endptr)) {
+        case 'K':
+            value *= 1024;
+            break;
+
+        case 'M':
+            value *= 1024 * 1024;
+            break;
+
+        case 'G':
+            value *= 1024 * 1024 * 1024;
+            break;
+
+        case '\0':
+            break;
+
+        default:
+            return -1;
+    }
+
+    return value > INT32_MAX ? -1 : (int32_t)value;
 }
 

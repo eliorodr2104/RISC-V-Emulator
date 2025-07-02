@@ -21,13 +21,18 @@ int main(const int argc, char** argv) {
 
     // Handle command line arguments and set options with the provided arguments
     const int result = handle_args(argc, argv, opts);
+
+    if (result == 1) {
+        return result;
+    }
+
     if (result != 0) {
         perror("Error handling command line");
         return result;
     }
 
-    // RAM Initialization 1MB
-    RAM main_memory = new_ram(1024 * 1024);
+    // RAM Initialization
+    RAM main_memory = new_ram(opts->ram_size);
 
     if (!main_memory) {
         perror("Error init RAM");

@@ -9,6 +9,8 @@
 
 #include "ram.h"
 
+#define DEFAULT_RAM_SIZE 1048576
+
 typedef enum {
     DEFAULT, FULL, STEP_BY_STEP
 } execution_mode;
@@ -43,6 +45,8 @@ typedef struct {
     // Entry point
     uint32_t entry_point;
 
+    uint32_t ram_size;
+
 } options_t;
 
 // public functions
@@ -53,5 +57,25 @@ int  handle_args  (
 );
 void print_options(const options_t *opts);
 void free_options (options_t *opts);
+
+int32_t parse_memory_size(const char *size_str);
+
+/**
+ * @brief print help message
+ * @param program_name name of the binary
+ */
+static void print_help(const char *program_name) {
+
+    printf("Usage: %s [binary_file] [options]\n\nOptions:\n", program_name);
+    printf("\t-f, --full-execution\tExecute the binary without stopping\n");
+    printf("\t-s, --step\t\tExecute step-by-step\n");
+    printf("\t-h, --help\t\tShow this help message\n");
+    printf("\t-r, --ram <SIZE>\tSet the RAM size\n");
+    printf("\t-a, --args <ARGS>\tArguments to pass to the binary (space-separated)\tNOTE: NOT IMPLEMENTED YET\n");
+    printf("\t-b, --breakpoint <ADDR>\tSet breakpoint at address (can be used multiple times)\tNOTE: NOT IMPLEMENTED YET\n");
+    printf("\nExample:\n");
+    printf("\t%s program.bin -a \"arg1 arg2\" -b 0x1004\n", program_name);
+
+}
 
 #endif //ARGS_HANDLER_H
