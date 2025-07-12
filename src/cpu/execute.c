@@ -53,16 +53,31 @@ int executeSingleStep(
     int     offsetProg  = 1;
 
     const uint32_t raw_instruction = fetchInstruction(cpu, options, main_memory);
+
     if (raw_instruction == -1) {
         perror("Error fetching instruction");
         return -1;
     }
 
+    fprintf(stderr, "Raw instruction: 0x%08X\n", raw_instruction);
+
     // Fetch and decode the instruction at the current program counter
     const DecodedInstruction decodedInstruction = decodeInstruction(raw_instruction);
 
+    fprintf(stderr, "Operation code instruction: 0x%08X\n", decodedInstruction.opcode);
+
     // Get the control signals for the instruction based on its opcode
     const ControlSignals unitControlRet         = getControlSignals(decodedInstruction.opcode);
+
+    fprintf(stderr, "Control signals: branch=%d, mem_read=%d, mem_to_reg=%d, operation=0x%02X, mem_write=%d, alu_src=%d, reg_write=%d\n",
+            unitControlRet.branch,
+            unitControlRet.mem_read,
+            unitControlRet.mem_to_reg,
+            unitControlRet.operation,
+            unitControlRet.mem_write,
+            unitControlRet.alu_src,
+            unitControlRet.reg_write
+    );
 
     // Determine the ALU operation based on the operation code, funz3 and funz7Bit30
     const AluOp aluOpEnum                       = get_alu_control(
@@ -71,9 +86,13 @@ int executeSingleStep(
                                                         decodedInstruction.funz7_bit30
                                                     );
 
+    fprintf(stderr, "Enum: %d\n", aluOpEnum);
+
     // TODO(Union the getAluOperationBits and getAluControl functions)
     // Get the ALU operation bits for the ALU operation enum
     get_alu_operation_bits(aluOpEnum, &operation);
+
+    fprintf(stderr, "Operation: 0x%08X\n", operation);
 
     // Invalid operation, return 0 to indicate an error
     if (operation == 0xF) {
@@ -81,18 +100,24 @@ int executeSingleStep(
         return -1;
     }
 
-    // Get the first register value based on the decoded instruction's rs1 field
-    const int32_t firstRegisterValue = getValueRegister(cpu, decodedInstruction.rs1);
+    int32_t firstRegisterValue = 0;
+    int32_t secondOperand      = 0;
+    Alu32BitResult result      = {0, 0, 0};
+    if (aluOpEnum != ALU_SKIP) {
+        // Get the first register value based on the decoded instruction's rs1 field
+        firstRegisterValue = unitControlRet.operation == 0x17 ? (int32_t)cpu->pc : getValueRegister(cpu, decodedInstruction.rs1);
 
-    // Determine the second operand based on whether the ALU source is immediate or a register
-    // if aluSrc is true, then use the immediate value, otherwise use the value from rs2 register
-    const int32_t secondOperand = unitControlRet.alu_src ? decodedInstruction.immediate : getValueRegister(cpu, decodedInstruction.rs2);
+        // Determine the second operand based on whether the ALU source is immediate or a register
+        // if aluSrc is true, then use the immediate value, otherwise use the value from rs2 register
+        secondOperand = unitControlRet.alu_src ? decodedInstruction.immediate : getValueRegister(cpu, decodedInstruction.rs2);
 
-    // Perform the ALU operation with the first register value, second operand, and operation bits
-    const Alu32BitResult result = alu_32_bit(firstRegisterValue, secondOperand, 0, operation);
+        // Perform the ALU operation with the first register value, second operand, and operation bits
+        result = alu_32_bit(firstRegisterValue, secondOperand, 0, operation);
+    }
 
     // Show all instructions and highlight the current instruction in a program window
     // If the function returns true, then it means that the program should stop executing
+
     if (printProgramWithCurrentInstruction(
         window_management,
         current_char,
@@ -119,6 +144,21 @@ int executeSingleStep(
         nextPc = decodedInstruction.opcode == 0x6F ? cpu->pc + secondOperand & ~1 : firstRegisterValue + secondOperand & ~1;
 
         // If the instruction is not jalr or jal, then write the result to the rd register if regWrite is true
+    } else if (unitControlRet.reg_write && aluOpEnum == ALU_SKIP) {
+        writeRegister(cpu, decodedInstruction.rd, decodedInstruction.immediate);
+
+    } else if (unitControlRet.mem_read && unitControlRet.alu_src) {
+
+        const uint32_t value_read_memory = read_ram32bit(main_memory, result.result);
+
+        if (!value_read_memory) {
+            perror("Error reading memory");
+            return -1;
+        }
+
+        writeRegister(cpu, decodedInstruction.rd, (int32_t)value_read_memory);
+
+        // Else write the result to the rd register if regWrite is true
     } else if (unitControlRet.reg_write) {
         writeRegister(cpu, decodedInstruction.rd, result.result);
 
@@ -214,14 +254,24 @@ void executeInstructionSilently(
     if ((decodedInstruction.opcode == 0x67 && decodedInstruction.funz3 == 0x0) || decodedInstruction.opcode == 0x6F) {
 
         // If the unit control signals indicate that rd register should be written next instruction
-        if (unitControlRet.reg_write) {
+        if (unitControlRet.reg_write)
             writeRegister(cpu, decodedInstruction.rd, (int32_t)cpu->pc + 4);
-        }
 
         // Calculate the next program counter based on the jalr or jal instruction
-        nextPc = decodedInstruction.opcode == 0x6F ? cpu->pc + secondOperand & ~1 : firstRegisterValue + secondOperand & ~1;
+        nextPc = decodedInstruction.opcode == 0x6F ? cpu->pc + secondOperand & ~1 : result.result & ~1;
 
-        // If the instruction is not jalr or jal, then write the result to the rd register if regWrite is true
+    } else if (unitControlRet.mem_read && unitControlRet.alu_src) {
+
+        const uint32_t value_read_memory = read_ram32bit(main_memory, result.result);
+
+        if (!value_read_memory) {
+            perror("Error reading memory");
+            return;
+        }
+
+        writeRegister(cpu, decodedInstruction.rd, (int32_t)value_read_memory);
+
+      // Else write the result to the rd register if regWrite is true
     } else if (unitControlRet.reg_write) {
         writeRegister(cpu, decodedInstruction.rd, result.result);
 

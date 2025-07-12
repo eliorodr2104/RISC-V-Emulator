@@ -81,28 +81,21 @@ bool initNcurses(
 
     // Right Window
     if (windowsManagement.winRegs->isActive && windowsManagement.winStatus->isActive) {
-        windowsManagement.winRegs->window = newwin(regsHeight + 8, regsWidth, 0, progWidth);
+        windowsManagement.winRegs->window = newwin(regsHeight + 7, regsWidth, 1, progWidth);
 
     } else if (!windowsManagement.winStatus->isActive) {
-        windowsManagement.winRegs->window = newwin(progHeight - 3, regsWidth, 0, progWidth);
+        windowsManagement.winRegs->window = newwin(progHeight - 4, regsWidth, 1, progWidth);
 
     }
 
     // Bottom Right Window
-
-    if (windowsManagement.winStatus->isActive) {
-        windowsManagement.winStatus->window = newwin(regsHeight - 10, regsWidth, regsHeight + 8, progWidth);
-
-    } else {
-        windowsManagement.winStatus->window = newwin(0, 0, 0, 0); // Create a empty window if not active
-
-    }
+    windowsManagement.winStatus->window = windowsManagement.winStatus->isActive ? newwin(regsHeight - 10, regsWidth, regsHeight + 8, progWidth) : newwin(0, 0, 0, 0);
 
     windowsManagement.winCmd->window = newwin(3, cols, rows - 3, 0);
 
     // Check if windows are created correctly, if not, end ncurses
-    if (!windowsManagement.winProg->window ||
-        !windowsManagement.winRegs->window ||
+    if (!windowsManagement.winProg->window   ||
+        !windowsManagement.winRegs->window   ||
         !windowsManagement.winStatus->window ||
         !windowsManagement.winCmd->window
 

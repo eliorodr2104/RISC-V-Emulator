@@ -45,6 +45,17 @@ ControlSignals getControlSignals(
             signals.reg_write  = true;  // writes result in rd register
             break;
 
+        // I-Type Load: LW, LH, LB, etc. (opcode = 0x03)
+        case 0x03:
+            signals.branch     = false; // non-branch instruction
+            signals.mem_read   = true;  // memory read instruction
+            signals.mem_to_reg = false; // non-memory to register instruction
+            signals.operation  = 0x03;  // Operation code
+            signals.mem_write  = false; // non-memory write instruction
+            signals.alu_src    = true;  // uses immediate value for offset
+            signals.reg_write  = false; // writes result in rd register
+            break;
+
         // UJ-Type: jal. (opcode = 0x6F)
         case 0x6F:
             signals.branch     = false; // non-branch instruction
@@ -75,6 +86,28 @@ ControlSignals getControlSignals(
             signals.mem_write  = false; // non-memory write instruction
             signals.alu_src    = false; // does not use immediate value
             signals.reg_write  = false; // does not write to registers
+            break;
+
+        case 0x37:
+            signals.branch     = false; // non-branch instruction
+            signals.mem_read   = false; // non-memory read instruction
+            signals.mem_to_reg = false; // non-memory to register instruction
+            signals.operation  = 0x37;  // Operation code for ecall
+            signals.mem_write  = false; // non-memory write instruction
+            signals.alu_src    = false;  // use immediate value
+            signals.reg_write  = true;  // write to registers
+
+            break;
+
+        case 0x17:
+            signals.branch     = false; // non-branch instruction
+            signals.mem_read   = false; // non-memory read instruction
+            signals.mem_to_reg = false; // non-memory to register instruction
+            signals.operation  = 0x17;  // Operation code for ecall
+            signals.mem_write  = false; // non-memory write instruction
+            signals.alu_src    = true;  // use immediate value
+            signals.reg_write  = true;  // write to registers
+
             break;
 
         // Default case for unrecognized opcodes -> instructions

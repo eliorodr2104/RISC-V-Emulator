@@ -4,12 +4,17 @@
 
 .data
 	# variables here
-	x: .word 10
+	x: .word 10, 60, 43, 39, 214, 73, 812
 	y: .word 12
 
 .text
 
 _start:
+
+    la   t0, x
+    lw   t1, 0(t0)
+    lw   t2, 4(t0)
+
     addi t0, zero, 10
     addi t1, zero, 5
     addi t2, zero, 3

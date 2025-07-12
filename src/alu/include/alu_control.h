@@ -39,6 +39,15 @@ typedef enum {
     ALU_SRLI,
     ALU_SRAI,
 
+    ALU_LB,
+    ALU_LH,
+    ALU_LW,
+    ALU_LBU,
+    ALU_LHU,
+
+    LUI,
+    ALU_AUIPC,
+
     ALU_SKIP,
     ALU_UNKNOWN
 

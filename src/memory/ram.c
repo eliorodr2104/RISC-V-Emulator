@@ -114,7 +114,7 @@ uint32_t read_ram32bit(
     }
 
     if (address + 3 >= ram->size) {
-        fprintf(stderr, "Errore: accesso fuori bounds 0x%08x + 4 > 0x%08x\n",
+        fprintf(stderr, "Errore: accesso fuori bounds 0x%08x + 4 > 0x%08lu\n",
                 address, ram->size);
         return 0;
     }

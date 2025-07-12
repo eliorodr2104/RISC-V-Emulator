@@ -4,10 +4,9 @@
 
 #include <stdio.h>
 #include <getopt.h>
-#include "args_handler.h"
-
 #include <ctype.h>
 
+#include "args_handler.h"
 #include "asm_file_parser.h"
 
 static char **split_args(const char *args_str, int *count);
@@ -127,10 +126,11 @@ void free_options(options_t *opts) {
  * @return 1: printed help. 0: success, -1: error occurred
  */
 int handle_args(
-    int argc,
-    char *argv[],
+    int        argc,
+    char      *argv[],
     options_t *opts
 ) {
+
     const struct option long_options[] = {
         {"full-execution", no_argument, nullptr, 'f'},
         {"step", no_argument, nullptr, 's'},
@@ -167,7 +167,7 @@ int handle_args(
             case 'f':
                 if (opts->execution_mode == DEFAULT) {
                     opts->execution_mode = FULL;
-                    // printf("Full execution mode enabled\n");
+
                 } else
                     fprintf(stderr, "Can't use both step by step and full execution mode, try again with only one of the two\n");
 
@@ -176,38 +176,30 @@ int handle_args(
             case 's':
                 if (opts->execution_mode == DEFAULT) {
                     opts->execution_mode = STEP_BY_STEP;
-                    // printf("Step by step mode enabled\n");
+
                 } else
                     fprintf(stderr, "Can't use both step by step and full execution mode, try again with only one of the two\n");
+
                 break;
+
             case 'h':
                 print_help(argv[0]);
                 return 1;
 
             case 'a':
                 fprintf(stderr, "Arguments for the asm execution are not implemented yet\n");
-                //opts->args = split_args(optarg, &opts->args_count);
-                // printf("Arguments for binary (%d args):\n", opts->args_count);
-                //for (int i = 0; i < opts->args_count; i++) printf("  argv[%d] = '%s'\n", i, opts->args[i]);
                 break;
+
             case 'b':
                 fprintf(stderr, "Breakpoints for the asm execution are not implemented yet\n");
-                // add_breakpoint(opts, optarg);
-                // printf("Breakpoint added at: %s\n", optarg);
                 break;
 
             case 'r':
-
-                if (optarg) {
-                    int32_t ram_size = parse_memory_size(optarg);
-                    if (ram_size <= 0) ram_size = DEFAULT_RAM_SIZE;
-
-                    opts->ram_size = ram_size;
-
-                } else
-                    opts->ram_size = DEFAULT_RAM_SIZE;
-
-
+                opts->ram_size = parse_memory_size(optarg);
+                if (opts->ram_size <= 0) {
+                    fprintf(stderr, "Ram size is too small\n");
+                    return -1;
+                }
                 break;
 
             default:

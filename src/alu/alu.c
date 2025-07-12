@@ -129,7 +129,7 @@ Alu32BitResult alu_32_bit(
     bool carryIn = getBit(operation, 3);
 
     // Extract the ALU operation bits (bits 2, 3, and 4)
-    const uint32_t alu_operation = (operation & 0b111);
+    const uint32_t alu_operation = operation & 0b111;
 
     // Shift Left Arithmetic
     if (alu_operation == 4) {
@@ -168,7 +168,7 @@ Alu32BitResult alu_32_bit(
         // Get the bits from the integers a and b, and the less than bit if it's the last iteration
         const bool bit_a      = getBit(a, i);
         const bool bit_b      = getBit(b, i);
-        const bool less_input = (i == 31) ? less : false;
+        const bool less_input = i == 31 ? less : false;
 
         // Get the ALU operation for this bit
         const AluResult res  = alu_1_bit(bit_a, bit_b, less_input, carryIn, operation, alu_operation);

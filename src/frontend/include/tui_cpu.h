@@ -5,6 +5,8 @@
 #ifndef TUI_H
 #define TUI_H
 
+#include <string.h>
+
 #include "assembly_data.h"
 #include "cpu.h"
 #include "decode.h"
@@ -66,7 +68,13 @@ void redrawProgram(
           DecodedInstruction usageInstruction,
     const int*               charCurrent,
           int                offset,
-          Cpu                cpu
+          Cpu                cpu,
+          int                input1,
+          int                input2,
+          int                result,
+          RAM                main_memory,
+          options_t          options,
+          uint32_t           currentInstructionIndex
 );
 
 void draw_instruction_colored(
@@ -75,5 +83,15 @@ void draw_instruction_colored(
           int     row,
           bool    highlight
 );
+
+static bool contains_pseudo_instruction(const char* line) {
+    if (!line) return false;
+
+    char token[128];
+    if (sscanf(line, "%127s", token) == 1) {
+        if (strcmp(token, "la") == 0) return true;
+    }
+    return false;
+}
 
 #endif //TUI_H

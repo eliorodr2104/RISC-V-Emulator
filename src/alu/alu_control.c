@@ -64,11 +64,17 @@ AluOp get_alu_control(
 
             }
 
+        // This is an instruction Tipe-I, special case for load
         // This is an instruction Tipe-J
+        // This is an instruction Tipe-U
+        case 0x17:
+        case 0x03:
         case 0x6F:
             return ALU_ADD;
 
         // This is an instruction Tipe-I, special case for ecall
+        // This is an instruction Tipe-U, special case for lui
+        case 0x37:
         case 0x73:
             return ALU_SKIP;
 

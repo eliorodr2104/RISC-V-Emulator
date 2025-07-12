@@ -2,14 +2,12 @@
 // Created by Eliomar Alejandro Rodriguez Ferrer on 02/06/25.
 //
 
-#define SPACE_COMMENT 30
+#define SPACE_COMMENT 35
 
 #include <stdlib.h>
-
-#include "tui_cpu.h"
-
 #include <string.h>
 
+#include "tui_cpu.h"
 #include "alu_control.h"
 #include "assembly_data.h"
 #include "cpu.h"
@@ -45,12 +43,22 @@ void printRegisterTable(
     wbkgd(winRegs, COLOR_PAIR(0));
     box(winRegs, 0, 0);
 
+    mvwaddch(winRegs, 0, 3, ACS_LRCORNER);
+
     wattron  (winRegs,  COLOR_PAIR(2) | A_BOLD);
-    mvwprintw(winRegs, 0, 2, " T");
+    mvwprintw(winRegs, 0, 4, " R");
     wattroff (winRegs, COLOR_PAIR(2) | A_BOLD);
 
     wattron  (winRegs, COLOR_PAIR(1) | A_BOLD);
-    mvwprintw(winRegs, 0, 4, "able Registers ");
+    mvwprintw(winRegs, 0, 6, "egisters ");
+    wattroff (winRegs, COLOR_PAIR(1) | A_BOLD);
+
+    wattron  (winRegs,  COLOR_PAIR(2) | A_BOLD);
+    mvwprintw(winRegs, 0, 16, " R");
+    wattroff (winRegs, COLOR_PAIR(2) | A_BOLD);
+
+    wattron  (winRegs, COLOR_PAIR(1) | A_BOLD);
+    mvwprintw(winRegs, 0, 18, "AM ");
     wattroff (winRegs, COLOR_PAIR(1) | A_BOLD);
 
     mvwprintw(winRegs, row, column, "╭");
@@ -92,11 +100,8 @@ void printRegisterTable(
 
     mvwprintw(winRegs, row, column, "╰");
 
-    for (uint8_t i = 0; i < 26; i++) {
-
-        mvwaddch (winRegs, row, column + 1 + i, ACS_HLINE);
-
-    }
+    for (uint8_t i = 0; i < 26; i++)
+        mvwaddch(winRegs, row, column + 1 + i, ACS_HLINE);
 
     mvwprintw(winRegs, row, column + 27, "╯");
 
@@ -230,14 +235,14 @@ bool printProgramWithCurrentInstruction(
 
     DecodedInstruction usageInstruction = { 0, 0, 0, 0, 0, 0, 0 };
 
-    // INIZIALIZZAZIONE SICURA DELL'ARRAY
+    // SAFE INIT ARRAY
     int* rowToLineMapping = malloc(sizeof(int) * data->lineCount);
     if (!rowToLineMapping) {
         fprintf(stderr, "ERROR: Failed to allocate rowToLineMapping\n");
         return true;
     }
 
-    // Inizializza tutto a -1
+    // Init all -1
     for (int i = 0; i < data->lineCount; i++) {
         rowToLineMapping[i] = -1;
     }
@@ -295,8 +300,9 @@ bool printProgramWithCurrentInstruction(
         *offsetProg = startLine;
     }
 
-    // CONTROLLO SICURO DEL LOOP DI DISEGNO
-    for (int i = startLine; i < data->lineCount && i - startLine < maxRows; i++) {
+    int lineCount = data->lineCount;
+    // Secure control for draw code
+    for (int i = startLine; i < lineCount && i - startLine < maxRows; i++) {
         if (i < 0 || i >= data->lineCount) {
             fprintf(stderr, "ERROR: Invalid line index %d (lineCount=%d)\n", i, data->lineCount);
             continue;
@@ -336,39 +342,176 @@ bool printProgramWithCurrentInstruction(
                     mvwprintw(windowManagement.winProg->window, row, SPACE_COMMENT, "// ecall - End program");
 
                 } else {
-                    switch (usageInstruction.opcode) {
-                        case 0x33: // R-type
-                            switch (aluOp) {
-                                case ALU_ADD:
-                                    mvwprintw(windowManagement.winProg->window, row, SPACE_COMMENT,
-                                            "// add: 0x%08X + 0x%08X = 0x%08X",
-                                            input1, input2, result);
-                                    break;
-
-                                case ALU_SUB:
-                                    mvwprintw(windowManagement.winProg->window, row, SPACE_COMMENT,
-                                            "// sub: 0x%08X - 0x%08X = 0x%08X",
-                                            input1, input2, result);
-                                    break;
-
-                                default:
-                                    mvwprintw(windowManagement.winProg->window, row, SPACE_COMMENT, "// PC: 0x%08X", cpu->pc);
-                                    break;
-                            }
+                    switch (aluOp) {
+                        case ALU_ADD:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) + %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) + %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
                             break;
 
-                        case 0x13: // I-type
-                            switch (aluOp) {
-                                case ALU_ADDI:
-                                    mvwprintw(windowManagement.winProg->window, row, SPACE_COMMENT,
-                                            "// addi: 0x%08X + %d = 0x%08X",
-                                            input1, (int16_t)usageInstruction.immediate, result);
-                                    break;
+                        case ALU_SUB:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) - %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) - %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
 
-                                default:
-                                    mvwprintw(windowManagement.winProg->window, row, SPACE_COMMENT, "// PC: 0x%08X", cpu->pc);
-                                    break;
-                            }
+                        case ALU_SRA:
+                        case ALU_SRL:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) << %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) << %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_SLL:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) >> %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) >> %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_AND:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) & %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) & %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_OR:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) | %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) | %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_XOR:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) ^ %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) ^ %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_ADDI:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) + 0x%08X then %s is 0x%08X" : "-- %s := %s(%d) + %d then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                usageInstruction.immediate,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case LUI:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := 0x%08X then %s is 0x%08X" : "-- %s := %d then %s is %d",
+                                register_names[usageInstruction.rd],
+                                usageInstruction.immediate,
+                                register_names[usageInstruction.rd],
+                                usageInstruction.immediate
+                            );
+                            break;
+
+                        case ALU_AUIPC:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := pc(0x%08X) + 0x%08X then %s is 0x%08X" : "-- %s := pc(%d) + %d then %s is %d",
+                                register_names[usageInstruction.rd],
+                                input1,
+                                usageInstruction.immediate,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_LW:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := RAM[%s(0x%08X) + 0x%08X] then %s is 0x%08X" : "-- %s := RAM[%s(%d) + %d] then %s is %d",
+                                register_names[usageInstruction.rd],   // dst
+                                register_names[usageInstruction.rs1],  // base
+                                input1,                                // rs1
+                                offset,                                // immediate
+                                register_names[usageInstruction.rd],   // dst (for “then”)
+                                read_ram32bit(main_memory, result)     // load value
+                            );
+
                             break;
 
                         default:
@@ -426,7 +569,24 @@ bool printProgramWithCurrentInstruction(
             }
 
             redraw = true;
-            redrawProgram(windowManagement, offsetProg, data, highlightedLine, maxRows, step, usageInstruction, charCurrent, offset, cpu);
+            redrawProgram(
+                windowManagement,
+                offsetProg,
+                data,
+                highlightedLine,
+                maxRows,
+                step,
+                usageInstruction,
+                charCurrent,
+                offset,
+                cpu,
+                input1,
+                input2,
+                result,
+                main_memory,
+                options,
+                currentInstructionIndex
+            );
 
         }
 
@@ -528,7 +688,24 @@ bool printProgramWithCurrentInstruction(
                     (*offsetProg)--;
 
                     redraw = true;
-                    redrawProgram(windowManagement, offsetProg, data, highlightedLine, maxRows, step, usageInstruction, charCurrent, offset, cpu);
+                    redrawProgram(
+                        windowManagement,
+                        offsetProg,
+                        data,
+                        highlightedLine,
+                        maxRows,
+                        step,
+                        usageInstruction,
+                        charCurrent,
+                        offset,
+                        cpu,
+                        input1,
+                        input2,
+                        result,
+                        main_memory,
+                        options,
+                        currentInstructionIndex
+                    );
                 }
 
                 if (ch == KEY_DOWN) {
@@ -539,7 +716,24 @@ bool printProgramWithCurrentInstruction(
                         (*offsetProg)++;
 
                         redraw = true;
-                        redrawProgram(windowManagement, offsetProg, data, highlightedLine, maxRows, step, usageInstruction, charCurrent, offset, cpu);
+                        redrawProgram(
+                            windowManagement,
+                            offsetProg,
+                            data,
+                            highlightedLine,
+                            maxRows,
+                            step,
+                            usageInstruction,
+                            charCurrent,
+                            offset,
+                            cpu,
+                            input1,
+                            input2,
+                            result,
+                            main_memory,
+                            options,
+                            currentInstructionIndex
+                        );
                     }
                 }
 
@@ -593,11 +787,23 @@ bool printProgramWithCurrentInstruction(
                     *charCurrent = 'd';
 
                     redraw = true;
-                    printRegisterTable(
-                         cpu,
-                         windowManagement.winRegs->window,
-                        *charCurrent,
-                         offset
+
+                    redrawProgram(windowManagement,
+                      offsetProg,
+                      data,
+                      highlightedLine,
+                      maxRows,
+                      step,
+                      usageInstruction,
+                      charCurrent,
+                      offset,
+                      cpu,
+                      input1,
+                      input2,
+                      result,
+                      main_memory,
+                      options,
+                      currentInstructionIndex
                     );
 
                 }
@@ -606,11 +812,24 @@ bool printProgramWithCurrentInstruction(
                     *charCurrent = 'h';
 
                     redraw = true;
-                    printRegisterTable(
-                         cpu,
-                         windowManagement.winRegs->window,
-                        *charCurrent,
-                         offset
+
+                    redrawProgram(
+                        windowManagement,
+                        offsetProg,
+                        data,
+                        highlightedLine,
+                        maxRows,
+                        step,
+                        usageInstruction,
+                        charCurrent,
+                        offset,
+                        cpu,
+                        input1,
+                        input2,
+                        result,
+                        main_memory,
+                        options,
+                        currentInstructionIndex
                     );
 
                 }
@@ -638,7 +857,13 @@ void redrawProgram(
     const DecodedInstruction usageInstruction,
     const int*               charCurrent,
     const int                offset,
-          Cpu                cpu
+          Cpu                cpu,
+    const int                input1,
+    const int                input2,
+    const int                result,
+          RAM                main_memory,
+    const options_t          options,
+    const uint32_t           currentInstructionIndex
 
 
 ) {
@@ -679,6 +904,199 @@ void redrawProgram(
             row,
             i == highlightedLine
         );
+
+        if (i == highlightedLine) {
+            // Add comments for debug
+            wattron(windowManagement.winProg->window, COLOR_PAIR(5));
+
+            if (currentInstructionIndex < options.text_size) {
+                const AluOp aluOp = getInstructionEnum(usageInstruction.opcode, usageInstruction.funz3, usageInstruction.funz7_bit30);
+
+                // Add comment for ecall
+                if (usageInstruction.opcode == 0x73) {
+                    mvwprintw(windowManagement.winProg->window, row, SPACE_COMMENT, "// ecall - End program");
+
+                } else {
+                    switch (aluOp) {
+                        case ALU_ADD:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) + %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) + %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_SUB:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) - %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) - %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_SRA:
+                        case ALU_SRL:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) << %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) << %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_SLL:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) >> %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) >> %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_AND:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) & %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) & %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_OR:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) | %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) | %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_XOR:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) ^ %s(0x%08X) then %s is 0x%08X" : "-- %s := %s(%d) ^ %s(%d) then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                register_names[usageInstruction.rs2],
+                                input2,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_ADDI:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := %s(0x%08X) + 0x%08X then %s is 0x%08X" : "-- %s := %s(%d) + %d then %s is %d",
+                                register_names[usageInstruction.rd],
+                                register_names[usageInstruction.rs1],
+                                input1,
+                                usageInstruction.immediate,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case LUI:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := 0x%08X then %s is 0x%08X" : "-- %s := %d then %s is %d",
+                                register_names[usageInstruction.rd],
+                                usageInstruction.immediate,
+                                register_names[usageInstruction.rd],
+                                usageInstruction.immediate
+                            );
+                            break;
+
+                        case ALU_AUIPC:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := pc(0x%08X) + 0x%08X then %s is 0x%08X" : "-- %s := pc(%d) + %d then %s is %d",
+                                register_names[usageInstruction.rd],
+                                input1,
+                                usageInstruction.immediate,
+                                register_names[usageInstruction.rd],
+                                result
+                            );
+                            break;
+
+                        case ALU_LW:
+                            mvwprintw(
+                                windowManagement.winProg->window,
+                                row,
+                                SPACE_COMMENT,
+                                *charCurrent == 'h' ? "-- %s := RAM[%s(0x%08X) + 0x%08X] then %s is 0x%08X" : "-- %s := RAM[%s(%d) + %d] then %s is %d",
+                                register_names[usageInstruction.rd],   // dst
+                                register_names[usageInstruction.rs1],  // base
+                                input1,                                // rs1
+                                offset,                                // immediate
+                                register_names[usageInstruction.rd],   // dst (for “then”)
+                                read_ram32bit(main_memory, result)     // load value
+                            );
+
+                            break;
+
+                        default:
+                            mvwprintw(windowManagement.winProg->window, row, SPACE_COMMENT, "// PC: 0x%08X", cpu->pc);
+                            break;
+                    }
+                }
+            }
+            wattroff(windowManagement.winProg->window, COLOR_PAIR(5));
+        }
     }
 
     wnoutrefresh(windowManagement.winRegs->window);
@@ -695,69 +1113,74 @@ void draw_instruction_colored(
     const int row,
     const bool highlight
 ) {
-
     if (highlight) mvwprintw(prog_window, row, 2, "->");
 
-          int col = 4;
+    int col = 4;
     const char* p = asm_current_line;
 
-    while (*p != '\0') {
+    // Skip leading whitespace
+    while (*p == ' ' || *p == '\t') p++;
 
-        if (*p == ' ' || *p == '\t') {
-            mvwprintw(prog_window, row, col++, "%c", *p);
-            p++;
-            continue;
+    // Reset to beginning of line for display
+    p = asm_current_line;
+
+    // First, always print the original instruction regardless of type
+        while (*p != '\0' && *p != '#') {
+            if (*p == ' ' || *p == '\t') {
+                mvwprintw(prog_window, row, col++, "%c", *p);
+                p++;
+                continue;
+            }
+
+            char token[128] = {0};
+            int len = 0;
+            while (*p != '\0' && *p != ' ' && *p != '\t' && *p != ',' && *p != '#') {
+                token[len++] = *p++;
+            }
+            token[len] = '\0';
+
+            // Skip any comma
+            if (*p == ',') {
+                token[len++] = *p++;
+                token[len] = '\0';
+            }
+
+            // Apply appropriate color based on token type
+            if (strcmp(token, "add") == 0 || strcmp(token, "and") == 0 ||
+                strcmp(token, "or") == 0 || strcmp(token, "sll") == 0  ||
+                strcmp(token, "srl") == 0 || strcmp(token, "la") == 0
+            ) {
+                    wattron(prog_window, COLOR_PAIR(7) | A_BOLD);
+                    mvwprintw(prog_window, row, col, "%s", token);
+                    wattroff(prog_window, COLOR_PAIR(7) | A_BOLD);
+
+            } else if (strcmp(token, "zero") == 0 || strcmp(token, "ra") == 0 ||
+                       strcmp(token, "sp") == 0 || strcmp(token, "gp") == 0   ||
+                       strcmp(token, "tp") == 0
+            ) {
+                    wattron(prog_window, COLOR_PAIR(8) | A_BOLD);
+                    mvwprintw(prog_window, row, col, "%s", token);
+                    wattroff(prog_window, COLOR_PAIR(8) | A_BOLD);
+
+            } else if (token[0] == 'a') {
+                    wattron(prog_window, COLOR_PAIR(9) | A_BOLD);
+                    mvwprintw(prog_window, row, col, "%s", token);
+                    wattroff(prog_window, COLOR_PAIR(9) | A_BOLD);
+
+            } else if (token[0] == 't') {
+                    wattron(prog_window, COLOR_PAIR(10) | A_BOLD);
+                    mvwprintw(prog_window, row, col, "%s", token);
+                    wattroff(prog_window, COLOR_PAIR(10) | A_BOLD);
+
+            } else if (token[0] == 's') {
+                    wattron(prog_window, COLOR_PAIR(11) | A_BOLD);
+                    mvwprintw(prog_window, row, col, "%s", token);
+                    wattroff(prog_window, COLOR_PAIR(11) | A_BOLD);
+
+            } else {
+                    mvwprintw(prog_window, row, col, "%s", token);
+            }
+
+            col += len;
         }
-
-        char token[128] = {0};
-        int len = 0;
-        while (*p != '\0' && *p != ' ' && *p != '\t') {
-            token[len++] = *p++;
-        }
-        token[len] = '\0';
-
-        if (
-            strcmp(token, "add") == 0 ||
-            strcmp(token, "and") == 0 ||
-            strcmp(token, "or")  == 0 ||
-            strcmp(token, "sll") == 0 ||
-            strcmp(token, "srl") == 0
-        ) {
-            wattron(prog_window, COLOR_PAIR(7) | A_BOLD);
-            mvwprintw(prog_window, row, col, "%s", token);
-            wattroff(prog_window, COLOR_PAIR(7) | A_BOLD);
-
-        } else if (
-            strcmp(token, "zero") == 0 ||
-            strcmp(token, "ra") == 0 ||
-            strcmp(token, "sp") == 0 ||
-            strcmp(token, "gp") == 0 ||
-            strcmp(token, "tp") == 0
-        ) {
-            wattron(prog_window, COLOR_PAIR(8) | A_BOLD);
-            mvwprintw(prog_window, row, col, "%s", token);
-            wattroff(prog_window, COLOR_PAIR(8) | A_BOLD);
-
-        } else if (token[0] == 'a') {
-            wattron(prog_window, COLOR_PAIR(9) | A_BOLD);
-            mvwprintw(prog_window, row, col, "%s", token);
-            wattroff(prog_window, COLOR_PAIR(9) | A_BOLD);
-
-        } else if (token[0] == 't') {
-            wattron(prog_window, COLOR_PAIR(10) | A_BOLD);
-            mvwprintw(prog_window, row, col, "%s", token);
-            wattroff(prog_window, COLOR_PAIR(10) | A_BOLD);
-
-        } else if (token[0] == 's') {
-            wattron(prog_window, COLOR_PAIR(11) | A_BOLD);
-            mvwprintw(prog_window, row, col, "%s", token);
-            wattroff(prog_window, COLOR_PAIR(11) | A_BOLD);
-
-        } else {
-            mvwprintw(prog_window, row, col, "%s", token);
-
-        }
-
-        col += len;
-    }
 }

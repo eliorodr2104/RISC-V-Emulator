@@ -7,6 +7,8 @@
 #include "tui_main.h"
 #include "windows_management.h"
 
+// #define DEBUG
+
 /**
  * @brief Main function to run the RISC-V CPU simulator
  * @param argc
@@ -16,6 +18,7 @@
  * @return 0 if successful, non-zero otherwise
  */
 int main(const int argc, char** argv) {
+
     // Initialize options' structure with null
     options_t* opts = calloc(1, sizeof(options_t));
 
@@ -62,9 +65,11 @@ int main(const int argc, char** argv) {
     cpu->registers[2] = 0x100000;
 
     // Test to print the RAM state from address 0 to the stack pointer
-    //print_ram_state(main_memory, opts.data_vaddr, opts.data_vaddr + opts.data_size, 32);
+#ifdef DEBUG
+    print_ram_state(main_memory, opts->data_vaddr, opts->data_vaddr + opts->data_size, 32);
 
-    //print_ram_state(main_memory, opts.text_vaddr, opts.text_vaddr + opts.text_size, 32);
+    print_ram_state(main_memory, opts->text_vaddr, opts->text_vaddr + opts->text_size, 32);
+#endif
 
     // Initialize ncurses windows for the TUI
     WINDOW* winProg   = nullptr;
@@ -91,7 +96,9 @@ int main(const int argc, char** argv) {
     }
 
     // Show the mode chooser window to select the execution mode
+#ifndef DEBUG
     userChoices(winManagement, cpu, opts, main_memory);
+#endif
 
     // Close ncurses windows and clean up resources
     closeNcurses(&winRegs, &winProg, &winStatus);

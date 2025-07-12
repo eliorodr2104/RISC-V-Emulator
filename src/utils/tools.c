@@ -58,24 +58,43 @@ AluOp getInstructionEnum(const uint8_t opcode, const uint8_t funct3, const uint8
     switch(opcode) {
         case 0x13: // Tipo I - Aritmetica immediata
             switch(funct3) {
-            case 0x0: return ALU_ADDI;
-            case 0x1: return ALU_SLLI;
-            case 0x5: return funct7Bit30 ? ALU_SRAI : ALU_SRLI;
-            case 0x4: return ALU_XORI;
-            case 0x6: return ALU_ORI;
-            case 0x7: return ALU_ANDI;
-            default: return ALU_UNKNOWN;
+                case 0x0: return ALU_ADDI;
+                case 0x1: return ALU_SLLI;
+                case 0x5: return funct7Bit30 ? ALU_SRAI : ALU_SRLI;
+                case 0x4: return ALU_XORI;
+                case 0x6: return ALU_ORI;
+                case 0x7: return ALU_ANDI;
+
+                default:  return ALU_UNKNOWN;
             }
+
+        case 0x03:
+            switch (funct3) {
+                case 0x0: return ALU_LB;
+                case 0x1: return ALU_LH;
+                case 0x2: return ALU_LW;
+                case 0x4: return ALU_LBU;
+                case 0x5: return ALU_LHU;
+
+                default:  return ALU_UNKNOWN;
+            }
+
         case 0x33: // Tipo R - Aritmetica registro
             switch(funct3) {
-            case 0x0: return funct7Bit30 ? ALU_SUB : ALU_ADD;
-            case 0x1: return ALU_SLL;
-            case 0x5: return funct7Bit30 ? ALU_SRA : ALU_SRL;
-            case 0x4: return ALU_XOR;
-            case 0x6: return ALU_OR;
-            case 0x7: return ALU_AND;
-            default: return ALU_UNKNOWN;
+                case 0x0: return funct7Bit30 ? ALU_SUB : ALU_ADD;
+                case 0x1: return ALU_SLL;
+                case 0x5: return funct7Bit30 ? ALU_SRA : ALU_SRL;
+                case 0x4: return ALU_XOR;
+                case 0x6: return ALU_OR;
+                case 0x7: return ALU_AND;
+                default: return ALU_UNKNOWN;
             }
+
+        case 0x37:
+            return LUI;
+
+        case 0x17:
+            return ALU_AUIPC;
 
         default: return ALU_UNKNOWN;
     }
