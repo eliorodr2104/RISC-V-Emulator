@@ -54,7 +54,7 @@ const char* getInstructionName(const uint8_t opcode, const uint8_t funct3, const
     }
 }
 
-AluOp getInstructionEnum(const uint8_t opcode, const uint8_t funct3, const uint8_t funct7Bit30) {
+AluEnumOperation getInstructionEnum(const uint8_t opcode, const uint8_t funct3, const uint8_t funct7Bit30) {
     switch(opcode) {
         case 0x13: // Tipo I - Aritmetica immediata
             switch(funct3) {

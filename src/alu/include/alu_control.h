@@ -1,5 +1,5 @@
 /**
- * @file alu-control.h
+ * @file alu_control.h
  * @brief Header file for the control of the ALU operations.
  *
  * @author eliorodr2104
@@ -51,33 +51,30 @@ typedef enum {
     ALU_SKIP,
     ALU_UNKNOWN
 
-} AluOp;
+} AluEnumOperation;
 
 /**
- * @brief Get the ALU control operation based on the opcode, funct3, and funct7 bit 30.
+ * @brief Struct for representing current information and state on the ALU.
+ */
+typedef struct  {
+    AluEnumOperation enumOperation;
+    uint8_t          operation;
+
+} AluTuple;
+
+/**
+ * @brief Get the ALU operation bits and enum.
  *
  * @param alu_op The opcode of the instruction.
  * @param funz3 The funct3 field of the instruction.
  * @param funz7_bit30 The 30th bit of the funct7 field.
- *
- * @return AluOp The ALU operation to be performed.
+ * @param alu_tuple Contains alu operation information
  */
-AluOp get_alu_control(
-    uint8_t alu_op,
-    uint8_t funz3,
-    uint8_t funz7_bit30
-);
-
-/**
- * @brief Get the ALU operation bits based on the ALU operation enum.
- *
- * @param alu_op_enum The ALU operation enum.
- * @param operation Pointer to store the operation bits.
- */
-void get_alu_operation_bits(
-    AluOp    alu_op_enum,
-    uint8_t* operation
-
+void get_alu_operation(
+    uint8_t   alu_op,
+    uint8_t   funz3,
+    uint8_t   funz7_bit30,
+    AluTuple* alu_tuple
 );
 
 #endif //ALUCONTROL_H

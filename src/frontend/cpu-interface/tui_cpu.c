@@ -335,7 +335,7 @@ bool printProgramWithCurrentInstruction(
             wattron(windowManagement.winProg->window, COLOR_PAIR(5));
 
             if (currentInstructionIndex < options.text_size) {
-                const AluOp aluOp = getInstructionEnum(usageInstruction.opcode, usageInstruction.funz3, usageInstruction.funz7_bit30);
+                const AluEnumOperation aluOp = getInstructionEnum(usageInstruction.opcode, usageInstruction.funz3, usageInstruction.funz7_bit30);
 
                 // Add comment for ecall
                 if (usageInstruction.opcode == 0x73) {
@@ -910,7 +910,7 @@ void redrawProgram(
             wattron(windowManagement.winProg->window, COLOR_PAIR(5));
 
             if (currentInstructionIndex < options.text_size) {
-                const AluOp aluOp = getInstructionEnum(usageInstruction.opcode, usageInstruction.funz3, usageInstruction.funz7_bit30);
+                const AluEnumOperation aluOp = getInstructionEnum(usageInstruction.opcode, usageInstruction.funz3, usageInstruction.funz7_bit30);
 
                 // Add comment for ecall
                 if (usageInstruction.opcode == 0x73) {

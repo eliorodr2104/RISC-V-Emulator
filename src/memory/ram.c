@@ -80,7 +80,7 @@ void write_ram32bit(
 
     if (address + 3 >= ram->size) {
         fprintf(stderr, "Errore: accesso fuori bounds 0x%08x + 4 > 0x%08x\n",
-                address, ram->size);
+                address, (int32_t)ram->size);
         return;
     }
 
@@ -137,13 +137,13 @@ void load_binary_to_ram(RAM ram, const uint8_t *binary, size_t size, uint32_t st
     // Controllo bounds più rigoroso
     if (start_addr >= ram->size) {
         fprintf(stderr, "Indirizzo di start 0x%08x fuori dai limiti della RAM (0x%08x)\n",
-                start_addr, ram->size);
+                start_addr, (int32_t)ram->size);
         return;
     }
 
     if (start_addr + size > ram->size) {
         fprintf(stderr, "Dimensione %zu + indirizzo 0x%08x eccede la RAM (0x%08x)\n",
-                size, start_addr, ram->size);
+                size, start_addr, (int32_t)ram->size);
         size = ram->size - start_addr; // Tronca alla dimensione disponibile
     }
 
@@ -213,7 +213,7 @@ void print_ram_state(const RAM ram, const uint32_t start_addr, const uint32_t en
 
     // Mostra informazioni di riepilogo
     printf("╠══════════════════════════════════════════════════════════════╣\n");
-    printf("║ 📈 Righe mostrate: %3zu/%-3u", actual_lines, lines_needed);
+    printf("║ 📈 Righe mostrate: %3u/%-3u", actual_lines, lines_needed);
     printf("           📏 Bytes totali: %-6u ║\n", total_bytes);
 
     if (actual_lines < lines_needed) {

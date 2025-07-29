@@ -30,7 +30,7 @@ void print_binary(uint32_t bin);
 void formatInstruction(DecodedInstruction decoded, char* buffer, uint32_t size);
 const char* getInstructionName(uint8_t opcode, uint8_t funct3, uint8_t funct7Bit30);
 
-AluOp getInstructionEnum(uint8_t opcode, uint8_t funct3, uint8_t funct7Bit30);
+AluEnumOperation getInstructionEnum(uint8_t opcode, uint8_t funct3, uint8_t funct7Bit30);
 
 char **tokenize(const char *src, int *n_tokens);
 void free_tokens(char** tokens);
