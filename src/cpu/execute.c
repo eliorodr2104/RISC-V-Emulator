@@ -22,7 +22,6 @@
  * @brief Execute a single step of the CPU, fetching and decoding the instruction, and updating the CPU state.
  *
  * @param window_management The management structure for the TUI windows
- * @param current_char Pointer to the current character input for interactive mode
  * @param cpu The CPU instance to run
  * @param options The options for execution
  * @param data The assembly data containing instructions and metadata
@@ -33,9 +32,8 @@
 int executeSingleStep(
           Cpu               cpu,
     const options_t         options,
-    const AssemblyData*     data,
+          AssemblyData*     data,
     const WindowsManagement window_management,
-          int*              current_char,
           bool              interactive,
           RAM               main_memory
 
@@ -98,7 +96,6 @@ int executeSingleStep(
 
     if (printProgramWithCurrentInstruction(
         window_management,
-        current_char,
         firstRegisterValue,
         secondOperand,
         result.result,
@@ -130,17 +127,15 @@ int executeSingleStep(
         const uint32_t value_read_memory = read_ram32bit(main_memory, result.result);
 
         if (!value_read_memory) {
-            perror("Error reading memory");
+            fprintf(stderr, "Error reading memory");
             return -1;
         }
 
         writeRegister(cpu, decodedInstruction.rd, (int32_t)value_read_memory);
 
         // Else write the result to the rd register if regWrite is true
-    } else if (unitControlRet.reg_write) {
+    } else if (unitControlRet.reg_write)
         writeRegister(cpu, decodedInstruction.rd, result.result);
-
-    }
 
     // Update the program counter to the next instruction address
     cpu->pc = nextPc;
@@ -239,7 +234,7 @@ void executeInstructionSilently(
         const uint32_t value_read_memory = read_ram32bit(main_memory, result.result);
 
         if (!value_read_memory) {
-            perror("Error reading memory");
+            fprintf(stderr, "Error reading memory");
             return;
         }
 

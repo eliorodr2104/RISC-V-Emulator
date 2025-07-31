@@ -19,7 +19,7 @@
 #include "tui_ncurses.h"
 
 bool initNcurses(
-    const WindowsManagement windowsManagement
+    WindowsManagement windowsManagement
 ) {
     setlocale(LC_ALL, "");
 
@@ -74,30 +74,30 @@ bool initNcurses(
     const int progHeight = rows;
     const int progWidth  = cols - regsWidth;
 
-    windowsManagement.winStatus->isActive = rows > 44 && cols > 154;
+    windowsManagement.window_bottom_right->isActive = rows > 44 && cols > 154;
 
     // Left Window
-    windowsManagement.winProg->window = newwin(progHeight - 3, progWidth, 0, 0);
+    windowsManagement.window_left->window = newwin(progHeight - 3, progWidth, 0, 0);
 
     // Right Window
-    if (windowsManagement.winRegs->isActive && windowsManagement.winStatus->isActive) {
-        windowsManagement.winRegs->window = newwin(regsHeight + 7, regsWidth, 1, progWidth);
+    if (windowsManagement.window_right->isActive && windowsManagement.window_bottom_right->isActive) {
+        windowsManagement.window_right->window = newwin(regsHeight + 7, regsWidth, 1, progWidth);
 
-    } else if (!windowsManagement.winStatus->isActive) {
-        windowsManagement.winRegs->window = newwin(progHeight - 4, regsWidth, 1, progWidth);
+    } else if (!windowsManagement.window_bottom_right->isActive) {
+        windowsManagement.window_right->window = newwin(progHeight - 4, regsWidth, 1, progWidth);
 
     }
 
     // Bottom Right Window
-    windowsManagement.winStatus->window = windowsManagement.winStatus->isActive ? newwin(regsHeight - 10, regsWidth, regsHeight + 8, progWidth) : newwin(0, 0, 0, 0);
+    windowsManagement.window_bottom_right->window = windowsManagement.window_bottom_right->isActive ? newwin(regsHeight - 10, regsWidth, regsHeight + 8, progWidth) : newwin(0, 0, 0, 0);
 
-    windowsManagement.winCmd->window = newwin(3, cols, rows - 3, 0);
+    windowsManagement.bottom_window->window = newwin(3, cols, rows - 3, 0);
 
     // Check if windows are created correctly, if not, end ncurses
-    if (!windowsManagement.winProg->window   ||
-        !windowsManagement.winRegs->window   ||
-        !windowsManagement.winStatus->window ||
-        !windowsManagement.winCmd->window
+    if (!windowsManagement.window_left->window   ||
+        !windowsManagement.window_right->window   ||
+        !windowsManagement.window_bottom_right->window ||
+        !windowsManagement.bottom_window->window
 
     ) {
         endwin();
@@ -106,13 +106,13 @@ bool initNcurses(
 
     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
 
-    keypad(windowsManagement.winStatus->window, TRUE);
-    keypad(windowsManagement.winCmd->window, TRUE);
-    keypad(windowsManagement.winProg->window, TRUE);
-    keypad(windowsManagement.winRegs->window, TRUE);
+    keypad(windowsManagement.window_bottom_right->window, TRUE);
+    keypad(windowsManagement.bottom_window->window, TRUE);
+    keypad(windowsManagement.window_left->window, TRUE);
+    keypad(windowsManagement.window_right->window, TRUE);
 
-    nodelay(windowsManagement.winProg->window, TRUE);
-    nodelay(windowsManagement.winRegs->window, TRUE);
+    nodelay(windowsManagement.window_left->window, TRUE);
+    nodelay(windowsManagement.window_right->window, TRUE);
 
     return true;
 }
@@ -139,7 +139,7 @@ void mvwprintwWrap(WINDOW *win, const int starty, const int startx, const char *
 
     while (*p) {
         // se la rimanenza è più corta di width, stampo tutto
-        const int len = strlen(p);
+        const size_t len = strlen(p);
         if (len <= width) {
             mvwprintw(win, y++, startx, "%s", p);
             break;
@@ -248,83 +248,83 @@ bool recreateWindows(const WindowsManagement* windowManagement) {
     const int progHeight = rows;
     const int progWidth  = cols - regsWidth;
 
-    windowManagement->winStatus->isActive = rows > 44 && cols > 154;
+    windowManagement->window_bottom_right->isActive = rows > 44 && cols > 154;
 
     // Ridimensiona e riposiziona la finestra principale (sinistra)
-    if (windowManagement->winProg->window && windowManagement->winProg->isActive) {
-        wresize(windowManagement->winProg->window, progHeight - 3, progWidth);
-        mvwin(windowManagement->winProg->window, 0, 0);
+    if (windowManagement->window_left->window && windowManagement->window_left->isActive) {
+        wresize(windowManagement->window_left->window, progHeight - 3, progWidth);
+        mvwin(windowManagement->window_left->window, 0, 0);
 
     } else {
-        wresize(windowManagement->winProg->window, 0, 0);
-        mvwin(windowManagement->winProg->window, 0, 0);
+        wresize(windowManagement->window_left->window, 0, 0);
+        mvwin(windowManagement->window_left->window, 0, 0);
     }
 
     // Ridimensiona e riposiziona la finestra registri (destra in alto)
-    if (windowManagement->winRegs->window &&
-        windowManagement->winRegs->isActive &&
-        windowManagement->winStatus->isActive
+    if (windowManagement->window_right->window &&
+        windowManagement->window_right->isActive &&
+        windowManagement->window_bottom_right->isActive
     ) {
 
-        windowManagement->winRegs->window = newwin(regsHeight + 8, regsWidth, 0, progWidth);
-        mvwin(windowManagement->winRegs->window, 0, progWidth);
+        windowManagement->window_right->window = newwin(regsHeight + 8, regsWidth, 0, progWidth);
+        mvwin(windowManagement->window_right->window, 0, progWidth);
 
-    } else if (!windowManagement->winStatus->isActive) {
-        wresize(windowManagement->winRegs->window, progHeight - 3, regsWidth);
-        mvwin(windowManagement->winRegs->window, 0, progWidth);
+    } else if (!windowManagement->window_bottom_right->isActive) {
+        wresize(windowManagement->window_right->window, progHeight - 3, regsWidth);
+        mvwin(windowManagement->window_right->window, 0, progWidth);
 
     }
 
     // Ridimensiona e riposiziona la finestra status (destra in basso)
-    if (windowManagement->winStatus->window && windowManagement->winStatus->isActive) {
-        wresize(windowManagement->winStatus->window, regsHeight - 10, regsWidth);
-        mvwin(windowManagement->winStatus->window, regsHeight + 8, progWidth);
+    if (windowManagement->window_bottom_right->window && windowManagement->window_bottom_right->isActive) {
+        wresize(windowManagement->window_bottom_right->window, regsHeight - 10, regsWidth);
+        mvwin(windowManagement->window_bottom_right->window, regsHeight + 8, progWidth);
 
     } else {
-        wresize(windowManagement->winStatus->window, 0, 0);
-        mvwin(windowManagement->winStatus->window, regsHeight + 8, progWidth);
+        wresize(windowManagement->window_bottom_right->window, 0, 0);
+        mvwin(windowManagement->window_bottom_right->window, regsHeight + 8, progWidth);
 
     }
 
     // Ridimensiona e riposiziona la finestra comandi (in basso)
-    if (windowManagement->winCmd->window && windowManagement->winCmd->isActive) {
-        wresize(windowManagement->winCmd->window, 3, cols);
-        mvwin(windowManagement->winCmd->window, rows - 3, 0);
+    if (windowManagement->bottom_window->window && windowManagement->bottom_window->isActive) {
+        wresize(windowManagement->bottom_window->window, 3, cols);
+        mvwin(windowManagement->bottom_window->window, rows - 3, 0);
 
     } else {
-        wresize(windowManagement->winCmd->window, 0, 0);
-        mvwin(windowManagement->winCmd->window, rows - 3, 0);
+        wresize(windowManagement->bottom_window->window, 0, 0);
+        mvwin(windowManagement->bottom_window->window, rows - 3, 0);
 
     }
 
     // Verifica che tutte le finestre esistano ancora
-    if (!windowManagement->winProg->window || !windowManagement->winRegs->window ||
-        !windowManagement->winStatus->window || !windowManagement->winCmd->window) {
+    if (!windowManagement->window_left->window || !windowManagement->window_right->window ||
+        !windowManagement->window_bottom_right->window || !windowManagement->bottom_window->window) {
         return false;
     }
 
     // Pulisci e ridisegna tutte le finestre
-    wclear(windowManagement->winProg->window);
-    wclear(windowManagement->winRegs->window);
-    wclear(windowManagement->winStatus->window);
-    wclear(windowManagement->winCmd->window);
+    wclear(windowManagement->window_left->window);
+    wclear(windowManagement->window_right->window);
+    wclear(windowManagement->window_bottom_right->window);
+    wclear(windowManagement->bottom_window->window);
 
     // Aggiorna il display
-    wrefresh(windowManagement->winProg->window);
-    wrefresh(windowManagement->winRegs->window);
-    wrefresh(windowManagement->winStatus->window);
-    wrefresh(windowManagement->winCmd->window);
+    wrefresh(windowManagement->window_left->window);
+    wrefresh(windowManagement->window_right->window);
+    wrefresh(windowManagement->window_bottom_right->window);
+    wrefresh(windowManagement->bottom_window->window);
 
     // Riabilita le funzionalità necessarie
     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, nullptr);
 
-    keypad(windowManagement->winStatus->window, TRUE);
-    keypad(windowManagement->winCmd->window, TRUE);
-    keypad(windowManagement->winProg->window, TRUE);
-    keypad(windowManagement->winRegs->window, TRUE);
+    keypad(windowManagement->window_bottom_right->window, TRUE);
+    keypad(windowManagement->bottom_window->window, TRUE);
+    keypad(windowManagement->window_left->window, TRUE);
+    keypad(windowManagement->window_right->window, TRUE);
 
-    nodelay(windowManagement->winProg->window, TRUE);
-    nodelay(windowManagement->winRegs->window, TRUE);
+    nodelay(windowManagement->window_left->window, TRUE);
+    nodelay(windowManagement->window_right->window, TRUE);
 
     return true;
 }
@@ -334,7 +334,7 @@ bool recreateWindows(const WindowsManagement* windowManagement) {
  * @param windowManagement Struttura di gestione delle finestre
  * @return true se il resize è stato gestito correttamente, false altrimenti
  */
-bool handleTerminalResize(const WindowsManagement* windowManagement) {
+bool handleTerminalResize(WindowsManagement* windowManagement) {
 
     // Notifica ncurses del resize
     endwin();

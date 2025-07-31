@@ -37,11 +37,13 @@ typedef struct {
  * Pointer to the current window being used
  */
 typedef struct {
-    WindowAndStatus *winProg;
-    WindowAndStatus *winRegs;
-    WindowAndStatus *winStatus;
-    WindowAndStatus *winCmd;
-    Windows *currentWindow;
+    WindowAndStatus *window_left;
+    WindowAndStatus *window_right;
+    WindowAndStatus *window_bottom_right;
+    WindowAndStatus *bottom_window;
+    Windows         *window_on_focus;
+    int8_t          current_window_character;
+
 } WindowsManagement;
 
 void destroy_windows_management(WindowsManagement window_management);

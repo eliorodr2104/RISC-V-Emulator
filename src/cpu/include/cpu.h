@@ -14,6 +14,7 @@
 #include <ncurses.h>
 
 #include "args_handler.h"
+#include "assembly_data.h"
 #include "windows_management.h"
 
 /**
@@ -65,10 +66,12 @@ void runCpuFull(
  *
  * @param window_management The management structure for the TUI windows
  * @param cpu The CPU instance to run
+ * @param assembly_data
  * @param options The options for execution
  */
 void runCpuStepByStep(
     Cpu               cpu,
+    AssemblyData*     assembly_data,
     options_t         options,
     WindowsManagement window_management,
     RAM               main_memory

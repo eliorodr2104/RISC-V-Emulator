@@ -21,16 +21,15 @@ void printRegisterTable(
 );
 
 bool printProgramWithCurrentInstruction(
-          WindowsManagement windowManagement,
-          int*              charCurrent,
-          int32_t           input1,
-          int32_t           input2,
-          int32_t           result,
-          Cpu               cpu,
-          options_t         options,
-    const AssemblyData*     data,
-    int*                    offsetProg,
-          RAM      main_memory
+    WindowsManagement windowManagement,
+    int32_t           input1,
+    int32_t           input2,
+    int32_t           result,
+    Cpu               cpu,
+    options_t         options,
+    AssemblyData*     data,
+    int*              offsetProg,
+    RAM               main_memory
 
 );
 
@@ -66,7 +65,6 @@ void redrawProgram(
           int                maxRows,
           int                step,
           DecodedInstruction usageInstruction,
-    const int*               charCurrent,
           int                offset,
           Cpu                cpu,
           int                input1,

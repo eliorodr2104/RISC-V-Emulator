@@ -24,7 +24,9 @@ void closeNcurses(
 
 void mvwprintwWrap(WINDOW *win, int starty, int startx, const char *str);
 
-bool handleTerminalResize(const WindowsManagement* windowManagement);
+bool handleTerminalResize(WindowsManagement* windowManagement);
+
+bool recreateWindows(const WindowsManagement* windowManagement);
 
 /**
  * @brief Prints the header of a window with a title and color.

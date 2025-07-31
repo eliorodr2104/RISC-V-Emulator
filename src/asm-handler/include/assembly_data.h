@@ -9,13 +9,13 @@
 
 typedef struct {
 
-    char **asmLines;
+    char** asmLines;
     int    lineCount;
-    int* lineToInstructionMap;
-    int* instructionToLineMap;
+    int *  lineToInstructionMap;
+    int *  instructionToLineMap;
 
 } AssemblyData;
 
-AssemblyData* newAssemblyData(options_t options);
+AssemblyData* newAssemblyData(const options_t* options);
 
 #endif //ASSEMBLYDATA_H

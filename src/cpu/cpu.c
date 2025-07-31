@@ -84,17 +84,16 @@ void runCpuFull(
  */
 void runCpuStepByStep(
           Cpu               cpu,
+          AssemblyData*     data,
     const options_t         options,
     const WindowsManagement window_management,
           RAM               main_memory
 ) {
 
     // TODO(Add "currentChar" to the WindowsManagement struct, and pass AssemblyData to the function)
-    int           currentChar = 'h';
-    AssemblyData* data        = newAssemblyData(options);
 
     if (!data) {
-        perror("Error initializing AssemblyData");
+        fprintf(stderr, "Error initializing AssemblyData");
         return;
     }
 
@@ -102,7 +101,7 @@ void runCpuStepByStep(
     while (cpu->pc >= options.text_vaddr && cpu->pc < options.text_vaddr + options.text_size) {
 
         // Execute a single step of the CPU, if the execution fails then break the loop
-        if (executeSingleStep(cpu, options, data, window_management, &currentChar, true, main_memory) == -1) {
+        if (executeSingleStep(cpu, options, data, window_management, true, main_memory) == -1) {
             break;
         }
 

@@ -8,11 +8,14 @@
 #include "tui_ncurses.h"
 #include "tui_main.h"
 
+#include "assembly_data.h"
+
 /**
  * @brief Function to show the mode chooser window
  *
  * @param windowManagement
  * Current window management structure
+ * @param data
  * @param cpu
  * Cpu structure containing the CPU state and their flags
  * @param options
@@ -26,6 +29,7 @@
  */
 void show_mode_chooser_window(
     const WindowsManagement windowManagement,
+          AssemblyData*     data,
           Cpu               cpu,
     const options_t*        options,
     const int32_t           rows,
@@ -101,9 +105,9 @@ void show_mode_chooser_window(
 
 
                 } else if (highlight == 1) {
-                    if (windowManagement.winCmd->isActive) commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
+                    if (windowManagement.bottom_window->isActive) commandWindow(windowManagement.bottom_window->window, *windowManagement.window_on_focus);
 
-                    runCpuStepByStep(cpu, *options, windowManagement, main_memory);
+                    runCpuStepByStep(cpu, data, *options, windowManagement, main_memory);
 
 
                 } else {
@@ -135,21 +139,22 @@ void show_mode_chooser_window(
 void userChoices(
     WindowsManagement windowManagement,
     Cpu               cpu,
+    AssemblyData*     data,
     options_t*        options,
     RAM               main_memory
 ) {
 
     // Allocate memory for the current window pointer
-    windowManagement.currentWindow = malloc(sizeof windowManagement.currentWindow);
+    windowManagement.window_on_focus = malloc(sizeof windowManagement.window_on_focus);
 
     // Check if memory allocation was successful
-    if (!windowManagement.currentWindow) {
+    if (!windowManagement.window_on_focus) {
         perror("Alloc memory for the current windows is not successfully");
         return;
     }
 
     // Set the current window to the program window (default -> PROG_WINDOW)
-    *windowManagement.currentWindow= PROG_WINDOW;
+    *windowManagement.window_on_focus= PROG_WINDOW;
 
     // Declare variables for terminal size
     int32_t rows, cols;
@@ -160,7 +165,7 @@ void userChoices(
     // Select current window based on the execution mode
     switch (options->execution_mode) {
         case DEFAULT:
-            show_mode_chooser_window(windowManagement, cpu, options, rows, cols, main_memory);
+            show_mode_chooser_window(windowManagement, data, cpu, options, rows, cols, main_memory);
             break;
 
         case FULL:
@@ -168,9 +173,9 @@ void userChoices(
             break;
 
         case STEP_BY_STEP:
-            if (windowManagement.winCmd->isActive) commandWindow(windowManagement.winCmd->window, *windowManagement.currentWindow);
+            if (windowManagement.bottom_window->isActive) commandWindow(windowManagement.bottom_window->window, *windowManagement.window_on_focus);
 
-            runCpuStepByStep(cpu, *options, windowManagement, main_memory);
+            runCpuStepByStep(cpu, data, *options, windowManagement, main_memory);
             break;
         default:
             break;

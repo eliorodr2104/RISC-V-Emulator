@@ -8,23 +8,23 @@
 
 void destroy_windows_management(const WindowsManagement window_management) {
 
-    if (window_management.winProg) {
-        delwin(window_management.winProg->window);
+    if (window_management.window_left) {
+        delwin(window_management.window_left->window);
     }
 
-    if (window_management.winRegs) {
-        delwin(window_management.winRegs->window);
+    if (window_management.window_right) {
+        delwin(window_management.window_right->window);
     }
 
-    if (window_management.winStatus) {
-        delwin(window_management.winStatus->window);
+    if (window_management.window_bottom_right) {
+        delwin(window_management.window_bottom_right->window);
     }
 
-    if (window_management.winCmd) {
-        delwin(window_management.winCmd->window);
+    if (window_management.bottom_window) {
+        delwin(window_management.bottom_window->window);
     }
 
-    if (window_management.currentWindow)
-        free(window_management.currentWindow);
+    if (window_management.window_on_focus)
+        free(window_management.window_on_focus);
 
 }

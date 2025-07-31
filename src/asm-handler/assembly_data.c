@@ -10,19 +10,14 @@
 
 #include <string.h>
 
-AssemblyData* newAssemblyData(const options_t options) {
+AssemblyData* newAssemblyData(const options_t* options) {
     bool in_text_section = false;
 
-    AssemblyData* data = malloc(sizeof(AssemblyData));
+    AssemblyData* data = calloc(1, sizeof(AssemblyData));
     if (!data) return nullptr;
 
-    data->lineCount = 0;
-    data->asmLines = nullptr;
-    data->lineToInstructionMap = nullptr;
-    data->instructionToLineMap = nullptr;
-
     // Read the file header
-    FILE *file = fopen(options.binary_file, "r");
+    FILE *file = fopen(options->binary_file, "r");
     if (!file) {
         free(data);
         return nullptr;
@@ -84,10 +79,8 @@ AssemblyData* newAssemblyData(const options_t options) {
         }
 
         // Check if this is a 'la' instruction
-        bool isLaInstruction = false;
         if (strncmp(trimmed, "la ", 3) == 0 ||
             strncmp(trimmed, "la\t", 3) == 0) {
-            isLaInstruction = true;
 
             // Parse the 'la' instruction: la rd, symbol
             char rd[10] = "";
@@ -132,8 +125,8 @@ AssemblyData* newAssemblyData(const options_t options) {
                 if (paddingLine) free(paddingLine);
 
                 // Free previously allocated memory
-                for (int i = 0; i < destLine; i++) {
-                    if (data->asmLines[i]) free(data->asmLines[i]);
+                for (int j = 0; j < destLine; j++) {
+                    if (data->asmLines[j]) free(data->asmLines[j]);
                 }
 
                 free(data->asmLines);
